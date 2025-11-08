@@ -25,7 +25,7 @@ export const RegisterInfo = () => {
     }) => {
         // handle next
         console.log(data);
-        navigate("/register/otp");
+        navigate("/dang-ky/otp");
     };
 
     return (
@@ -117,7 +117,7 @@ export const RegisterInfo = () => {
             </Form>
             <div className="mt-4 text-center text-sm">
                 Đã có tài khoản?{" "}
-                <a href="/login" className="text-[#518EE6] hover:underline hover:text-[#3A74C5]">
+                <a href="/dang-nhap" className="text-[#518EE6] hover:underline hover:text-[#3A74C5]">
                     Đăng nhập tại đây.
                 </a>
             </div>

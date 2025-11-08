@@ -74,7 +74,7 @@ export const Login = () => {
                             )}
                         />
                         <div className="flex justify-end">
-                            <a href="/forgot" className="text-sm mt-4 text-[#008DDA] hover:underline hover:text-[#0064A6]">
+                            <a href="/quen-mat-khau" className="text-sm mt-4 text-[#008DDA] hover:underline hover:text-[#0064A6]">
                                 Quên mật khẩu?
                             </a>
                         </div>
@@ -87,7 +87,7 @@ export const Login = () => {
 
                 <div className="mt-4 text-center text-sm">
                     Chưa có tài khoản?{" "}
-                    <a href="/register" className="text-[#008DDA] hover:underline hover:text-[#0064A6]">
+                    <a href="/dang-ky" className="text-[#008DDA] hover:underline hover:text-[#0064A6]">
                         Đăng ký tại đây.
                     </a>
                 </div>

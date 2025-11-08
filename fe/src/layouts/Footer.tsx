@@ -38,22 +38,22 @@ export const Footer = () => {
                             <h3 className="text-lg font-semibold text-gray-900">Hướng Dẫn</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link to="/about-us" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/ve-chung-toi" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Về chúng tôi
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/faq" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/cau-hoi-thuong-gap" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Câu hỏi thường gặp
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/feedback" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/gop-y-bao-loi" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Góp ý báo lỗi
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/living-index" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/chi-so-song" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Chỉ số sống
                                     </Link>
                                 </li>
@@ -65,22 +65,22 @@ export const Footer = () => {
                             <h3 className="text-lg font-semibold text-gray-900">Qui định</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link to="/term-of-use" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/dieu-khoan-su-dung" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Điều khoản sử dụng
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/operating-regulation" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/quy-che-hoat-dong" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Quy chế hoạt động
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/privacy-policy" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/chinh-sach-bao-mat" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Chính sách bảo mật
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/posting-regulation" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/quy-dinh-dang-tin" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Quy định đăng tin
                                     </Link>
                                 </li>

@@ -22,25 +22,25 @@ function App() {
           <Router>
               <ScrollToTop/>
               <Routes>
-                  <Route path="/login" element={<Login/>}/>
-                  <Route path="/register" element={<Register/>}>
+                  <Route path="/dang-nhap" element={<Login/>}/>
+                  <Route path="/dang-ky" element={<Register/>}>
                       <Route index element={<RegisterInfo/>}/>
                       <Route path="otp" element={<OTP from={"register"}/>}/>
                   </Route>
 
-                  <Route path="/forgot" element={<Forgot/>}>
+                  <Route path="/quen-mat-khau" element={<Forgot/>}>
                       <Route index element={<ForgotEmail/>}/>
                       <Route path="otp" element={<OTP from={"forgot"}/>}/>
                   </Route>
 
                   <Route path="/" element={<MainLayout/>}>
                       <Route index element={<Home/>}/>
-                      <Route path="/about-us" element={<AboutUs/>}/>
-                      <Route path="/faq" element={<FAQ/>}/>
-                      <Route path="/term-of-use" element={<TermsOfUse/>}/>
-                      <Route path="/operating-regulation" element={<OperatingRegulations/>}/>
-                      <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
-                      <Route path="/posting-regulation" element={<PostingRegulations/>}/>
+                      <Route path="/ve-chung-toi" element={<AboutUs/>}/>
+                      <Route path="/cau-hoi-thuong-gap" element={<FAQ/>}/>
+                      <Route path="/dieu-khoan-su-dung" element={<TermsOfUse/>}/>
+                      <Route path="/quy-che-hoat-dong" element={<OperatingRegulations/>}/>
+                      <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicy/>}/>
+                      <Route path="/quy-dinh-dang-tin" element={<PostingRegulations/>}/>
                   </Route>
 
               </Routes>

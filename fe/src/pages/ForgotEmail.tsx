@@ -23,7 +23,7 @@ export const ForgotEmail = () => {
     }) => {
         // handle next
         console.log(data);
-        navigate("/forgot/otp");
+        navigate("/quen-mat-khau/otp");
     };
 
     return (
