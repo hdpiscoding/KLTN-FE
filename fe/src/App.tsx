@@ -9,6 +9,7 @@ import {MainLayout} from "@/layouts/MainLayout.tsx";
 import {Home} from "@/pages/Home.tsx";
 import AboutUs from "@/pages/AboutUs.tsx";
 import ScrollToTop from "@/components/scroll-to-top.ts";
+import {FAQ} from "@/pages/FAQ.tsx";
 
 function App() {
 
@@ -31,6 +32,7 @@ function App() {
                   <Route path="/" element={<MainLayout/>}>
                       <Route index element={<Home/>}/>
                       <Route path="/about-us" element={<AboutUs/>}/>
+                      <Route path="/faq" element={<FAQ/>}/>
                   </Route>
 
               </Routes>

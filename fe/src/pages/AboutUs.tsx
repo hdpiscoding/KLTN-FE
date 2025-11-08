@@ -2,7 +2,7 @@ import React from 'react';
 
 const AboutUs: React.FC = () => {
     return (
-        <div className="max-w-4xl mx-auto p-6 bg-white shadow-md rounded-lg">
+        <div className="max-w-4xl my-4 mx-auto p-6 bg-white shadow-md rounded-lg">
             <h3 className="text-3xl font-bold mb-6 text-center text-gray-800">Về Chúng Tôi</h3>
             <p className="mb-6 text-gray-700 leading-relaxed">
                 Chào mừng bạn đến với <span className="text-[#008DDA] font-semibold">timnha</span>, nền tảng tiên phong trong việc tìm kiếm và gợi ý bất động sản dựa trên Chỉ số Sống – một chỉ số toàn diện đánh giá chất lượng cuộc sống tại từng khu vực. Chúng tôi không chỉ giúp bạn tìm nhà, mà còn hỗ trợ bạn tìm kiếm một cuộc sống lý tưởng, nơi mà sự tiện nghi, an toàn và hạnh phúc được đặt lên hàng đầu.
