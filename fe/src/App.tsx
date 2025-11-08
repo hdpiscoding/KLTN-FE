@@ -7,12 +7,15 @@ import {ForgotEmail} from "@/pages/ForgotEmail.tsx";
 import {Forgot} from "@/pages/Forgot.tsx";
 import {MainLayout} from "@/layouts/MainLayout.tsx";
 import {Home} from "@/pages/Home.tsx";
+import AboutUs from "@/pages/AboutUs.tsx";
+import ScrollToTop from "@/components/scroll-to-top.ts";
 
 function App() {
 
   return (
       <>
           <Router>
+              <ScrollToTop/>
               <Routes>
                   <Route path="/login" element={<Login/>}/>
                   <Route path="/register" element={<Register/>}>
@@ -27,6 +30,7 @@ function App() {
 
                   <Route path="/" element={<MainLayout/>}>
                       <Route index element={<Home/>}/>
+                      <Route path="/about-us" element={<AboutUs/>}/>
                   </Route>
 
               </Routes>

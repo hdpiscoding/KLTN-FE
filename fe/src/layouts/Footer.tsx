@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import {Link} from "react-router-dom";
 import logo from "@/assets/timnha-portrait.png";
 import { Facebook, Instagram, Youtube, MapPin, Phone, Mail, Clock } from "lucide-react";
 
@@ -38,7 +38,7 @@ export const Footer = () => {
                             <h3 className="text-lg font-semibold text-gray-900">Hướng Dẫn</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link to="/about" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/about-us" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Về chúng tôi
                                     </Link>
                                 </li>
