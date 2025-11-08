@@ -80,7 +80,7 @@ export const Footer = () => {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/posting-rules" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/posting-regulation" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Quy định đăng tin
                                     </Link>
                                 </li>
@@ -97,7 +97,7 @@ export const Footer = () => {
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <Mail className="w-4 h-4 flex-shrink-0" />
-                                    <span>abc@gmail.com</span>
+                                    <span>support@timnha.com</span>
                                 </p>
                                 <p className="flex items-center gap-2">
                                     <MapPin className="w-4 h-4 flex-shrink-0" />

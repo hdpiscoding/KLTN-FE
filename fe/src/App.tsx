@@ -13,6 +13,7 @@ import {FAQ} from "@/pages/FAQ.tsx";
 import TermsOfUse from "@/pages/TermOfUse.tsx";
 import OperatingRegulations from "@/pages/OperatingRegulations.tsx";
 import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
+import PostingRegulations from "@/pages/PostingRegulations.tsx";
 
 function App() {
 
@@ -39,6 +40,7 @@ function App() {
                       <Route path="/term-of-use" element={<TermsOfUse/>}/>
                       <Route path="/operating-regulation" element={<OperatingRegulations/>}/>
                       <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
+                      <Route path="/posting-regulation" element={<PostingRegulations/>}/>
                   </Route>
 
               </Routes>
