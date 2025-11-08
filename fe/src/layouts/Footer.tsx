@@ -34,7 +34,7 @@ export const Footer = () => {
                     {/* Navigation Columns - 70% width on desktop */}
                     <div className="md:w-[70%] grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
                         {/* Hướng Dẫn Column */}
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <h3 className="text-lg font-semibold text-gray-900">Hướng Dẫn</h3>
                             <ul className="space-y-2">
                                 <li>
@@ -53,11 +53,6 @@ export const Footer = () => {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/news" className="text-gray-600 hover:text-[#008DDA] transition-colors">
-                                        Tin tức BĐS
-                                    </Link>
-                                </li>
-                                <li>
                                     <Link to="/living-index" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Chỉ số sống
                                     </Link>
@@ -66,7 +61,7 @@ export const Footer = () => {
                         </div>
 
                         {/* Qui định Column */}
-                        <div className="space-y-4">
+                        <div className="space-y-5">
                             <h3 className="text-lg font-semibold text-gray-900">Qui định</h3>
                             <ul className="space-y-2">
                                 <li>
@@ -75,7 +70,7 @@ export const Footer = () => {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/rules" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/operating-regulation" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Quy chế hoạt động
                                     </Link>
                                 </li>
@@ -87,11 +82,6 @@ export const Footer = () => {
                                 <li>
                                     <Link to="/posting-rules" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Quy định đăng tin
-                                    </Link>
-                                </li>
-                                <li>
-                                    <Link to="/payment-guide" className="text-gray-600 hover:text-[#008DDA] transition-colors">
-                                        Hướng dẫn thanh toán
                                     </Link>
                                 </li>
                             </ul>
