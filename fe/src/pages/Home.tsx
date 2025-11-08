@@ -73,6 +73,24 @@ export const Home: React.FC = () => {
             imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
             createdAt: "2025-11-05T14:10:00.000Z",
         },
+        {
+            id: "7",
+            title: "Căn hộ Duplex view công viên",
+            price: 3200000000,
+            area: 110,
+            address: "Lumière Riverside, Quận 2, TP.HCM",
+            imageUrl: "https://images.unsplash.com/photo-1512916194211-3f2b7f5f7de3?q=80&w=2070&auto=format&fit=crop",
+            createdAt: "2025-11-06T11:20:00.000Z",
+        },
+        {
+            id: "8",
+            title: "Nhà phố thương mại mặt tiền đường lớn",
+            price: 12000000000,
+            area: 160,
+            address: "Phú Mỹ Hưng, Quận 7, TP.HCM",
+            imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
+            createdAt: "2025-11-05T14:10:00.000Z",
+        },
     ];
 
     // Sample data for districts
