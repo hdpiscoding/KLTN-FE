@@ -12,6 +12,7 @@ import ScrollToTop from "@/components/scroll-to-top.ts";
 import {FAQ} from "@/pages/FAQ.tsx";
 import TermsOfUse from "@/pages/TermOfUse.tsx";
 import OperatingRegulations from "@/pages/OperatingRegulations.tsx";
+import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
 
 function App() {
 
@@ -37,6 +38,7 @@ function App() {
                       <Route path="/faq" element={<FAQ/>}/>
                       <Route path="/term-of-use" element={<TermsOfUse/>}/>
                       <Route path="/operating-regulation" element={<OperatingRegulations/>}/>
+                      <Route path="/privacy-policy" element={<PrivacyPolicy/>}/>
                   </Route>
 
               </Routes>

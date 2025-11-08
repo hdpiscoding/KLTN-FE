@@ -75,7 +75,7 @@ export const Footer = () => {
                                     </Link>
                                 </li>
                                 <li>
-                                    <Link to="/privacy" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/privacy-policy" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Chính sách bảo mật
                                     </Link>
                                 </li>
