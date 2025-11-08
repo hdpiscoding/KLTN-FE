@@ -70,7 +70,7 @@ export const Footer = () => {
                             <h3 className="text-lg font-semibold text-gray-900">Qui định</h3>
                             <ul className="space-y-2">
                                 <li>
-                                    <Link to="/terms" className="text-gray-600 hover:text-[#008DDA] transition-colors">
+                                    <Link to="/term-of-use" className="text-gray-600 hover:text-[#008DDA] transition-colors">
                                         Điều khoản sử dụng
                                     </Link>
                                 </li>
