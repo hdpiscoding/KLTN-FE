@@ -23,7 +23,7 @@ import {
 
 export const Header = () => {
     const navigate = useNavigate();
-    const isLoggin = true; // Placeholder for future authentication logic
+    const isLoggin = false; // Placeholder for future authentication logic
 
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
@@ -67,23 +67,21 @@ export const Header = () => {
                         {/* Auth Section */}
                         <div className="pl-6">
                             {!isLoggin ? (
-                                <>
+                                <div className="flex items-center">
                                     <Link
-                                        to="/login"
+                                        to="/dang-nhap"
                                         className="text-gray-700 hover:text-[#008DDA] transition-colors font-semibold flex items-center gap-2"
                                     >
-                                        <UserCircle className="w-4 h-4" />
                                         Đăng nhập
                                     </Link>
                                     <span className="mx-2 text-gray-400">|</span>
                                     <Link
-                                        to="/register"
+                                        to="/dang-ky"
                                         className="text-gray-700 hover:text-[#008DDA] transition-colors font-semibold flex items-center gap-2"
                                     >
-                                        <PenSquare className="w-4 h-4" />
                                         Đăng ký
                                     </Link>
-                                </>
+                                </div>
                             ) : (
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild className="cursor-pointer">
