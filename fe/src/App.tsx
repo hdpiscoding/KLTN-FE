@@ -8,7 +8,7 @@ import {Forgot} from "@/pages/Forgot.tsx";
 import {MainLayout} from "@/layouts/MainLayout.tsx";
 import {Home} from "@/pages/Home.tsx";
 import AboutUs from "@/pages/AboutUs.tsx";
-import ScrollToTop from "@/components/scroll-to-top.ts";
+import ScrollToTop from "@/components/scroll-to-top.tsx";
 import {FAQ} from "@/pages/FAQ.tsx";
 import TermsOfUse from "@/pages/TermOfUse.tsx";
 import OperatingRegulations from "@/pages/OperatingRegulations.tsx";
