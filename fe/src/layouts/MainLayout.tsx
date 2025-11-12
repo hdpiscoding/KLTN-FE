@@ -5,7 +5,7 @@ import {Footer} from "@/layouts/Footer.tsx";
 
 export const MainLayout: React.FC = () => {
     return (
-        <div className="min-h-screen flex flex-col">
+        <div className="min-h-full flex flex-col">
             <Header />
             <main className="flex-grow">
                 <Outlet />

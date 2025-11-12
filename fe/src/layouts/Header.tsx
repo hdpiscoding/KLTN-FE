@@ -44,7 +44,7 @@ export const Header = () => {
     };
 
     return (
-        <header className="sticky top-0 z-50 w-screen bg-white shadow">
+        <header className="sticky top-0 z-50 w-full bg-white shadow">
             <div className="container mx-auto px-4">
                 <div className="flex items-center justify-between h-16">
                     {/* Logo */}

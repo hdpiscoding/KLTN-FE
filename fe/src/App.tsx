@@ -14,6 +14,7 @@ import TermsOfUse from "@/pages/TermOfUse.tsx";
 import OperatingRegulations from "@/pages/OperatingRegulations.tsx";
 import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
 import PostingRegulations from "@/pages/PostingRegulations.tsx";
+import {BuyProperty} from "@/pages/BuyProperty.tsx";
 
 function App() {
 
@@ -41,6 +42,7 @@ function App() {
                       <Route path="/quy-che-hoat-dong" element={<OperatingRegulations/>}/>
                       <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicy/>}/>
                       <Route path="/quy-dinh-dang-tin" element={<PostingRegulations/>}/>
+                      <Route path="/mua-nha" element={<BuyProperty/>}/>
                   </Route>
 
               </Routes>

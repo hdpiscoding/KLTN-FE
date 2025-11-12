@@ -76,7 +76,7 @@ export const PropertyListItem = ({
                 </div>
 
                 {/* Time and Favorite - Bottom row */}
-                <div className="flex items-center justify-between mt-2 pt-2 border-t">
+                <div className="flex items-center justify-between mt-2 pt-2">
                     <span className="text-gray-500 text-xs">
                         {formatRelativeTime(createdAt)}
                     </span>
