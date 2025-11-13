@@ -29,7 +29,7 @@ export const Header = () => {
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
         { label: "Thuê nhà", path: "/thue-nha", icon: <Key className="w-4 h-4" /> },
         { label: "Giá nhà đất", path: "/gia-nha-dat", icon: <TrendingUp className="w-4 h-4" /> },
-        { label: "Định giá nhà", path: "/dinh-gia-nha", icon: <Calculator className="w-4 h-4" /> },
+        { label: "Định giá nhà", path: "/dinh-gia-nha/dia-chi", icon: <Calculator className="w-4 h-4" /> },
     ];
 
     // Add "Đăng tin" when logged in

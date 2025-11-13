@@ -15,6 +15,9 @@ import OperatingRegulations from "@/pages/OperatingRegulations.tsx";
 import PrivacyPolicy from "@/pages/PrivacyPolicy.tsx";
 import PostingRegulations from "@/pages/PostingRegulations.tsx";
 import {BuyProperty} from "@/pages/BuyProperty.tsx";
+import {EstimatePropertyAddress} from "@/pages/EstimatePropertyAddress.tsx";
+import {EstimatePropertyMap} from "@/pages/EstimatePropertyMap.tsx";
+import {EstimatePropertyPrice} from "@/pages/EstimatePropertyPrice.tsx";
 
 function App() {
 
@@ -43,6 +46,9 @@ function App() {
                       <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicy/>}/>
                       <Route path="/quy-dinh-dang-tin" element={<PostingRegulations/>}/>
                       <Route path="/mua-nha" element={<BuyProperty/>}/>
+                      <Route path="/dinh-gia-nha/dia-chi" element={<EstimatePropertyAddress/>}/>
+                      <Route path="/dinh-gia-nha/ban-do" element={<EstimatePropertyMap/>}/>
+                      <Route path="/dinh-gia-nha/ket-qua" element={<EstimatePropertyPrice/>}/>
                   </Route>
 
               </Routes>
