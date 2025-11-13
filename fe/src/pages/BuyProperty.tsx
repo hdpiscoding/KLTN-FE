@@ -12,6 +12,7 @@ import {
 import { DISTRICTS } from '@/constants/districts';
 import { PROPERTY_TYPES } from "@/constants/propertyTypes.ts";
 import { PRICE_RANGES} from "@/constants/priceRanges.ts";
+import { PROPERTY_SORT_CRITERIAS } from "@/constants/propertySortCriterias.ts";
 import { PropertyListItem } from '@/components/property-list-item';
 import { PropertyTypeFilter } from '@/components/property-type-filter';
 import { PropertyDistrictFilter } from '@/components/property-district-filter';
@@ -24,6 +25,7 @@ export const BuyProperty: React.FC = () => {
     const [district, setDistrict] = useState('all');
     const [propertyType, setPropertyType] = useState('all');
     const [priceRange, setPriceRange] = useState('all');
+    const [sortCriteria, setSortCriteria] = useState('default');
     const [currentPage, setCurrentPage] = useState(1);
 
     // Sample data for properties
@@ -198,6 +200,27 @@ export const BuyProperty: React.FC = () => {
                         <h2 className="text-2xl font-semibold text-gray-900 my-8">
                             Mua bán nhà đất ở Thành phố Hồ Chí Minh
                         </h2>
+
+                        <div className="flex justify-between items-center mb-4">
+                            <p className="text-gray-600 text-sm">Hiện có 1.000 bất động sản</p>
+
+                            <div className="flex items-center lg:w-1/3">
+                                <Select value={sortCriteria} onValueChange={setSortCriteria}>
+                                    <SelectTrigger className="w-full bg-white focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                                        <SelectValue placeholder="Mặc định" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="default" className="cursor-pointer">Mặc định</SelectItem>
+                                        {PROPERTY_SORT_CRITERIAS.map((PROPERTY_SORT_CRITERIA) => (
+                                            <SelectItem key={PROPERTY_SORT_CRITERIA.id} value={PROPERTY_SORT_CRITERIA.id} className="cursor-pointer">
+                                                {PROPERTY_SORT_CRITERIA.title}
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+
+                        </div>
 
                         {/* Property List */}
                         <div className="space-y-4 mb-6">
