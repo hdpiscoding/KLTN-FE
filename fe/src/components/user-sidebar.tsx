@@ -2,7 +2,7 @@ import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
     FileText,
-    PlusCircle,
+    Plus,
     Heart,
     User,
     Lock,
@@ -60,6 +60,55 @@ const SidebarItem: React.FC<SidebarItemProps> = ({
     );
 };
 
+// Bottom Nav Item Component for mobile
+const BottomNavItem: React.FC<SidebarItemProps & { isCentral?: boolean }> = ({
+    icon,
+    label,
+    path,
+    isActive,
+    isCentral = false,
+    onClick
+}) => {
+    const navigate = useNavigate();
+
+    const handleClick = () => {
+        if (onClick) {
+            onClick();
+        } else {
+            navigate(path);
+        }
+    };
+
+    return (
+        <button
+            onClick={handleClick}
+            className={cn(
+                "flex flex-col items-center justify-center transition-all duration-200 cursor-pointer",
+                isCentral
+                    ? "relative -mt-6 w-16 h-16 rounded-full bg-[#008DDA] text-white shadow-lg hover:bg-[#0064A6] active:scale-95"
+                    : cn(
+                        "flex-1 py-2 px-1",
+                        isActive && "text-[#008DDA]",
+                        !isActive && "text-gray-600 hover:text-gray-900"
+                    )
+            )}
+        >
+            <span className={cn(
+                "transition-transform duration-200",
+                isCentral ? "text-white" : ""
+            )}>
+                {icon}
+            </span>
+            <span className={cn(
+                "text-[10px] mt-1 font-medium",
+                isCentral && "sr-only"
+            )}>
+                {label}
+            </span>
+        </button>
+    );
+};
+
 export const UserSidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
@@ -78,7 +127,7 @@ export const UserSidebar: React.FC = () => {
             path: '/tin-dang',
         },
         {
-            icon: <PlusCircle size={20} />,
+            icon: <Plus size={20} />,
             label: 'Đăng tin',
             path: '/dang-tin',
         },
@@ -99,47 +148,75 @@ export const UserSidebar: React.FC = () => {
         },
     ];
 
+    // Bottom nav items order: Tin đăng, Tin yêu thích, Đăng tin (center), Thông tin cá nhân, Đổi mật khẩu
+    const bottomNavItems = [
+        menuItems[0], // Tin đăng
+        menuItems[2], // Tin yêu thích
+        menuItems[1], // Đăng tin (center)
+        menuItems[3], // Thông tin cá nhân
+        menuItems[4], // Đổi mật khẩu
+    ];
+
     return (
-        <aside className="w-64 bg-white border-r border-gray-200 h-screen sticky top-0 flex flex-col shadow-sm">
-            {/* Logo */}
-            <div className="p-6 border-b border-gray-200 bg-gradient-to-br from-white to-gray-50">
-                <button
-                    onClick={() => navigate('/')}
-                    className="flex items-center justify-center w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#008DDA] focus:ring-offset-2 rounded-lg p-2 cursor-pointer"
-                >
-                    <img
-                        src="/src/assets/timnha-icon.png"
-                        alt="TimNha Logo"
-                        className="h-16 w-auto drop-shadow-sm"
-                    />
-                </button>
-            </div>
+        <>
+            {/* Desktop Sidebar */}
+            <aside className="hidden sm:flex w-64 bg-white border-r border-gray-200 h-screen sticky top-0 flex-col shadow-sm">
+                {/* Logo */}
+                <div className="p-6 border-b border-gray-200 bg-gradient-to-br from-white to-gray-50">
+                    <button
+                        onClick={() => navigate('/')}
+                        className="flex items-center justify-center w-full transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-[#008DDA] focus:ring-offset-2 rounded-lg p-2 cursor-pointer"
+                    >
+                        <img
+                            src="/src/assets/timnha-icon.png"
+                            alt="TimNha Logo"
+                            className="h-16 w-auto drop-shadow-sm"
+                        />
+                    </button>
+                </div>
 
-            {/* Navigation Menu */}
-            <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
-                {menuItems.map((item) => (
+                {/* Navigation Menu */}
+                <nav className="flex-1 p-4 space-y-1 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-transparent">
+                    {menuItems.map((item) => (
+                        <SidebarItem
+                            key={item.path}
+                            icon={item.icon}
+                            label={item.label}
+                            path={item.path}
+                            isActive={location.pathname === item.path}
+                        />
+                    ))}
+                </nav>
+
+                {/* Logout Button */}
+                <div className="p-4 border-t border-gray-200 bg-gradient-to-br from-white to-gray-50">
                     <SidebarItem
-                        key={item.path}
-                        icon={item.icon}
-                        label={item.label}
-                        path={item.path}
-                        isActive={location.pathname === item.path}
+                        icon={<LogOut size={20} />}
+                        label="Đăng xuất"
+                        path=""
+                        isActive={false}
+                        isDanger={true}
+                        onClick={handleLogout}
                     />
-                ))}
-            </nav>
+                </div>
+            </aside>
 
-            {/* Logout Button */}
-            <div className="p-4 border-t border-gray-200 bg-gradient-to-br from-white to-gray-50">
-                <SidebarItem
-                    icon={<LogOut size={20} />}
-                    label="Đăng xuất"
-                    path=""
-                    isActive={false}
-                    isDanger={true}
-                    onClick={handleLogout}
-                />
-            </div>
-        </aside>
+            {/* Mobile Bottom Navigation */}
+            <nav className="sm:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg z-50">
+                <div className="flex items-center justify-around px-2 pb-safe">
+                    {bottomNavItems.map((item, index) => (
+                        <BottomNavItem
+                            key={item.path}
+                            icon={item.icon}
+                            label={item.label}
+                            path={item.path}
+                            isActive={location.pathname === item.path}
+                            isCentral={index === 2} // Đăng tin is at index 2
+                        />
+                    ))}
+                </div>
+            </nav>
+        </>
     );
 };
 
