@@ -18,6 +18,12 @@ import {BuyProperty} from "@/pages/BuyProperty.tsx";
 import {EstimatePropertyAddress} from "@/pages/EstimatePropertyAddress.tsx";
 import {EstimatePropertyMap} from "@/pages/EstimatePropertyMap.tsx";
 import {EstimatePropertyPrice} from "@/pages/EstimatePropertyPrice.tsx";
+import {UserLayout} from "@/layouts/UserLayout.tsx";
+import {MyPosts} from "@/pages/MyPosts.tsx";
+import {CreatePost} from "@/pages/CreatePost.tsx";
+import {FavoritePosts} from "@/pages/FavoritePosts.tsx";
+import {UserProfile} from "@/pages/UserProfile.tsx";
+import {ChangePassword} from "@/pages/ChangePassword.tsx";
 
 function App() {
 
@@ -49,6 +55,14 @@ function App() {
                       <Route path="/dinh-gia-nha/dia-chi" element={<EstimatePropertyAddress/>}/>
                       <Route path="/dinh-gia-nha/ban-do" element={<EstimatePropertyMap/>}/>
                       <Route path="/dinh-gia-nha/ket-qua" element={<EstimatePropertyPrice/>}/>
+                  </Route>
+
+                  <Route path="/" element={<UserLayout/>}>
+                      <Route path="/tin-dang" element={<MyPosts/>}/>
+                      <Route path="/dang-tin" element={<CreatePost/>}/>
+                      <Route path="/tin-yeu-thich" element={<FavoritePosts/>}/>
+                      <Route path="/thong-tin-ca-nhan" element={<UserProfile/>}/>
+                      <Route path="/doi-mat-khau" element={<ChangePassword/>}/>
                   </Route>
 
               </Routes>

@@ -23,7 +23,7 @@ import {
 
 export const Header = () => {
     const navigate = useNavigate();
-    const isLoggin = false; // Placeholder for future authentication logic
+    const isLoggin = true; // Placeholder for future authentication logic
 
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
@@ -95,7 +95,7 @@ export const Header = () => {
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56">
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link to="/quan-ly-tin-dang" className="w-full flex items-center gap-2">
+                                            <Link to="/tin-dang" className="w-full flex items-center gap-2">
                                                 <FileText className="w-4 h-4" />
                                                 Quản lý tin đăng
                                             </Link>
