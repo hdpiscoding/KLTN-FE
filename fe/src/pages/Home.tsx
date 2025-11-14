@@ -12,10 +12,12 @@ import {
     CarouselNext,
     CarouselPrevious,
 } from "@/components/ui/carousel";
+import {useNavigate} from "react-router-dom";
 
 export const Home: React.FC = () => {
     const [searchType, setSearchType] = useState<'buy' | 'rent'>('buy');
     const [searchValue, setSearchValue] = useState('');
+    const navigate = useNavigate();
 
     // Sample data for properties
     const sampleProperties = [
@@ -346,7 +348,7 @@ export const Home: React.FC = () => {
 
                 <div className="text-center">
                     <button
-                        onClick={() => console.log('Load more districts')}
+                        onClick={() => navigate('/mua-nha')}
                         className="px-6 py-3 bg-white text-[#008DDA] border-2 border-[#008DDA] rounded-lg font-medium hover:bg-[#008DDA] hover:text-white transition-colors duration-200 cursor-pointer"
                     >
                         Xem thêm
