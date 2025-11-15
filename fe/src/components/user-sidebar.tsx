@@ -115,6 +115,7 @@ export const UserSidebar: React.FC = () => {
 
     const handleLogout = () => {
         // TODO: Implement logout logic
+        navigate('/');
         console.log('Logging out...');
         // Clear user data, tokens, etc.
         // navigate('/dang-nhap');

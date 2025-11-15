@@ -3,11 +3,20 @@ import { MyPropertyListItem } from '@/components/my-property-list-item';
 // Cast to any due to stale TS mismatch on optional props
 const MyPropertyListItemAny = MyPropertyListItem as any;
 import { ControlledPagination } from '@/components/controlled-pagination';
+import { Input } from '@/components/ui/input';
+import { Search } from 'lucide-react';
+import { cn } from '@/lib/utils';
+
+type StatusFilter = 'all' | 'Đang hiển thị' | 'Chờ duyệt' | 'Đã gỡ' | 'Không duyệt' | 'Hết hạn';
 
 export const MyPosts: React.FC = () => {
     // pagination state
     const [currentPage, setCurrentPage] = React.useState(1);
     const pageSize = 3; // items per page
+
+    // filter states
+    const [searchQuery, setSearchQuery] = React.useState('');
+    const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
 
     type MyProperty = {
         id: string;
@@ -98,8 +107,43 @@ export const MyPosts: React.FC = () => {
         }
     ];
 
-    const totalPages = Math.ceil(myProperties.length / pageSize);
-    const paginatedItems = myProperties.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+    // Filter logic
+    const filteredProperties = myProperties.filter((property) => {
+        // Search filter
+        const matchesSearch = searchQuery === '' ||
+            property.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            property.address.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            property.code.toLowerCase().includes(searchQuery.toLowerCase());
+
+        // Status filter
+        const matchesStatus = statusFilter === 'all' || property.status === statusFilter;
+
+        return matchesSearch && matchesStatus;
+    });
+
+    // Tab configuration
+    const tabs: { label: string; value: StatusFilter; color: string }[] = [
+        { label: 'Tất cả', value: 'all', color: 'text-blue-600 border-blue-600' },
+        { label: 'Đang hiển thị', value: 'Đang hiển thị', color: 'text-green-600 border-green-600' },
+        { label: 'Chờ duyệt', value: 'Chờ duyệt', color: 'text-yellow-600 border-yellow-600' },
+        { label: 'Đã gỡ', value: 'Đã gỡ', color: 'text-gray-600 border-gray-600' },
+        { label: 'Không duyệt', value: 'Không duyệt', color: 'text-red-600 border-red-600' },
+        { label: 'Hết hạn', value: 'Hết hạn', color: 'text-orange-600 border-orange-600' },
+    ];
+
+    // Get count for each status
+    const getStatusCount = (status: StatusFilter): number => {
+        if (status === 'all') return myProperties.length;
+        return myProperties.filter(p => p.status === status).length;
+    };
+
+    // Reset to page 1 when filters change
+    React.useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, statusFilter]);
+
+    const totalPages = Math.ceil(filteredProperties.length / pageSize);
+    const paginatedItems = filteredProperties.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
     return (
         <div className="space-y-4">
@@ -108,10 +152,55 @@ export const MyPosts: React.FC = () => {
                 <h1 className="text-3xl font-semibold mb-2">Tin đăng của tôi</h1>
                 <p className="text-gray-600">
                     Quản lý {myProperties.length} tin đăng bất động sản của bạn
+                    {filteredProperties.length !== myProperties.length &&
+                        ` (Hiển thị ${filteredProperties.length} kết quả)`
+                    }
                 </p>
             </div>
 
-            {/* Filter/Stats Bar */}
+            {/* Search and Filter Section */}
+            <div className="bg-white rounded-lg shadow-md p-6 space-y-4">
+                {/* Search Input */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <Input
+                        type="text"
+                        placeholder="Tìm kiếm theo tiêu đề, địa chỉ hoặc mã tin..."
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="pl-10 focus-visible:ring-[#008DDA]"
+                    />
+                </div>
+
+                {/* Status Tabs */}
+                <div className="flex flex-wrap gap-2">
+                    {tabs.map((tab) => (
+                        <button
+                            key={tab.value}
+                            onClick={() => setStatusFilter(tab.value)}
+                            className={cn(
+                                "px-4 py-2 rounded-lg border-2 transition-all duration-200 font-medium text-sm",
+                                "hover:shadow-md active:scale-95 cursor-pointer",
+                                statusFilter === tab.value
+                                    ? `${tab.color} bg-opacity-10`
+                                    : "border-gray-200 text-gray-600 hover:border-gray-300"
+                            )}
+                        >
+                            {tab.label}
+                            <span className={cn(
+                                "ml-2 px-2 py-0.5 rounded-full text-xs font-semibold",
+                                statusFilter === tab.value
+                                    ? "bg-white"
+                                    : "bg-gray-100"
+                            )}>
+                                {getStatusCount(tab.value)}
+                            </span>
+                        </button>
+                    ))}
+                </div>
+            </div>
+
+            {/* Filter/Stats Bar - Keep for visual consistency */}
             <div className="bg-white rounded-lg shadow-md p-4">
                 <div className="flex flex-wrap gap-3 text-sm">
                     <div className="flex items-center gap-2">
@@ -167,19 +256,30 @@ export const MyPosts: React.FC = () => {
             </div>
 
             {/* Pagination */}
-            <div className="flex justify-center pt-2">
-                <ControlledPagination
-                    currentPage={currentPage}
-                    totalPages={totalPages}
-                    onPageChange={setCurrentPage}
-                />
-            </div>
+            {totalPages > 1 && (
+                <div className="flex justify-center pt-2">
+                    <ControlledPagination
+                        currentPage={currentPage}
+                        totalPages={totalPages}
+                        onPageChange={setCurrentPage}
+                    />
+                </div>
+            )}
 
-            {/* Empty State */}
+            {/* Empty State - No properties at all */}
             {myProperties.length === 0 && (
                 <div className="bg-white rounded-lg shadow-md p-12 text-center">
                     <p className="text-gray-500 text-lg">Bạn chưa có tin đăng nào</p>
                     <p className="text-gray-400 mt-2">Hãy bắt đầu đăng tin bất động sản của bạn</p>
+                </div>
+            )}
+
+            {/* Empty State - No filtered results */}
+            {myProperties.length > 0 && filteredProperties.length === 0 && (
+                <div className="bg-white rounded-lg shadow-md p-12 text-center">
+                    <Search className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-500 text-lg">Không tìm thấy kết quả phù hợp</p>
+                    <p className="text-gray-400 mt-2">Thử tìm kiếm với từ khóa khác hoặc thay đổi bộ lọc</p>
                 </div>
             )}
         </div>
