@@ -87,6 +87,18 @@ export const UserProfile: React.FC = () => {
         }
     };
 
+    const handlePreferenceDefault = () => {
+        preferenceForm.reset({
+            security: 50,
+            healthcare: 50,
+            education: 50,
+            amenities: 50,
+            transportation: 50,
+            environment: 50,
+            entertainment: 50,
+        });
+    }
+
     const onSubmit = async (data: UserProfileFormData) => {
         console.log('Profile data:', data);
         console.log('Avatar file:', avatarFile);
@@ -526,12 +538,24 @@ export const UserProfile: React.FC = () => {
 
                         {/* Submit Button */}
                         <div className="pt-4 border-t">
-                            <Button
-                                type="submit"
-                                className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
-                            >
-                                Lưu thay đổi
-                            </Button>
+                            <div className="flex items-center gap-6">
+                                <Button
+                                    type="submit"
+                                    className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                                >
+                                    Lưu thay đổi
+                                </Button>
+
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="cursor-pointer"
+                                    onClick={handlePreferenceDefault}
+                                >
+                                    Đặt lại mặc định
+                                </Button>
+                            </div>
+
                         </div>
                     </form>
                 </Form>
