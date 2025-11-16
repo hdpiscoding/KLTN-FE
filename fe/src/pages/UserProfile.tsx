@@ -144,20 +144,22 @@ export const UserProfile: React.FC = () => {
                             onChange={handleAvatarChange}
                             className="hidden"
                         />
-                        <label htmlFor="avatar-upload">
-                            <Button
-                                type="button"
-                                variant="outline"
-                                className="cursor-pointer"
-                                onClick={() => document.getElementById('avatar-upload')?.click()}
-                            >
-                                <Upload className="w-4 h-4 mr-2" />
-                                Tải ảnh
-                            </Button>
-                        </label>
-                        <p className="text-xs text-gray-500">
-                            Chấp nhận: PNG, JPG, JPEG, WEBP
-                        </p>
+                        <div className="flex flex-col items-center gap-3">
+                            <label htmlFor="avatar-upload">
+                                <Button
+                                    type="button"
+                                    variant="outline"
+                                    className="cursor-pointer"
+                                    onClick={() => document.getElementById('avatar-upload')?.click()}
+                                >
+                                    <Upload className="w-4 h-4 mr-2" />
+                                    Tải ảnh
+                                </Button>
+                            </label>
+                            <p className="text-xs text-gray-500">
+                                Chấp nhận: PNG, JPG, JPEG, WEBP
+                            </p>
+                        </div>
                     </div>
                 </div>
 

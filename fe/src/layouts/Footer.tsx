@@ -62,7 +62,7 @@ export const Footer = () => {
 
                         {/* Qui định Column */}
                         <div className="space-y-5">
-                            <h3 className="text-lg font-semibold text-gray-900">Qui định</h3>
+                            <h3 className="text-lg font-semibold text-gray-900">Quy định</h3>
                             <ul className="space-y-2">
                                 <li>
                                     <Link to="/dieu-khoan-su-dung" className="text-gray-600 hover:text-[#008DDA] transition-colors">
