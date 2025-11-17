@@ -1,4 +1,4 @@
-import type { District } from '@/types/district';
+import type { District } from '@/types/district.d.ts';
 
 export const DISTRICTS: District[] = [
     { id: 'quan1', name: 'Quận 1' },
