@@ -276,7 +276,7 @@ export const CreatePost: React.FC = () => {
                             Vui lòng cung cấp địa chỉ chính xác của bất động sản
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                             {/* Province/City - Disabled */}
                             <FormField
                                 control={form.control}
@@ -286,7 +286,7 @@ export const CreatePost: React.FC = () => {
                                         <FormLabel>Tỉnh/Thành phố</FormLabel>
                                         <Select value={field.value} disabled>
                                             <FormControl>
-                                                <SelectTrigger className="cursor-not-allowed opacity-75">
+                                                <SelectTrigger className="cursor-not-allowed opacity-75 w-full">
                                                     <SelectValue placeholder="Chọn tỉnh/thành phố" />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -314,7 +314,7 @@ export const CreatePost: React.FC = () => {
                                             onValueChange={handleDistrictChange}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
+                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
                                                     <SelectValue placeholder="Chọn quận/huyện" />
                                                 </SelectTrigger>
                                             </FormControl>
@@ -347,7 +347,7 @@ export const CreatePost: React.FC = () => {
                                             disabled={!selectedDistrict}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className={cn("cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0",
+                                                <SelectTrigger className={cn("cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full",
                                                     !selectedDistrict && "cursor-not-allowed opacity-50"
                                                 )}>
                                                     <SelectValue placeholder="Chọn phường/xã" />
@@ -365,7 +365,9 @@ export const CreatePost: React.FC = () => {
                                     </FormItem>
                                 )}
                             />
+                        </div>
 
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
                             {/* Street */}
                             <FormField
                                 control={form.control}
