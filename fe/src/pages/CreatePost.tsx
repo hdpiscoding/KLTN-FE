@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Home, Key, MapPin } from 'lucide-react';
+import { Home, Key, MapPin, Upload, Image as ImageIcon, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { districtWards } from '@/constants/districtWard.ts';
 import { PROPERTY_TYPES } from '@/constants/propertyTypes';
@@ -39,6 +39,7 @@ type CreatePostFormData = {
     balconyDirection: string;
     roadWidth: string;
     frontWidth: string;
+    images: File[];
 };
 
 export const CreatePost: React.FC = () => {
@@ -46,6 +47,8 @@ export const CreatePost: React.FC = () => {
     const [selectedDistrict, setSelectedDistrict] = useState<string>('');
     const [selectedWard, setSelectedWard] = useState<string>('');
     const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [uploadedImages, setUploadedImages] = useState<File[]>([]);
+    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
     const form = useForm<CreatePostFormData>({
         defaultValues: {
@@ -62,7 +65,6 @@ export const CreatePost: React.FC = () => {
             price: '',
             title: '',
             description: '',
-            // Optional fields
             legalDoc: '',
             furniture: '',
             bedrooms: '',
@@ -72,6 +74,7 @@ export const CreatePost: React.FC = () => {
             balconyDirection: '',
             roadWidth: '',
             frontWidth: '',
+            images: [],
         },
         mode: 'onChange',
     });
@@ -104,6 +107,63 @@ export const CreatePost: React.FC = () => {
         setMapLocation(dummyLocation);
         form.setValue('latitude', dummyLocation.lat);
         form.setValue('longitude', dummyLocation.lng);
+    };
+
+    const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (!files) return;
+
+        const newFiles = Array.from(files);
+        const currentImages = uploadedImages.length;
+        const availableSlots = 10 - currentImages;
+
+        if (availableSlots <= 0) {
+            alert('Bạn chỉ có thể tải lên tối đa 10 ảnh');
+            return;
+        }
+
+        const filesToAdd = newFiles.slice(0, availableSlots);
+
+        // Validate file types
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+        const invalidFiles = filesToAdd.filter(file => !validTypes.includes(file.type));
+
+        if (invalidFiles.length > 0) {
+            alert('Chỉ chấp nhận file ảnh định dạng JPG, PNG, WEBP');
+            return;
+        }
+
+        // Validate file sizes (max 5MB per image)
+        const oversizedFiles = filesToAdd.filter(file => file.size > 5 * 1024 * 1024);
+        if (oversizedFiles.length > 0) {
+            alert('Kích thước mỗi ảnh không được vượt quá 5MB');
+            return;
+        }
+
+        const updatedImages = [...uploadedImages, ...filesToAdd];
+        setUploadedImages(updatedImages);
+        form.setValue('images', updatedImages);
+
+        // Create previews
+        filesToAdd.forEach(file => {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setImagePreviews(prev => [...prev, reader.result as string]);
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Reset input
+        event.target.value = '';
+    };
+
+    const handleRemoveImage = (index: number) => {
+        const updatedImages = uploadedImages.filter((_, i) => i !== index);
+        const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+
+        setUploadedImages(updatedImages);
+        setImagePreviews(updatedPreviews);
+        form.setValue('images', updatedImages);
     };
 
     const onSubmit = async (data: CreatePostFormData) => {
@@ -936,6 +996,121 @@ export const CreatePost: React.FC = () => {
                                 />
                             </div>
                         </div>
+                    </div>
+
+                    {/* Section 5: Images (Hình ảnh) */}
+                    <div className="bg-white rounded-lg shadow-md p-6">
+                        <h2 className="text-xl font-semibold mb-4">
+                            Hình ảnh <span className="text-red-500">*</span>
+                        </h2>
+                        <p className="text-sm text-gray-500 mb-6">
+                            Tải lên ít nhất 1 ảnh và tối đa 10 ảnh. Ảnh đầu tiên sẽ là ảnh đại diện.
+                        </p>
+
+                        <FormField
+                            control={form.control}
+                            name="images"
+                            rules={{
+                                validate: (value) => {
+                                    if (!value || value.length === 0) {
+                                        return 'Vui lòng tải lên ít nhất 1 ảnh';
+                                    }
+                                    if (value.length > 10) {
+                                        return 'Chỉ được tải lên tối đa 10 ảnh';
+                                    }
+                                    return true;
+                                }
+                            }}
+                            render={() => (
+                                <FormItem>
+                                    <FormControl>
+                                        <div className="space-y-4">
+                                            {/* Image Grid */}
+                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                                {/* Uploaded Images */}
+                                                {imagePreviews.map((preview, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 group"
+                                                    >
+                                                        <img
+                                                            src={preview}
+                                                            alt={`Preview ${index + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {/* Image number badge */}
+                                                        <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                                            {index === 0 ? 'Ảnh đại diện' : `${index + 1}`}
+                                                        </div>
+                                                        {/* Remove button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveImage(index)}
+                                                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                                {/* Upload Button */}
+                                                {uploadedImages.length < 10 && (
+                                                    <label
+                                                        className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#008DDA] cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
+                                                    >
+                                                        <input
+                                                            type="file"
+                                                            multiple
+                                                            accept="image/jpeg,image/jpg,image/png,image/webp"
+                                                            onChange={handleImageUpload}
+                                                            className="hidden"
+                                                        />
+                                                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                                            <Upload className="w-6 h-6 text-gray-600" />
+                                                        </div>
+                                                        <div className="text-center px-2">
+                                                            <p className="text-sm font-medium text-gray-700">
+                                                                Tải ảnh lên
+                                                            </p>
+                                                            <p className="text-xs text-gray-500 mt-1">
+                                                                {uploadedImages.length}/10
+                                                            </p>
+                                                        </div>
+                                                    </label>
+                                                )}
+                                            </div>
+
+                                            {/* Upload Instructions */}
+                                            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                                <div className="flex items-start gap-3">
+                                                    <ImageIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                                    <div className="text-sm text-blue-800">
+                                                        <p className="font-medium mb-1">Lưu ý khi tải ảnh:</p>
+                                                        <ul className="list-disc list-inside space-y-1 text-xs">
+                                                            <li>Định dạng: JPG, PNG, WEBP</li>
+                                                            <li>Kích thước tối đa: 5MB/ảnh</li>
+                                                            <li>Ảnh đầu tiên sẽ là ảnh đại diện</li>
+                                                            <li>Nên chụp ảnh rõ nét, đầy đủ góc nhìn</li>
+                                                        </ul>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Image count display */}
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-gray-600">
+                                                    Đã tải: <span className="font-semibold text-[#008DDA]">{uploadedImages.length}</span> ảnh
+                                                </span>
+                                                <span className="text-gray-500">
+                                                    Còn lại: {10 - uploadedImages.length} ảnh
+                                                </span>
+                                            </div>
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
                     </div>
 
                     {/* Submit Button - Sticky at bottom */}
