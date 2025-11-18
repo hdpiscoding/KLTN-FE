@@ -37,7 +37,7 @@ export const PropertyCardItem = ({
 
     return (
         <Link
-            to={`/property/${id}`}
+            to={`/bat-dong-san/${id}`}
             className="group flex flex-col bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 h-[400px]"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

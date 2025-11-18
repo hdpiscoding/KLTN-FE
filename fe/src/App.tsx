@@ -24,6 +24,7 @@ import {CreatePost} from "@/pages/CreatePost.tsx";
 import {FavoritePosts} from "@/pages/FavoritePosts.tsx";
 import {UserProfile} from "@/pages/UserProfile.tsx";
 import {ChangePassword} from "@/pages/ChangePassword.tsx";
+import {PropertyDetail} from "@/pages/PropertyDetail.tsx";
 
 function App() {
 
@@ -52,6 +53,7 @@ function App() {
                       <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicy/>}/>
                       <Route path="/quy-dinh-dang-tin" element={<PostingRegulations/>}/>
                       <Route path="/mua-nha" element={<BuyProperty/>}/>
+                      <Route path="/bat-dong-san/:id" element={<PropertyDetail/>}/>
                       <Route path="/dinh-gia-nha/dia-chi" element={<EstimatePropertyAddress/>}/>
                       <Route path="/dinh-gia-nha/ban-do" element={<EstimatePropertyMap/>}/>
                       <Route path="/dinh-gia-nha/ket-qua" element={<EstimatePropertyPrice/>}/>
