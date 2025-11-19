@@ -1,5 +1,6 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import { useForm } from 'react-hook-form';
+import { useParams, useNavigate } from 'react-router-dom';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -15,7 +16,7 @@ import { PROPERTY_DIRECTIONS } from '@/constants/propertyDirections';
 
 type DemandType = 'buy' | 'rent';
 
-type CreatePostFormData = {
+type EditPostFormData = {
     demand: DemandType;
     province: string;
     district: string;
@@ -42,15 +43,21 @@ type CreatePostFormData = {
     images: File[];
 };
 
-export const CreatePost: React.FC = () => {
+export const EditPost: React.FC = () => {
+    const { id } = useParams();
+    const navigate = useNavigate();
     const [selectedDemand, setSelectedDemand] = useState<DemandType>('buy');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('');
     const [selectedWard, setSelectedWard] = useState<string>('');
     const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
-    const [uploadedImages, setUploadedImages] = useState<File[]>([]);
-    const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
-    const form = useForm<CreatePostFormData>({
+    // Separate state for existing images (URLs from API) and new uploads (Files)
+    const [existingImages, setExistingImages] = useState<string[]>([]);
+    const [newImages, setNewImages] = useState<File[]>([]);
+    const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    const form = useForm<EditPostFormData>({
         defaultValues: {
             demand: 'buy',
             province: 'TP. Hồ Chí Minh',
@@ -109,13 +116,99 @@ export const CreatePost: React.FC = () => {
         form.setValue('longitude', dummyLocation.lng);
     };
 
+    // Load post data from API
+    useEffect(() => {
+        const loadPostData = async () => {
+            try {
+                setIsLoading(true);
+                // TODO: Replace with actual API call
+                // const response = await fetch(`/api/posts/${id}`);
+                // const data = await response.json();
+
+                // Mock data for now
+                const mockData = {
+                    demand: 'buy' as DemandType,
+                    province: 'TP. Hồ Chí Minh',
+                    district: 'quan_binh_thanh',
+                    ward: 'gia_dinh',
+                    street: 'Nguyễn Hữu Cảnh',
+                    houseNumber: '208',
+                    latitude: 10.8231,
+                    longitude: 106.6297,
+                    propertyType: 'canho',
+                    area: '120',
+                    price: '5500000000',
+                    title: 'Căn hộ cao cấp Vinhomes Central Park, 3 phòng ngủ, view sông đẹp',
+                    description: 'Căn hộ nằm tại tầng cao, view thoáng mát hướng sông. Nội thất đầy đủ bao gồm: phòng khách, bếp, 3 phòng ngủ có giường tủ, máy lạnh. Khu vực an ninh 24/7, có hồ bơi, phòng gym...',
+                    legalDoc: '1',
+                    furniture: '2',
+                    bedrooms: '3',
+                    bathrooms: '2',
+                    floors: '1',
+                    houseDirection: '3',
+                    balconyDirection: '5',
+                    roadWidth: '8',
+                    frontWidth: '6',
+                    images: [
+                        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800',
+                        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800',
+                        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
+                    ],
+                };
+
+                // Set form values
+                setSelectedDemand(mockData.demand);
+                setSelectedDistrict(mockData.district);
+                setSelectedWard(mockData.ward);
+                setMapLocation({ lat: mockData.latitude, lng: mockData.longitude });
+                setExistingImages(mockData.images);
+
+                form.reset({
+                    demand: mockData.demand,
+                    province: mockData.province,
+                    district: mockData.district,
+                    ward: mockData.ward,
+                    street: mockData.street,
+                    houseNumber: mockData.houseNumber,
+                    latitude: mockData.latitude,
+                    longitude: mockData.longitude,
+                    propertyType: mockData.propertyType,
+                    area: mockData.area,
+                    price: mockData.price,
+                    title: mockData.title,
+                    description: mockData.description,
+                    legalDoc: mockData.legalDoc,
+                    furniture: mockData.furniture,
+                    bedrooms: mockData.bedrooms,
+                    bathrooms: mockData.bathrooms,
+                    floors: mockData.floors,
+                    houseDirection: mockData.houseDirection,
+                    balconyDirection: mockData.balconyDirection,
+                    roadWidth: mockData.roadWidth,
+                    frontWidth: mockData.frontWidth,
+                    images: [],
+                });
+
+                setIsLoading(false);
+            } catch (error) {
+                console.error('Error loading post data:', error);
+                alert('Không thể tải dữ liệu tin đăng');
+                navigate('/tin-dang');
+            }
+        };
+
+        if (id) {
+            loadPostData();
+        }
+    }, [id, navigate, form]);
+
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
         if (!files) return;
 
         const newFiles = Array.from(files);
-        const currentImages = uploadedImages.length;
-        const availableSlots = 10 - currentImages;
+        const totalImages = existingImages.length + newImages.length;
+        const availableSlots = 10 - totalImages;
 
         if (availableSlots <= 0) {
             alert('Bạn chỉ có thể tải lên tối đa 10 ảnh');
@@ -140,15 +233,15 @@ export const CreatePost: React.FC = () => {
             return;
         }
 
-        const updatedImages = [...uploadedImages, ...filesToAdd];
-        setUploadedImages(updatedImages);
-        form.setValue('images', updatedImages);
+        const updatedNewImages = [...newImages, ...filesToAdd];
+        setNewImages(updatedNewImages);
+        form.setValue('images', updatedNewImages);
 
-        // Create previews
+        // Create previews for new images
         filesToAdd.forEach(file => {
             const reader = new FileReader();
             reader.onloadend = () => {
-                setImagePreviews(prev => [...prev, reader.result as string]);
+                setNewImagePreviews(prev => [...prev, reader.result as string]);
             };
             reader.readAsDataURL(file);
         });
@@ -157,27 +250,51 @@ export const CreatePost: React.FC = () => {
         event.target.value = '';
     };
 
-    const handleRemoveImage = (index: number) => {
-        const updatedImages = uploadedImages.filter((_, i) => i !== index);
-        const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
+    const handleRemoveImage = (index: number, isExisting: boolean) => {
+        if (isExisting) {
+            // Remove from existing images (URLs)
+            const updatedExisting = existingImages.filter((_, i) => i !== index);
+            setExistingImages(updatedExisting);
+        } else {
+            // Remove from new images (Files)
+            const adjustedIndex = index - existingImages.length;
+            const updatedNewImages = newImages.filter((_, i) => i !== adjustedIndex);
+            const updatedPreviews = newImagePreviews.filter((_, i) => i !== adjustedIndex);
 
-        setUploadedImages(updatedImages);
-        setImagePreviews(updatedPreviews);
-        form.setValue('images', updatedImages);
+            setNewImages(updatedNewImages);
+            setNewImagePreviews(updatedPreviews);
+            form.setValue('images', updatedNewImages);
+        }
     };
 
-    const onSubmit = async (data: CreatePostFormData) => {
-        console.log('Create post data:', data);
-        // TODO: Implement API call to create post
+    const onSubmit = async (data: EditPostFormData) => {
+        console.log('Edit post data:', data);
+        console.log('Existing images (URLs):', existingImages);
+        console.log('New images (Files):', newImages);
+
+        // TODO: Implement API call to update post
+        // Send both existingImages (URLs to keep) and newImages (Files to upload)
+        alert('Cập nhật tin đăng thành công!');
+        navigate('/tin-dang');
     };
+
+    if (isLoading) {
+        return (
+            <div className="max-w-5xl mx-auto space-y-6">
+                <div className="bg-white rounded-lg shadow-md p-6 text-center">
+                    <p className="text-gray-600">Đang tải dữ liệu...</p>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="max-w-5xl mx-auto space-y-6">
             {/* Header */}
             <div className="bg-white rounded-lg shadow-md p-6">
-                <h1 className="text-3xl font-semibold mb-2">Đăng tin mới</h1>
+                <h1 className="text-3xl font-semibold mb-2">Chỉnh sửa tin đăng</h1>
                 <p className="text-gray-600">
-                    Điền thông tin chi tiết về bất động sản của bạn
+                    Cập nhật thông tin chi tiết về bất động sản của bạn
                 </p>
             </div>
 
@@ -1013,12 +1130,13 @@ export const CreatePost: React.FC = () => {
                             control={form.control}
                             name="images"
                             rules={{
-                                validate: (value) => {
-                                    if (!value || value.length === 0) {
-                                        return 'Vui lòng tải lên ít nhất 1 ảnh';
+                                validate: () => {
+                                    const totalImages = existingImages.length + newImages.length;
+                                    if (totalImages === 0) {
+                                        return 'Vui lòng giữ lại hoặc tải lên ít nhất 1 ảnh';
                                     }
-                                    if (value.length > 10) {
-                                        return 'Chỉ được tải lên tối đa 10 ảnh';
+                                    if (totalImages > 10) {
+                                        return 'Chỉ được có tối đa 10 ảnh';
                                     }
                                     return true;
                                 }
@@ -1029,15 +1147,15 @@ export const CreatePost: React.FC = () => {
                                         <div className="space-y-4">
                                             {/* Image Grid */}
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                                                {/* Uploaded Images */}
-                                                {imagePreviews.map((preview, index) => (
+                                                {/* Existing Images from API (URLs) */}
+                                                {existingImages.map((imageUrl, index) => (
                                                     <div
-                                                        key={index}
+                                                        key={`existing-${index}`}
                                                         className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 group"
                                                     >
                                                         <img
-                                                            src={preview}
-                                                            alt={`Preview ${index + 1}`}
+                                                            src={imageUrl}
+                                                            alt={`Existing ${index + 1}`}
                                                             className="w-full h-full object-cover"
                                                         />
                                                         {/* Image number badge */}
@@ -1047,7 +1165,33 @@ export const CreatePost: React.FC = () => {
                                                         {/* Remove button */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRemoveImage(index)}
+                                                            onClick={() => handleRemoveImage(index, true)}
+                                                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                        >
+                                                            <X className="w-4 h-4" />
+                                                        </button>
+                                                    </div>
+                                                ))}
+
+                                                {/* New Uploaded Images (Files) */}
+                                                {newImagePreviews.map((preview, index) => (
+                                                    <div
+                                                        key={`new-${index}`}
+                                                        className="relative aspect-square rounded-lg overflow-hidden border-2 border-blue-300 group"
+                                                    >
+                                                        <img
+                                                            src={preview}
+                                                            alt={`New ${index + 1}`}
+                                                            className="w-full h-full object-cover"
+                                                        />
+                                                        {/* Image number badge */}
+                                                        <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
+                                                            Mới {existingImages.length + index + 1}
+                                                        </div>
+                                                        {/* Remove button */}
+                                                        <button
+                                                            type="button"
+                                                            onClick={() => handleRemoveImage(existingImages.length + index, false)}
                                                             className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                                                         >
                                                             <X className="w-4 h-4" />
@@ -1056,7 +1200,7 @@ export const CreatePost: React.FC = () => {
                                                 ))}
 
                                                 {/* Upload Button */}
-                                                {uploadedImages.length < 10 && (
+                                                {(existingImages.length + newImages.length) < 10 && (
                                                     <label
                                                         className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#008DDA] cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
                                                     >
@@ -1075,7 +1219,7 @@ export const CreatePost: React.FC = () => {
                                                                 Tải ảnh lên
                                                             </p>
                                                             <p className="text-xs text-gray-500 mt-1">
-                                                                {uploadedImages.length}/10
+                                                                {existingImages.length + newImages.length}/10
                                                             </p>
                                                         </div>
                                                     </label>
@@ -1093,6 +1237,7 @@ export const CreatePost: React.FC = () => {
                                                             <li>Kích thước tối đa: 5MB/ảnh</li>
                                                             <li>Ảnh đầu tiên sẽ là ảnh đại diện</li>
                                                             <li>Nên chụp ảnh rõ nét, đầy đủ góc nhìn</li>
+                                                            <li>Ảnh cũ có viền xám, ảnh mới có viền xanh</li>
                                                         </ul>
                                                     </div>
                                                 </div>
@@ -1100,11 +1245,16 @@ export const CreatePost: React.FC = () => {
 
                                             {/* Image count display */}
                                             <div className="flex items-center justify-between text-sm">
-                                                <span className="text-gray-600">
-                                                    Đã tải: <span className="font-semibold text-[#008DDA]">{uploadedImages.length}</span> ảnh
-                                                </span>
+                                                <div className="flex items-center gap-4">
+                                                    <span className="text-gray-600">
+                                                        Tổng: <span className="font-semibold text-[#008DDA]">{existingImages.length + newImages.length}</span> ảnh
+                                                    </span>
+                                                    <span className="text-gray-500">
+                                                        (Cũ: {existingImages.length}, Mới: {newImages.length})
+                                                    </span>
+                                                </div>
                                                 <span className="text-gray-500">
-                                                    Còn lại: {10 - uploadedImages.length} ảnh
+                                                    Còn lại: {10 - existingImages.length - newImages.length} ảnh
                                                 </span>
                                             </div>
                                         </div>
@@ -1119,13 +1269,13 @@ export const CreatePost: React.FC = () => {
                     <div className="sticky bottom-0 left-0 right-0 bg-white border-t shadow-lg rounded-lg p-4 z-50">
                         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
                             <p className="text-sm text-gray-600 hidden sm:block">
-                                Vui lòng kiểm tra kỹ thông tin trước khi đăng tin
+                                Vui lòng kiểm tra kỹ thông tin trước khi cập nhật
                             </p>
                             <Button
                                 type="submit"
                                 className="cursor-pointer w-full sm:w-auto px-8 py-6 text-base font-semibold transition-all duration-200 bg-[#008DDA] hover:bg-[#0064A6] shadow-md hover:shadow-lg"
                             >
-                                Đăng tin
+                                Cập nhật tin đăng
                             </Button>
                         </div>
                     </div>

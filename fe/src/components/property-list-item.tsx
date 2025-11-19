@@ -37,7 +37,7 @@ export const PropertyListItem = ({
 
     return (
         <Link
-            to={`/property/${id}`}
+            to={`/bat-dong-san/${id}`}
             className="group flex gap-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-3"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}

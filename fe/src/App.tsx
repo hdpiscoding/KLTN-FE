@@ -25,6 +25,7 @@ import {FavoritePosts} from "@/pages/FavoritePosts.tsx";
 import {UserProfile} from "@/pages/UserProfile.tsx";
 import {ChangePassword} from "@/pages/ChangePassword.tsx";
 import {PropertyDetail} from "@/pages/PropertyDetail.tsx";
+import {EditPost} from "@/pages/EditPost.tsx";
 
 function App() {
 
@@ -62,6 +63,7 @@ function App() {
                   <Route path="/" element={<UserLayout/>}>
                       <Route path="/tin-dang" element={<MyPosts/>}/>
                       <Route path="/dang-tin" element={<CreatePost/>}/>
+                      <Route path="/bat-dong-san/:id/chinh-sua" element={<EditPost/>}/>
                       <Route path="/tin-yeu-thich" element={<FavoritePosts/>}/>
                       <Route path="/thong-tin-ca-nhan" element={<UserProfile/>}/>
                       <Route path="/doi-mat-khau" element={<ChangePassword/>}/>
