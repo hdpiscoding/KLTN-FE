@@ -24,7 +24,7 @@ export const PropertyDetail: React.FC = () => {
     const [isFavorited, setIsFavorited] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(1);
     const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-    const staticMarkerMapKey = import.meta.env.VITE_STATIC_MARKER_MAP_KEY;
+    const staticMarkerMapKey = import.meta.env.VITE_MAPTILES_KEY;
 
     // Sample data - TODO: Replace with real API call
     const property = {

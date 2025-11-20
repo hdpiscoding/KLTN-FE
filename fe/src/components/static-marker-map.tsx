@@ -64,7 +64,7 @@ const StaticMarkerMap: React.FC<GoongMapProps> = ({
                     offsetLeft={-25}
                     offsetTop={-50}
                 >
-                    <MapPin size={40} className="text-red-600 fill-red-500 drop-shadow-2xl" />
+                    <MapPin size={36} className="text-red-600 fill-red-500 drop-shadow-2xl" />
                 </Marker>
             </ReactMapGL>
 
