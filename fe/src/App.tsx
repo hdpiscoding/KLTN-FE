@@ -26,6 +26,7 @@ import {UserProfile} from "@/pages/UserProfile.tsx";
 import {ChangePassword} from "@/pages/ChangePassword.tsx";
 import {PropertyDetail} from "@/pages/PropertyDetail.tsx";
 import {EditPost} from "@/pages/EditPost.tsx";
+import '@goongmaps/goong-js/dist/goong-js.css';
 
 function App() {
 

@@ -16,12 +16,15 @@ import {PropertyTypeFilter} from "@/components/property-type-filter.tsx";
 import {PropertyDistrictFilter} from "@/components/property-district-filter.tsx";
 import {formatDate} from "@/utils/generalFormat.ts";
 import {PropertyCardItem} from '@/components/property-card-item';
+import StaticMarkerMap from "@/components/static-marker-map.tsx";
+import type {Location} from "@/types/location.ts";
 
 export const PropertyDetail: React.FC = () => {
     const {id} = useParams();
     const [isFavorited, setIsFavorited] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(1);
     const [carouselApi, setCarouselApi] = useState<CarouselApi>();
+    const staticMarkerMapKey = import.meta.env.VITE_STATIC_MARKER_MAP_KEY;
 
     // Sample data - TODO: Replace with real API call
     const property = {
@@ -59,6 +62,16 @@ export const PropertyDetail: React.FC = () => {
             avatar: 'https://ui-avatars.com/api/?name=Nguyen+Van+A&background=008DDA&color=fff',
             phone: '0123456789',
         },
+        location: {
+            latitude: 21.028511,
+            longitude: 105.804817,
+        }
+    };
+
+    const location: Location = {
+        latitude: property.location.latitude,
+        longitude: property.location.longitude,
+        address: property.address,
     };
 
     // Suggested properties data
@@ -356,36 +369,12 @@ export const PropertyDetail: React.FC = () => {
                             <h2 className="text-xl font-semibold text-gray-900 mb-4">
                                 Vị trí trên bản đồ
                             </h2>
-                            <div
-                                className="w-full h-96 rounded-lg bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center relative overflow-hidden border border-gray-200">
-                                {/* Placeholder gradient background */}
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-gray-100"></div>
-
-                                <div className="relative z-10 flex flex-col items-center gap-4">
-                                    <div
-                                        className="w-20 h-20 rounded-full bg-blue-200 flex items-center justify-center">
-                                        <MapPin className="w-10 h-10 text-blue-600"/>
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-gray-700 font-medium text-lg">
-                                            Google Maps sẽ được tích hợp tại đây
-                                        </p>
-                                        <p className="text-sm text-gray-500 mt-2">
-                                            {property.address}
-                                        </p>
-                                    </div>
-                                </div>
-
-                                {/* Decorative grid pattern */}
-                                <div className="absolute inset-0 opacity-5">
-                                    <div className="w-full h-full" style={{
-                                        backgroundImage: `
-                                            linear-gradient(to right, #008DDA 1px, transparent 1px),
-                                            linear-gradient(to bottom, #008DDA 1px, transparent 1px)
-                                        `,
-                                        backgroundSize: '40px 40px'
-                                    }}></div>
-                                </div>
+                            <div className="w-full h-96 rounded-lg bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center relative overflow-hidden border border-gray-200">
+                                <StaticMarkerMap
+                                    location={location}
+                                    goongApiKey={staticMarkerMapKey}
+                                    defaultZoom={16}
+                                />
                             </div>
                         </div>
 
