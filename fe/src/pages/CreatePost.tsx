@@ -12,6 +12,8 @@ import { PROPERTY_TYPES } from '@/constants/propertyTypes';
 import { LEGAL_DOCS } from '@/constants/legalDocs';
 import { PROPERTY_FURNITURE } from '@/constants/propertyFurniture';
 import { PROPERTY_DIRECTIONS } from '@/constants/propertyDirections';
+import DraggableMarkerMap from '@/components/draggable-marker-map';
+import type { Location } from '@/types/location.d.ts';
 
 type DemandType = 'buy' | 'rent';
 
@@ -46,9 +48,16 @@ export const CreatePost: React.FC = () => {
     const [selectedDemand, setSelectedDemand] = useState<DemandType>('buy');
     const [selectedDistrict, setSelectedDistrict] = useState<string>('');
     const [selectedWard, setSelectedWard] = useState<string>('');
-    const [mapLocation, setMapLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [mapLocation, setMapLocation] = useState<Location>({
+        latitude: 10.8231,
+        longitude: 106.6297,
+        address: 'TP. Hồ Chí Minh'
+    });
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+
+    // Goong API Key
+    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
 
     const form = useForm<CreatePostFormData>({
         defaultValues: {
@@ -88,7 +97,12 @@ export const CreatePost: React.FC = () => {
     const handleDistrictChange = (districtId: string) => {
         setSelectedDistrict(districtId);
         setSelectedWard(''); // Reset ward state
-        setMapLocation(null); // Reset map location
+        // Reset map location to default HCM center
+        setMapLocation({
+            latitude: 10.8231,
+            longitude: 106.6297,
+            address: 'TP. Hồ Chí Minh'
+        });
         form.setValue('district', districtId);
         form.setValue('ward', ''); // Reset ward when district changes
         form.setValue('latitude', null);
@@ -100,13 +114,10 @@ export const CreatePost: React.FC = () => {
         form.setValue('ward', wardId);
     };
 
-    const handleMapLocationSelect = () => {
-        // TODO: Implement actual map location picker
-        // For now, set a dummy location
-        const dummyLocation = { lat: 10.8231, lng: 106.6297 }; // Ho Chi Minh City center
-        setMapLocation(dummyLocation);
-        form.setValue('latitude', dummyLocation.lat);
-        form.setValue('longitude', dummyLocation.lng);
+    const handleLocationChange = (newLocation: Location) => {
+        setMapLocation(newLocation);
+        form.setValue('latitude', newLocation.latitude);
+        form.setValue('longitude', newLocation.longitude);
     };
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -431,81 +442,27 @@ export const CreatePost: React.FC = () => {
                                                         Chọn vị trí trên bản đồ <span className="text-red-500">*</span>
                                                     </FormLabel>
                                                     <p className="text-sm text-gray-500 mt-1">
-                                                        Đánh dấu chính xác vị trí bất động sản trên bản đồ
+                                                        Kéo thả marker màu đỏ để chọn vị trí chính xác
                                                     </p>
                                                 </div>
-                                                {mapLocation && (
+                                                {form.watch('latitude') !== null && form.watch('longitude') !== null && (
                                                     <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
                                                         <MapPin className="w-4 h-4" />
-                                                        <span className="text-sm font-medium">Đã chọn vị trí</span>
+                                                        <span className="text-sm font-medium">Vị trí đã được chọn</span>
                                                     </div>
                                                 )}
                                             </div>
                                             <FormControl>
-                                                <div className="space-y-3">
-                                                    {/* Map Placeholder */}
-                                                    <div
-                                                        className={cn(
-                                                            "w-full h-96 rounded-lg border-2 flex flex-col items-center justify-center relative overflow-hidden",
-                                                            mapLocation
-                                                                ? "border-green-300 bg-green-50"
-                                                                : "border-gray-300 bg-gray-50"
-                                                        )}
-                                                    >
-                                                        {/* Placeholder gradient background */}
-                                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 to-gray-100"></div>
-
-                                                        <div className="relative z-10 flex flex-col items-center gap-4">
-                                                            <div className={cn(
-                                                                "w-20 h-20 rounded-full flex items-center justify-center",
-                                                                mapLocation ? "bg-green-200" : "bg-blue-200"
-                                                            )}>
-                                                                <MapPin className={cn(
-                                                                    "w-10 h-10",
-                                                                    mapLocation ? "text-green-600" : "text-blue-600"
-                                                                )} />
-                                                            </div>
-                                                            <div className="text-center">
-                                                                <p className="text-gray-700 font-medium text-lg">
-                                                                    {mapLocation
-                                                                        ? "Vị trí đã được chọn"
-                                                                        : "Google Maps sẽ được tích hợp tại đây"
-                                                                    }
-                                                                </p>
-                                                                {mapLocation && (
-                                                                    <p className="text-sm text-gray-500 mt-2">
-                                                                        Tọa độ: {mapLocation.lat.toFixed(6)}, {mapLocation.lng.toFixed(6)}
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                        </div>
-
-                                                        {/* Decorative grid pattern */}
-                                                        <div className="absolute inset-0 opacity-5">
-                                                            <div className="w-full h-full" style={{
-                                                                backgroundImage: `
-                                                                    linear-gradient(to right, #008DDA 1px, transparent 1px),
-                                                                    linear-gradient(to bottom, #008DDA 1px, transparent 1px)
-                                                                `,
-                                                                backgroundSize: '40px 40px'
-                                                            }}></div>
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Select Location Button */}
-                                                    <Button
-                                                        type="button"
-                                                        onClick={handleMapLocationSelect}
-                                                        className={cn(
-                                                            "w-full transition-colors duration-200 cursor-pointer",
-                                                            mapLocation
-                                                                ? "bg-green-600 hover:bg-green-700"
-                                                                : "bg-[#008DDA] hover:bg-[#0064A6]"
-                                                        )}
-                                                    >
-                                                        <MapPin className="w-4 h-4 mr-2" />
-                                                        {mapLocation ? "Chọn lại vị trí" : "Chọn vị trí trên bản đồ"}
-                                                    </Button>
+                                                <div className="rounded-lg overflow-hidden border-2 border-gray-300">
+                                                    {/* Draggable Marker Map */}
+                                                    <DraggableMarkerMap
+                                                        location={mapLocation}
+                                                        goongApiKey={GOONG_API_KEY}
+                                                        onLocationChange={handleLocationChange}
+                                                        defaultZoom={16}
+                                                        height="500px"
+                                                        showNavigation={true}
+                                                    />
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
