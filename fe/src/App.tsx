@@ -27,6 +27,7 @@ import {ChangePassword} from "@/pages/ChangePassword.tsx";
 import {PropertyDetail} from "@/pages/PropertyDetail.tsx";
 import {EditPost} from "@/pages/EditPost.tsx";
 import '@goongmaps/goong-js/dist/goong-js.css';
+import {RentProperty} from "@/pages/RentProperty.tsx";
 
 function App() {
 
@@ -55,6 +56,7 @@ function App() {
                       <Route path="/chinh-sach-bao-mat" element={<PrivacyPolicy/>}/>
                       <Route path="/quy-dinh-dang-tin" element={<PostingRegulations/>}/>
                       <Route path="/mua-nha" element={<BuyProperty/>}/>
+                      <Route path="/thue-nha" element={<RentProperty/>}/>
                       <Route path="/bat-dong-san/:id" element={<PropertyDetail/>}/>
                       <Route path="/dinh-gia-nha/dia-chi" element={<EstimatePropertyAddress/>}/>
                       <Route path="/dinh-gia-nha/ban-do" element={<EstimatePropertyMap/>}/>
