@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Search, MapIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -167,16 +167,30 @@ export const RentProperty: React.FC = () => {
     };
 
     const handleToggleMap = () => {
-        const newMapState = !isMapOpen;
-        setIsMapOpen(newMapState);
+        setIsMapOpen(!isMapOpen);
+    };
 
-        // Toggle body overflow when map opens/closes
-        if (newMapState) {
+    // Cleanup effect: Reset body overflow when component unmounts
+    useEffect(() => {
+        return () => {
+            // Always reset body overflow when leaving this page
+            document.body.style.overflow = '';
+        };
+    }, []);
+
+    // Effect to handle body overflow based on map state
+    useEffect(() => {
+        if (isMapOpen) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
         }
-    };
+
+        // Cleanup when effect re-runs or component unmounts
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isMapOpen]);
 
     return (
         <div className={`min-h-screen bg-gray-50 ${isMapOpen ? 'h-screen overflow-hidden' : ''}`}>
