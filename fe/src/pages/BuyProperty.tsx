@@ -19,6 +19,7 @@ import { PropertyDistrictFilter } from '@/components/property-district-filter';
 import {ControlledPagination} from "@/components/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
 import {PropertyCardItem} from "@/components/property-card-item.tsx";
+import MultipleMarkerMap, { type PropertyMarker } from '@/components/multiple-marker-map';
 
 export const BuyProperty: React.FC = () => {
     const [searchValue, setSearchValue] = useState('');
@@ -27,6 +28,10 @@ export const BuyProperty: React.FC = () => {
     const [priceRange, setPriceRange] = useState('all');
     const [sortCriteria, setSortCriteria] = useState('default');
     const [currentPage, setCurrentPage] = useState(1);
+    const [isMapOpen, setIsMapOpen] = useState(false);
+
+    // Goong API Key
+    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
 
     // Sample data for properties
     const sampleProperties = [
@@ -38,6 +43,11 @@ export const BuyProperty: React.FC = () => {
             address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop",
             createdAt: "2025-11-05T09:00:00.000Z",
+            location: {
+                latitude: 10.8231,
+                longitude: 106.6297,
+                address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM"
+            }
         },
         {
             id: "2",
@@ -47,6 +57,11 @@ export const BuyProperty: React.FC = () => {
             address: "Palm City, Quận 9, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
             createdAt: "2025-11-06T15:30:00.000Z",
+            location: {
+                latitude: 10.8545,
+                longitude: 106.6296,
+                address: "Palm City, Quận 9, TP.HCM"
+            }
         },
         {
             id: "3",
@@ -56,6 +71,11 @@ export const BuyProperty: React.FC = () => {
             address: "Masteri Thảo Điền, Quận 2, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=2084&auto=format&fit=crop",
             createdAt: "2025-11-07T08:15:00.000Z",
+            location: {
+                latitude: 10.7970,
+                longitude: 106.7215,
+                address: "Masteri Thảo Điền, Quận 2, TP.HCM"
+            }
         },
         {
             id: "4",
@@ -65,6 +85,11 @@ export const BuyProperty: React.FC = () => {
             address: "Thảo Điền, Quận 2, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop",
             createdAt: "2025-11-07T10:45:00.000Z",
+            location: {
+                latitude: 10.8050,
+                longitude: 106.7350,
+                address: "Thảo Điền, Quận 2, TP.HCM"
+            }
         },
         {
             id: "5",
@@ -74,6 +99,11 @@ export const BuyProperty: React.FC = () => {
             address: "Lumière Riverside, Quận 2, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1512916194211-3f2b7f5f7de3?q=80&w=2070&auto=format&fit=crop",
             createdAt: "2025-11-06T11:20:00.000Z",
+            location: {
+                latitude: 10.7820,
+                longitude: 106.7020,
+                address: "Lumière Riverside, Quận 2, TP.HCM"
+            }
         },
         {
             id: "6",
@@ -83,6 +113,11 @@ export const BuyProperty: React.FC = () => {
             address: "Phú Mỹ Hưng, Quận 7, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
             createdAt: "2025-11-05T14:10:00.000Z",
+            location: {
+                latitude: 10.7350,
+                longitude: 106.7123,
+                address: "Phú Mỹ Hưng, Quận 7, TP.HCM"
+            }
         },
         {
             id: "7",
@@ -92,6 +127,11 @@ export const BuyProperty: React.FC = () => {
             address: "The Gold View, Quận 4, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop",
             createdAt: "2025-11-08T09:00:00.000Z",
+            location: {
+                latitude: 10.7626,
+                longitude: 106.7040,
+                address: "The Gold View, Quận 4, TP.HCM"
+            }
         },
         {
             id: "8",
@@ -101,8 +141,23 @@ export const BuyProperty: React.FC = () => {
             address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM",
             imageUrl: "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop",
             createdAt: "2025-11-08T09:00:00.000Z",
+            location: {
+                latitude: 10.7900,
+                longitude: 106.7150,
+                address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM"
+            }
         },
     ];
+
+    // Convert sampleProperties to PropertyMarker format for map
+    const propertyMarkers: PropertyMarker[] = sampleProperties.map(property => ({
+        id: property.id,
+        location: property.location,
+        title: property.title,
+        image: property.imageUrl,
+        price: property.price,
+        area: property.area
+    }));
 
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -111,16 +166,24 @@ export const BuyProperty: React.FC = () => {
         }
     };
 
-    const handleOpenMap = () => {
-        console.log('Open map view');
+    const handleToggleMap = () => {
+        const newMapState = !isMapOpen;
+        setIsMapOpen(newMapState);
+
+        // Toggle body overflow when map opens/closes
+        if (newMapState) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            <div className="max-w-7xl mx-auto px-4 py-6">
-                <div className="flex flex-col lg:flex-row gap-6">
-                    {/* Main Content - 75% */}
-                    <div className="flex-1 lg:w-3/4">
+        <div className={`min-h-screen bg-gray-50 ${isMapOpen ? 'h-screen overflow-hidden' : ''}`}>
+            <div className={isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}>
+                <div className="flex flex-col lg:flex-row lg:gap-6">
+                    {/* Main Content - Dynamic width based on map state */}
+                    <div className={isMapOpen ? "lg:w-[40%] overflow-y-auto px-4 py-6 h-screen" : "flex-1 lg:w-3/4"}>
                         {/* Search and Map Button */}
                         <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
                             <div className="flex flex-col sm:flex-row gap-3">
@@ -136,12 +199,12 @@ export const BuyProperty: React.FC = () => {
                                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                                 </div>
                                 <Button
-                                    onClick={handleOpenMap}
+                                    onClick={handleToggleMap}
                                     variant="outline"
                                     className="flex items-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
                                 >
                                     <MapIcon className="w-4 h-4" />
-                                    Mở bản đồ
+                                    {isMapOpen ? 'Đóng bản đồ' : 'Mở bản đồ'}
                                 </Button>
                             </div>
                         </div>
@@ -196,6 +259,7 @@ export const BuyProperty: React.FC = () => {
                             </div>
                         </div>
 
+
                         {/* Title */}
                         <h2 className="text-2xl font-semibold text-gray-900 my-8">
                             Mua bán nhà đất ở Thành phố Hồ Chí Minh
@@ -234,14 +298,15 @@ export const BuyProperty: React.FC = () => {
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center">
+                        <div className="flex justify-center mb-6">
                             <ControlledPagination
                                 currentPage={currentPage}
                                 onPageChange={setCurrentPage}
                                 totalPages={10}/>
                         </div>
 
-                        <section className="py-12 px-4 max-w-7xl mx-auto">
+                        {/* Suggested Properties - Always show */}
+                        <section className={isMapOpen ? "py-8" : "py-12 px-4 max-w-7xl mx-auto"}>
                             <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-8">
                                 Bất động sản gợi ý
                             </h2>
@@ -256,7 +321,7 @@ export const BuyProperty: React.FC = () => {
                                 <div className="relative">
                                     <CarouselContent className="-ml-2 md:-ml-4">
                                         {sampleProperties.map((property) => (
-                                            <CarouselItem key={property.id} className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/2 lg:basis-1/3">
+                                            <CarouselItem key={property.id} className={`pl-2 md:pl-4 ${isMapOpen ? 'basis-full md:basis-1/2 lg:basis-1/2' : 'sm:basis-1/2 md:basis-1/2 lg:basis-1/3'}`}>
                                                 <div className="h-[420px]"> {/* Fixed height wrapper */}
                                                     <PropertyCardItem {...property} />
                                                 </div>
@@ -272,10 +337,25 @@ export const BuyProperty: React.FC = () => {
                         </section>
                     </div>
 
-                    {/* Quick Filter Sidebar - 25% */}
-                    <aside className="lg:w-1/4 space-y-4 hidden md:block">
-                        <PropertyTypeFilter />
-                        <PropertyDistrictFilter />
+                    {/* Right Sidebar - Conditional: Map (60%) or Quick Filters (25%) */}
+                    <aside className={isMapOpen ? "lg:w-[60%] hidden md:block" : "lg:w-1/4 hidden md:block"}>
+                        {isMapOpen ? (
+                            /* Map View - Fixed full height on right side */
+                            <div className="fixed top-0 right-0 h-screen" style={{ width: '60%' }}>
+                                <MultipleMarkerMap
+                                    properties={propertyMarkers}
+                                    goongApiKey={GOONG_API_KEY}
+                                    defaultZoom={12}
+                                    showNavigation={true}
+                                />
+                            </div>
+                        ) : (
+                            /* Quick Filter Sidebar */
+                            <div className="space-y-4">
+                                <PropertyTypeFilter />
+                                <PropertyDistrictFilter />
+                            </div>
+                        )}
                     </aside>
                 </div>
             </div>
