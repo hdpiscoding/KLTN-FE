@@ -388,7 +388,7 @@ export const Home: React.FC = () => {
 
                 <div className="text-center mt-8">
                     <button
-                        onClick={() => console.log('View all sale properties')}
+                        onClick={() => navigate('/mua-nha')}
                         className="px-6 py-3 bg-white text-[#008DDA] border-2 border-[#008DDA] rounded-lg font-medium hover:bg-[#008DDA] hover:text-white transition-colors duration-200 cursor-pointer"
                     >
                         Xem tất cả
@@ -430,7 +430,7 @@ export const Home: React.FC = () => {
 
                 <div className="text-center mt-8">
                     <button
-                        onClick={() => console.log('View all rent properties')}
+                        onClick={() => navigate('/thue-nha')}
                         className="px-6 py-3 bg-white text-[#008DDA] border-2 border-[#008DDA] rounded-lg font-medium hover:bg-[#008DDA] hover:text-white transition-colors duration-200 cursor-pointer"
                     >
                         Xem tất cả
