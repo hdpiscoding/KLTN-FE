@@ -1,4 +1,4 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef, useCallback, useMemo} from 'react';
 import { useForm } from 'react-hook-form';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -6,25 +6,26 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
-import { Home, Key, MapPin, Upload, Image as ImageIcon, X } from 'lucide-react';
+import { Home, Key, MapPin, Upload, Image as ImageIcon, X, Loader2, AlertCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { districtWards } from '@/constants/districtWard.ts';
 import { PROPERTY_TYPES } from '@/constants/propertyTypes';
 import { LEGAL_DOCS } from '@/constants/legalDocs';
 import { PROPERTY_FURNITURE } from '@/constants/propertyFurniture';
 import { PROPERTY_DIRECTIONS } from '@/constants/propertyDirections';
 import DraggableMarkerMap from '@/components/draggable-marker-map';
 import type { Location } from '@/types/location.d.ts';
+import { useDebounce } from 'use-debounce';
+import type { PlacePrediction } from '@/types/place-prediction';
+import {calculateDistance} from "@/utils/calculateDistance.ts";
+import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
+import {toast} from "react-toastify";
+
 
 type DemandType = 'buy' | 'rent';
 
 type EditPostFormData = {
     demand: DemandType;
-    province: string;
-    district: string;
-    ward: string;
-    street: string;
-    houseNumber: string;
+    address: string;
     latitude: number | null;
     longitude: number | null;
     propertyType: string;
@@ -49,13 +50,8 @@ export const EditPost: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const [selectedDemand, setSelectedDemand] = useState<DemandType>('buy');
-    const [selectedDistrict, setSelectedDistrict] = useState<string>('');
-    const [selectedWard, setSelectedWard] = useState<string>('');
-    const [mapLocation, setMapLocation] = useState<Location>({
-        latitude: 10.8231,
-        longitude: 106.6297,
-        address: 'TP. Hồ Chí Minh'
-    });
+    const [mapLocation, setMapLocation] = useState<Location | null>(null);
+    const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
 
     // Separate state for existing images (URLs from API) and new uploads (Files)
     const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -63,17 +59,23 @@ export const EditPost: React.FC = () => {
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
+    // Autocomplete states
+    const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
+    const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [addressSelected, setAddressSelected] = useState(false);
+    const suggestionRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
     // Goong API Key
-    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
+    const GOONG_MAP_KEY = import.meta.env.VITE_MAPTILES_KEY;
+    const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
     const form = useForm<EditPostFormData>({
         defaultValues: {
             demand: 'buy',
-            province: 'TP. Hồ Chí Minh',
-            district: '',
-            ward: '',
-            street: '',
-            houseNumber: '',
+            address: '',
             latitude: null,
             longitude: null,
             propertyType: '',
@@ -95,30 +97,141 @@ export const EditPost: React.FC = () => {
         mode: 'onSubmit',
     });
 
-    // Get wards based on selected district
-    const getWardsByDistrict = (districtId: string) => {
-        const district = districtWards.find(d => d.id === districtId);
-        return district?.ward || [];
+    // Watch address value
+    const addressValue = form.watch('address');
+
+    // Debounce address value with 300ms delay
+    const [debouncedAddress] = useDebounce(addressValue, 300);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node) &&
+                inputRef.current && !inputRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const fetchAutocompleteSuggestions = useCallback(async (input: string) => {
+        setIsLoadingAddress(true);
+        try {
+            const response = await fetch(
+                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch suggestions');
+
+            const data = await response.json();
+
+            if (data.predictions && data.predictions.length > 0) {
+                setSuggestions(data.predictions);
+                setShowSuggestions(true);
+                setSelectedIndex(-1);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Error fetching autocomplete:', error);
+            setSuggestions([]);
+        } finally {
+            setIsLoadingAddress(false);
+        }
+    }, [GOONG_API_KEY]);
+
+    // Fetch autocomplete suggestions when debounced address changes
+    useEffect(() => {
+        if (!debouncedAddress || debouncedAddress.length < 3 || addressSelected) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        fetchAutocompleteSuggestions(debouncedAddress);
+    }, [debouncedAddress, fetchAutocompleteSuggestions, addressSelected]);
+
+    // Hide map when user manually changes address (not from suggestion)
+    useEffect(() => {
+        if (!addressSelected && mapLocation) {
+            // User is typing or changed the address manually, hide the map
+            setMapLocation(null);
+            setOriginalLocation(null);
+            form.setValue('latitude', null);
+            form.setValue('longitude', null);
+        }
+    }, [addressSelected, mapLocation, form]);
+
+    const fetchPlaceDetail = async (placeId: string) => {
+        setIsLoadingAddress(true);
+        try {
+            const response = await fetch(
+                `https://rsapi.goong.io/Place/Detail?place_id=${encodeURIComponent(placeId)}&api_key=${GOONG_API_KEY}`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch place details');
+
+            const data = await response.json();
+
+            if (data.result && data.result.geometry && data.result.geometry.location) {
+                const { lat, lng } = data.result.geometry.location;
+                const location: Location = {
+                    latitude: lat,
+                    longitude: lng,
+                    address: form.getValues('address')
+                };
+                setMapLocation(location);
+                setOriginalLocation(location);
+                form.setValue('latitude', lat);
+                form.setValue('longitude', lng);
+                return { lat, lng };
+            }
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+            alert('Không thể lấy tọa độ của địa chỉ này');
+        } finally {
+            setIsLoadingAddress(false);
+        }
+        return null;
     };
 
-    const handleDistrictChange = (districtId: string) => {
-        setSelectedDistrict(districtId);
-        setSelectedWard(''); // Reset ward state
-        // Reset map location to default HCM center
-        setMapLocation({
-            latitude: 10.8231,
-            longitude: 106.6297,
-            address: 'TP. Hồ Chí Minh'
-        });
-        form.setValue('district', districtId);
-        form.setValue('ward', ''); // Reset ward when district changes
-        form.setValue('latitude', null);
-        form.setValue('longitude', null);
+    const handleSelectSuggestion = async (prediction: PlacePrediction) => {
+        setAddressSelected(true); // Mark as selected from suggestion
+        form.setValue('address', prediction.description);
+        setShowSuggestions(false);
+        setSuggestions([]);
+
+        // Fetch place details to get coordinates
+        await fetchPlaceDetail(prediction.place_id);
     };
 
-    const handleWardChange = (wardId: string) => {
-        setSelectedWard(wardId);
-        form.setValue('ward', wardId);
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showSuggestions || suggestions.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex(prev =>
+                    prev < suggestions.length - 1 ? prev + 1 : prev
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+                break;
+            case 'Enter':
+                if (selectedIndex >= 0) {
+                    e.preventDefault();
+                    handleSelectSuggestion(suggestions[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                setShowSuggestions(false);
+                break;
+        }
     };
 
     const handleLocationChange = (newLocation: Location) => {
@@ -126,6 +239,20 @@ export const EditPost: React.FC = () => {
         form.setValue('latitude', newLocation.latitude);
         form.setValue('longitude', newLocation.longitude);
     };
+
+    // Calculate distance from original location
+    const distanceFromOriginal = useMemo(() => {
+        if (!originalLocation || !mapLocation) return 0;
+        return calculateDistance(
+            originalLocation.latitude,
+            originalLocation.longitude,
+            mapLocation.latitude,
+            mapLocation.longitude
+        );
+    }, [originalLocation, mapLocation]);
+
+    // Check if location is valid (within 100m)
+    const isLocationValid = distanceFromOriginal <= MAX_DISTANCE_METERS;
 
     // Load post data from API
     useEffect(() => {
@@ -136,14 +263,11 @@ export const EditPost: React.FC = () => {
                 // const response = await fetch(`/api/posts/${id}`);
                 // const data = await response.json();
 
-                // Mock data for now
+                // Mock data for now - simulating API response
                 const mockData = {
                     demand: 'buy' as DemandType,
-                    province: 'TP. Hồ Chí Minh',
-                    district: 'quan_binh_thanh',
-                    ward: 'gia_dinh',
-                    street: 'Nguyễn Hữu Cảnh',
-                    houseNumber: '208',
+                    // Full address from API
+                    address: '208 Nguyễn Hữu Cảnh, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh',
                     latitude: 10.8231,
                     longitude: 106.6297,
                     propertyType: 'canho',
@@ -169,22 +293,22 @@ export const EditPost: React.FC = () => {
 
                 // Set form values
                 setSelectedDemand(mockData.demand);
-                setSelectedDistrict(mockData.district);
-                setSelectedWard(mockData.ward);
-                setMapLocation({
+
+                // Set map location and mark address as selected (from API)
+                const location: Location = {
                     latitude: mockData.latitude,
                     longitude: mockData.longitude,
-                    address: `${mockData.houseNumber} ${mockData.street}, ${mockData.ward}, ${mockData.district}, ${mockData.province}`
-                });
+                    address: mockData.address
+                };
+                setMapLocation(location);
+                setOriginalLocation(location);
+                setAddressSelected(true); // Mark as already selected since it's from API
+
                 setExistingImages(mockData.images);
 
                 form.reset({
                     demand: mockData.demand,
-                    province: mockData.province,
-                    district: mockData.district,
-                    ward: mockData.ward,
-                    street: mockData.street,
-                    houseNumber: mockData.houseNumber,
+                    address: mockData.address,
                     latitude: mockData.latitude,
                     longitude: mockData.longitude,
                     propertyType: mockData.propertyType,
@@ -282,14 +406,9 @@ export const EditPost: React.FC = () => {
         }
     };
 
-    const onSubmit = async (data: EditPostFormData) => {
-        console.log('Edit post data:', data);
-        console.log('Existing images (URLs):', existingImages);
-        console.log('New images (Files):', newImages);
-
+    const onSubmit = async () => {
         // TODO: Implement API call to update post
-        // Send both existingImages (URLs to keep) and newImages (Files to upload)
-        alert('Cập nhật tin đăng thành công!');
+        toast.success('Cập nhật tin đăng thành công!');
         navigate('/tin-dang');
     };
 
@@ -405,180 +524,119 @@ export const EditPost: React.FC = () => {
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <h2 className="text-xl font-semibold mb-4">Địa chỉ <span className="text-red-500">*</span></h2>
                         <p className="text-sm text-gray-500 mb-6">
-                            Vui lòng cung cấp địa chỉ chính xác của bất động sản
+                            Nhập địa chỉ của bất động sản và chọn vị trí chính xác trên bản đồ
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Province/City - Disabled */}
-                            <FormField
-                                control={form.control}
-                                name="province"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tỉnh/Thành phố</FormLabel>
-                                        <Select value={field.value} disabled>
-                                            <FormControl>
-                                                <SelectTrigger className="cursor-not-allowed opacity-75 w-full">
-                                                    <SelectValue placeholder="Chọn tỉnh/thành phố" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* District */}
-                            <FormField
-                                control={form.control}
-                                name="district"
-                                rules={{
-                                    required: 'Vui lòng chọn quận/huyện',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Quận/Huyện <span className="text-red-500">*</span></FormLabel>
-                                        <Select
-                                            value={field.value}
-                                            onValueChange={handleDistrictChange}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                    <SelectValue placeholder="Chọn quận/huyện" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {districtWards.map((district) => (
-                                                    <SelectItem key={district.id} value={district.id}>
-                                                        {district.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Ward */}
-                            <FormField
-                                control={form.control}
-                                name="ward"
-                                rules={{
-                                    required: 'Vui lòng chọn phường/xã',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Phường/Xã <span className="text-red-500">*</span></FormLabel>
-                                        <Select
-                                            value={field.value}
-                                            onValueChange={handleWardChange}
-                                            disabled={!selectedDistrict}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className={cn("cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full",
-                                                    !selectedDistrict && "cursor-not-allowed opacity-50"
-                                                )}>
-                                                    <SelectValue placeholder="Chọn phường/xã" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {getWardsByDistrict(selectedDistrict).map((ward) => (
-                                                    <SelectItem key={ward.id} value={ward.id}>
-                                                        {ward.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            {/* Street */}
-                            <FormField
-                                control={form.control}
-                                name="street"
-                                rules={{
-                                    required: 'Vui lòng nhập tên đường',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Đường <span className="text-red-500">*</span></FormLabel>
-                                        <FormControl>
+                        {/* Address Autocomplete Input */}
+                        <FormField
+                            control={form.control}
+                            name="address"
+                            rules={{
+                                required: "Địa chỉ không được để trống!",
+                            }}
+                            render={({field}) => (
+                                <FormItem className="mb-6">
+                                    <FormLabel className="text-base">Địa chỉ bất động sản</FormLabel>
+                                    <FormControl>
+                                        <div className="relative">
                                             <Input
-                                                placeholder="Nhập tên đường"
-                                                className="focus-visible:ring-[#008DDA]"
+                                                className="focus-visible:ring-[#008DDA] h-11"
+                                                placeholder="Nhập địa chỉ (VD: 123 Nguyễn Huệ, Quận 1, TP.HCM)"
                                                 {...field}
+                                                ref={(e) => {
+                                                    field.ref(e);
+                                                    inputRef.current = e;
+                                                }}
+                                                onKeyDown={handleKeyDown}
+                                                autoComplete="off"
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setAddressSelected(false);
+                                                    // Hide map immediately when user changes input
+                                                    if (mapLocation) {
+                                                        setMapLocation(null);
+                                                        setOriginalLocation(null);
+                                                        form.setValue('latitude', null);
+                                                        form.setValue('longitude', null);
+                                                    }
+                                                }}
                                             />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
 
-                            {/* House Number */}
-                            <FormField
-                                control={form.control}
-                                name="houseNumber"
-                                rules={{
-                                    required: 'Vui lòng nhập số nhà',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Số nhà <span className="text-red-500">*</span></FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Nhập số nhà"
-                                                className="focus-visible:ring-[#008DDA]"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
+                                            {/* Loading indicator */}
+                                            {isLoadingAddress && (
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <Loader2 className="w-5 h-5 animate-spin text-[#008DDA]" />
+                                                </div>
+                                            )}
 
-                        {/* Map Location Picker - Only shown when district and ward are selected */}
-                        {selectedDistrict && selectedWard && (
-                            <div className="mt-6 pt-6 border-t">
+                                            {/* Autocomplete suggestions dropdown */}
+                                            {showSuggestions && suggestions.length > 0 && (
+                                                <div
+                                                    ref={suggestionRef}
+                                                    className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+                                                >
+                                                    {suggestions.map((prediction, index) => (
+                                                        <div
+                                                            key={prediction.place_id}
+                                                            onClick={() => handleSelectSuggestion(prediction)}
+                                                            className={cn(
+                                                                "flex items-start gap-3 p-3 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0",
+                                                                selectedIndex === index
+                                                                    ? "bg-blue-50"
+                                                                    : "hover:bg-gray-50"
+                                                            )}
+                                                        >
+                                                            <MapPin className="w-5 h-5 text-[#008DDA] flex-shrink-0 mt-0.5" />
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900">
+                                                                    {prediction.structured_formatting.main_text}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                                                    {prediction.structured_formatting.secondary_text}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage />
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* Map Location Picker - Only shown when address is selected */}
+                        {mapLocation && (
+                            <div className="mt-6 pt-6 border-t space-y-4">
+                                <div>
+                                    <h3 className="text-base font-semibold mb-1">
+                                        Chọn vị trí chính xác trên bản đồ <span className="text-red-500">*</span>
+                                    </h3>
+                                </div>
+
+                                {/* Map */}
                                 <FormField
                                     control={form.control}
                                     name="latitude"
                                     rules={{
                                         required: 'Vui lòng chọn vị trí trên bản đồ',
-                                        validate: (value) => value !== null || 'Vui lòng chọn vị trí trên bản đồ'
+                                        validate: (value) => {
+                                            if (value === null) return 'Vui lòng chọn vị trí trên bản đồ';
+                                            if (!isLocationValid) return 'Vị trí quá xa so với địa chỉ ban đầu (> 100m)';
+                                            return true;
+                                        }
                                     }}
                                     render={() => (
                                         <FormItem>
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div>
-                                                    <FormLabel className="text-base font-semibold">
-                                                        Chọn vị trí trên bản đồ <span className="text-red-500">*</span>
-                                                    </FormLabel>
-                                                    <p className="text-sm text-gray-500 mt-1">
-                                                        Kéo thả marker màu đỏ để chọn vị trí chính xác
-                                                    </p>
-                                                </div>
-                                                {form.watch('latitude') !== null && form.watch('longitude') !== null && (
-                                                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
-                                                        <MapPin className="w-4 h-4" />
-                                                        <span className="text-sm font-medium">Vị trí đã được chọn</span>
-                                                    </div>
-                                                )}
-                                            </div>
                                             <FormControl>
-                                                <div className="rounded-lg overflow-hidden border-2 border-gray-300">
-                                                    {/* Draggable Marker Map */}
+                                                <div className={cn(
+                                                    "rounded-lg overflow-hidden border-2",
+                                                    !isLocationValid ? "border-red-300" : "border-gray-300"
+                                                )}>
                                                     <DraggableMarkerMap
                                                         location={mapLocation}
-                                                        goongApiKey={GOONG_API_KEY}
+                                                        goongApiKey={GOONG_MAP_KEY}
                                                         onLocationChange={handleLocationChange}
                                                         defaultZoom={16}
                                                         height="500px"
@@ -587,6 +645,19 @@ export const EditPost: React.FC = () => {
                                                 </div>
                                             </FormControl>
                                             <FormMessage />
+                                            {/* Validation Messages */}
+                                            {!isLocationValid && distanceFromOriginal > 0 && (
+                                                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                                                    <div className="flex items-start gap-3">
+                                                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                                        <div className="flex-1">
+                                                            <h3 className="text-sm font-semibold text-red-800 mb-1">
+                                                                Vị trí không trùng khớp với địa chỉ ban đầu
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </FormItem>
                                     )}
                                 />

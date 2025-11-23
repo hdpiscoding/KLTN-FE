@@ -17,7 +17,6 @@ import {useDebounce} from "use-debounce";
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {calculateDistance} from "@/utils/calculateDistance.ts";
 import type {PlacePrediction} from "@/types/place-prediction";
-import {parseAddress, extractStreetInfo} from '@/utils/addressParser';
 
 type DemandType = 'buy' | 'rent';
 
