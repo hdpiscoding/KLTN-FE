@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -109,6 +109,33 @@ export const UserProfile: React.FC = () => {
         },
         mode: 'onChange',
     });
+
+    // Watch all preference form values
+    const watchedPreferences = preferenceForm.watch();
+
+    // Effect to clear preset selection when user manually adjusts any slider
+    useEffect(() => {
+        if (selectedPresetId) {
+            const selectedPreset = presets.find(p => p.id === selectedPresetId);
+            if (selectedPreset) {
+                // Check if any value has been changed from the preset values
+                const hasChanged =
+                    watchedPreferences.security !== selectedPreset.preferenceSecurity ||
+                    watchedPreferences.healthcare !== selectedPreset.preferenceHealthcare ||
+                    watchedPreferences.education !== selectedPreset.preferenceEducation ||
+                    watchedPreferences.amenities !== selectedPreset.preferenceAmenities ||
+                    watchedPreferences.transportation !== selectedPreset.preferenceTransportation ||
+                    watchedPreferences.environment !== selectedPreset.preferenceEnvironment ||
+                    watchedPreferences.entertainment !== selectedPreset.preferenceEntertainment;
+
+                // If any value changed, clear the preset selection
+                if (hasChanged) {
+                    setSelectedPresetId(null);
+                }
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [watchedPreferences, selectedPresetId]);
 
     // Helper function to get preference level label
     const getPreferenceLabel = (value: number): string => {
