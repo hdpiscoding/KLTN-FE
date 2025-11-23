@@ -4,7 +4,10 @@ import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music } from 'lucide-react';
+import { PreferencePresetCard } from '@/components/preference-preset-card';
+import type { PreferencePreset } from '@/types/preference-preset';
 
 type UserProfileFormData = {
     fullName: string;
@@ -26,6 +29,63 @@ type PreferenceFormData = {
 export const UserProfile: React.FC = () => {
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+
+    // Preset data
+    const presets: PreferencePreset[] = [
+        {
+            id: '1',
+            name: 'Nhà đông con',
+            image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500',
+            description: 'Phù hợp cho gia đình có nhiều trẻ em, ưu tiên giáo dục, an ninh và môi trường sống an toàn',
+            preferenceSecurity: 90,
+            preferenceHealthcare: 75,
+            preferenceEducation: 95,
+            preferenceAmenities: 80,
+            preferenceTransportation: 70,
+            preferenceEnvironment: 85,
+            preferenceEntertainment: 60
+        },
+        {
+            id: '2',
+            name: 'Dành cho người cao tuổi',
+            image: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=500',
+            description: 'Ưu tiên y tế, môi trường yên tĩnh và giao thông thuận tiện cho người lớn tuổi',
+            preferenceSecurity: 80,
+            preferenceHealthcare: 95,
+            preferenceEducation: 40,
+            preferenceAmenities: 85,
+            preferenceTransportation: 90,
+            preferenceEnvironment: 90,
+            preferenceEntertainment: 30
+        },
+        {
+            id: '3',
+            name: 'Người độc thân bận rộn',
+            image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500',
+            description: 'Tập trung vào giao thông, tiện ích và giải trí cho lối sống năng động',
+            preferenceSecurity: 70,
+            preferenceHealthcare: 60,
+            preferenceEducation: 50,
+            preferenceAmenities: 90,
+            preferenceTransportation: 95,
+            preferenceEnvironment: 60,
+            preferenceEntertainment: 85
+        },
+        {
+            id: '4',
+            name: 'Cân bằng toàn diện',
+            image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500',
+            description: 'Mức độ ưu tiên cân bằng cho tất cả các yếu tố, phù hợp cho hầu hết mọi người',
+            preferenceSecurity: 70,
+            preferenceHealthcare: 70,
+            preferenceEducation: 70,
+            preferenceAmenities: 70,
+            preferenceTransportation: 70,
+            preferenceEnvironment: 70,
+            preferenceEntertainment: 70
+        },
+    ];
 
     const form = useForm<UserProfileFormData>({
         defaultValues: {
@@ -87,7 +147,23 @@ export const UserProfile: React.FC = () => {
         }
     };
 
+    const handlePresetSelect = (presetId: string) => {
+        setSelectedPresetId(presetId);
+        const preset = presets.find(p => p.id === presetId);
+        if (preset) {
+            // Update preference form values with preset values
+            preferenceForm.setValue('security', preset.preferenceSecurity);
+            preferenceForm.setValue('healthcare', preset.preferenceHealthcare);
+            preferenceForm.setValue('education', preset.preferenceEducation);
+            preferenceForm.setValue('amenities', preset.preferenceAmenities);
+            preferenceForm.setValue('transportation', preset.preferenceTransportation);
+            preferenceForm.setValue('environment', preset.preferenceEnvironment);
+            preferenceForm.setValue('entertainment', preset.preferenceEntertainment);
+        }
+    };
+
     const handlePreferenceDefault = () => {
+        setSelectedPresetId(null); // Clear preset selection
         preferenceForm.reset({
             security: 50,
             healthcare: 50,
@@ -276,8 +352,57 @@ export const UserProfile: React.FC = () => {
                     Hãy cho chúng tôi biết điều gì là quan trọng nhất với bạn. Hệ thống sẽ sử dụng các ưu tiên này để tính toán "Điểm của bạn" cho mỗi bất động sản.
                 </p>
 
-                <Form {...preferenceForm}>
-                    <form onSubmit={preferenceForm.handleSubmit(onSubmitPreferences)} className="space-y-8">
+                <Tabs defaultValue="presets" className="w-full">
+                    <TabsList className="grid w-full grid-cols-2 mb-6">
+                        <TabsTrigger value="presets" className="cursor-pointer">Bộ có sẵn</TabsTrigger>
+                        <TabsTrigger value="custom" className="cursor-pointer">Tùy chỉnh</TabsTrigger>
+                    </TabsList>
+
+                    {/* Tab 1: Bộ có sẵn (Presets) */}
+                    <TabsContent value="presets" className="space-y-6">
+                        <div className="mb-4">
+                            <p className="text-sm text-gray-600">
+                                Chọn một mẫu ưu tiên phù hợp với nhu cầu của bạn. Bạn có thể chỉnh sửa chi tiết ở tab "Tùy chỉnh".
+                            </p>
+                        </div>
+
+                        {/* Preset Cards Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {presets.map((preset) => (
+                                <PreferencePresetCard
+                                    key={preset.id}
+                                    preset={preset}
+                                    isSelected={selectedPresetId === preset.id}
+                                    onSelect={() => handlePresetSelect(preset.id)}
+                                />
+                            ))}
+                        </div>
+
+                        {/* Apply Button */}
+                        {selectedPresetId && (
+                            <div className="pt-6 border-t">
+                                <div className="flex items-center justify-between">
+                                    <p className="text-sm text-gray-600">
+                                        Đã chọn: <span className="font-semibold text-[#008DDA]">
+                                            {presets.find(p => p.id === selectedPresetId)?.name}
+                                        </span>
+                                    </p>
+                                    <Button
+                                        type="button"
+                                        onClick={preferenceForm.handleSubmit(onSubmitPreferences)}
+                                        className="cursor-pointer transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                                    >
+                                        Lưu mẫu này
+                                    </Button>
+                                </div>
+                            </div>
+                        )}
+                    </TabsContent>
+
+                    {/* Tab 2: Tùy chỉnh (Custom Sliders) */}
+                    <TabsContent value="custom">
+                        <Form {...preferenceForm}>
+                            <form onSubmit={preferenceForm.handleSubmit(onSubmitPreferences)} className="space-y-8">
 
                         {/* Security Slider */}
                         <FormField
@@ -538,29 +663,30 @@ export const UserProfile: React.FC = () => {
                             )}
                         />
 
-                        {/* Submit Button */}
-                        <div className="pt-4 border-t">
-                            <div className="flex items-center gap-6">
-                                <Button
-                                    type="submit"
-                                    className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
-                                >
-                                    Lưu thay đổi
-                                </Button>
+                                {/* Submit Button */}
+                                <div className="pt-4 border-t">
+                                    <div className="flex flex-col sm:flex-row items-center gap-4">
+                                        <Button
+                                            type="submit"
+                                            className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                                        >
+                                            Lưu thay đổi
+                                        </Button>
 
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="cursor-pointer"
-                                    onClick={handlePreferenceDefault}
-                                >
-                                    Đặt lại mặc định
-                                </Button>
-                            </div>
-
-                        </div>
-                    </form>
-                </Form>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="cursor-pointer w-full sm:w-auto"
+                                            onClick={handlePreferenceDefault}
+                                        >
+                                            Đặt lại mặc định
+                                        </Button>
+                                    </div>
+                                </div>
+                            </form>
+                        </Form>
+                    </TabsContent>
+                </Tabs>
             </div>
         </div>
     );
