@@ -92,7 +92,7 @@ export const EditPost: React.FC = () => {
             frontWidth: '',
             images: [],
         },
-        mode: 'onChange',
+        mode: 'onSubmit',
     });
 
     // Get wards based on selected district
