@@ -1,22 +1,169 @@
-import React from 'react';
+import React, {useState, useEffect, useRef, useCallback} from 'react';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import {useForm} from "react-hook-form";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {useNavigate} from "react-router-dom";
+import { MapPin, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { useDebounce } from 'use-debounce';
+import {HCMC_RADIUS, HCMC_LAT, HCMC_LNG} from "@/constants/mapConstants.ts";
+import {toast} from "react-toastify";
+
+interface PlacePrediction {
+    place_id: string;
+    description: string;
+    structured_formatting: {
+        main_text: string;
+        secondary_text: string;
+    };
+}
 
 export const EstimatePropertyAddress: React.FC = () => {
     const navigate = useNavigate();
+    const [lat, setLat] = useState<number | null>(null);
+    const [lon, setLon] = useState<number | null>(null);
+    const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const suggestionRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
+    const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
+
     const form = useForm({
         defaultValues: {
             address: ""
         },
-        mode: "onChange",
+        mode: "onSubmit",
     });
 
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node) &&
+                inputRef.current && !inputRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    // Watch address value
+    const addressValue = form.watch('address');
+
+    // Debounce address value with 300ms delay
+    const [debouncedAddress] = useDebounce(addressValue, 300);
+
+    const fetchAutocompleteSuggestions = useCallback(async (input: string) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(
+                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10&location=${HCMC_LAT},${HCMC_LNG}&radius=${HCMC_RADIUS}`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch suggestions');
+
+            const data = await response.json();
+
+            if (data.predictions && data.predictions.length > 0) {
+                setSuggestions(data.predictions);
+                setShowSuggestions(true);
+                setSelectedIndex(-1);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Error fetching autocomplete:', error);
+            setSuggestions([]);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [GOONG_API_KEY]);
+
+    // Fetch autocomplete suggestions when debounced address changes
+    useEffect(() => {
+        if (!debouncedAddress || debouncedAddress.length < 3) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        fetchAutocompleteSuggestions(debouncedAddress);
+    }, [debouncedAddress, fetchAutocompleteSuggestions]);
+
+    const fetchPlaceDetail = async (placeId: string) => {
+        setIsLoading(true);
+        try {
+            const response = await fetch(
+                `https://rsapi.goong.io/Place/Detail?place_id=${encodeURIComponent(placeId)}&api_key=${GOONG_API_KEY}`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch place details');
+
+            const data = await response.json();
+
+            if (data.result && data.result.geometry && data.result.geometry.location) {
+                const { lat, lng } = data.result.geometry.location;
+                setLat(lat);
+                setLon(lng);
+                return { lat, lng };
+            }
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+            alert('Không thể lấy tọa độ của địa chỉ này');
+        } finally {
+            setIsLoading(false);
+        }
+        return null;
+    };
+
+    const handleSelectSuggestion = async (prediction: PlacePrediction) => {
+        form.setValue('address', prediction.description);
+        setShowSuggestions(false);
+        setSuggestions([]);
+
+        // Fetch place details to get coordinates
+        await fetchPlaceDetail(prediction.place_id);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showSuggestions || suggestions.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex(prev =>
+                    prev < suggestions.length - 1 ? prev + 1 : prev
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+                break;
+            case 'Enter':
+                if (selectedIndex >= 0) {
+                    e.preventDefault();
+                    handleSelectSuggestion(suggestions[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                setShowSuggestions(false);
+                break;
+        }
+    };
+
     const onSubmit = async (data: { address: string }) => {
-        navigate("/dinh-gia-nha/ban-do");
-        console.log(data);
+        if (!lat || !lon) {
+            toast.error('Vui lòng chọn địa chỉ chính xác');
+            return;
+        }
+
+        navigate(`/dinh-gia-nha/ban-do?lat=${lat}&lon=${lon}&address=${encodeURIComponent(data.address)}`);
     };
 
     return (
@@ -39,18 +186,85 @@ export const EstimatePropertyAddress: React.FC = () => {
                                     <FormItem>
                                         <FormLabel className="text-base">Địa chỉ của bạn</FormLabel>
                                         <FormControl>
-                                            <Input
-                                                className="focus-visible:ring-[#008DDA] h-11"
-                                                placeholder="Nhập địa chỉ của bạn"
-                                                {...field}
-                                            />
+                                            <div className="relative">
+                                                <Input
+                                                    className="focus-visible:ring-[#008DDA] h-11"
+                                                    placeholder="Nhập địa chỉ của bạn (VD: 123 Nguyễn Huệ, Quận 1)"
+                                                    {...field}
+                                                    ref={(e) => {
+                                                        field.ref(e);
+                                                        inputRef.current = e;
+                                                    }}
+                                                    onKeyDown={handleKeyDown}
+                                                    autoComplete="off"
+                                                />
+
+                                                {/* Loading indicator */}
+                                                {isLoading && (
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                        <Loader2 className="w-5 h-5 animate-spin text-[#008DDA]" />
+                                                    </div>
+                                                )}
+
+                                                {/* Autocomplete suggestions dropdown */}
+                                                {showSuggestions && suggestions.length > 0 && (
+                                                    <div
+                                                        ref={suggestionRef}
+                                                        className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+                                                    >
+                                                        {suggestions.map((prediction, index) => (
+                                                            <div
+                                                                key={prediction.place_id}
+                                                                onClick={() => handleSelectSuggestion(prediction)}
+                                                                className={cn(
+                                                                    "flex items-start gap-3 p-3 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0",
+                                                                    selectedIndex === index
+                                                                        ? "bg-blue-50"
+                                                                        : "hover:bg-gray-50"
+                                                                )}
+                                                            >
+                                                                <MapPin className="w-5 h-5 text-[#008DDA] flex-shrink-0 mt-0.5" />
+                                                                <div className="flex-1 min-w-0">
+                                                                    <p className="text-sm font-medium text-gray-900">
+                                                                        {prediction.structured_formatting.main_text}
+                                                                    </p>
+                                                                    <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                                                        {prediction.structured_formatting.secondary_text}
+                                                                    </p>
+                                                                </div>
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
+
+                                        {/* Coordinate display */}
+                                        {lat && lon && (
+                                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                                <p className="text-sm text-green-800">
+                                                    ✓ Đã xác định tọa độ: <span className="font-mono">{lat.toFixed(6)}, {lon.toFixed(6)}</span>
+                                                </p>
+                                            </div>
+                                        )}
                                     </FormItem>
                                 )}
                             />
-                            <Button type="submit" className="w-full h-11 transition-colors duration-200 bg-[#008DDA] cursor-pointer hover:bg-[#0064A6]">
-                                Tiếp tục
+
+                            <Button
+                                type="submit"
+                                className="w-full h-11 transition-colors duration-200 bg-[#008DDA] cursor-pointer hover:bg-[#0064A6]"
+                                disabled={isLoading}
+                            >
+                                {isLoading ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                        Đang xử lý...
+                                    </>
+                                ) : (
+                                    'Tiếp tục'
+                                )}
                             </Button>
                         </form>
                     </Form>

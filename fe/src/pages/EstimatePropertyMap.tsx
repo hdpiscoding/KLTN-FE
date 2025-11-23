@@ -1,21 +1,43 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button.tsx";
-import { useNavigate } from "react-router-dom";
+import {useNavigate, useSearchParams} from "react-router-dom";
 import DraggableMarkerMap from "@/components/draggable-marker-map";
 import type { Location } from "@/types/location.d.ts";
+import { AlertCircle } from 'lucide-react';
+import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
+import {calculateDistance} from "@/utils/calculateDistance.ts";
 
 export const EstimatePropertyMap: React.FC = () => {
     const navigate = useNavigate();
+    const [params] = useSearchParams();
 
-    // Sample location data - TODO: Get from previous step (EstimatePropertyAddress)
+    const originalLocation = useMemo(() => ({
+        latitude: parseFloat(params.get("lat") ?? ""),
+        longitude: parseFloat(params.get("lon") ?? ""),
+        address: params.get("address") ?? ""
+    }), [params]);
+
     const [currentLocation, setCurrentLocation] = useState<Location>({
-        latitude: 10.8231,
-        longitude: 106.6297,
-        address: "208 Nguyễn Hữu Cảnh, Phường 22, Quận Bình Thạnh, TP.HCM"
+        latitude: parseFloat(params.get("lat") ?? ""),
+        longitude: parseFloat(params.get("lon") ?? ""),
+        address: params.get("address") ?? ""
     });
 
-    // Goong API Key - TODO: Move to environment variables
+    // Goong API Key
     const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
+
+    // Calculate distance from original location
+    const distanceFromOriginal = useMemo(() => {
+        return calculateDistance(
+            originalLocation.latitude,
+            originalLocation.longitude,
+            currentLocation.latitude,
+            currentLocation.longitude
+        );
+    }, [originalLocation, currentLocation]);
+
+    // Check if location is valid
+    const isLocationValid = distanceFromOriginal <= MAX_DISTANCE_METERS;
 
     const handleLocationChange = (newLocation: Location) => {
         console.log('Location changed:', newLocation);
@@ -24,7 +46,6 @@ export const EstimatePropertyMap: React.FC = () => {
 
     const handleConfirmLocation = () => {
         console.log('Location confirmed:', currentLocation);
-        // TODO: Save location and navigate to result page
         navigate("/dinh-gia-nha/ket-qua");
     };
 
@@ -56,10 +77,25 @@ export const EstimatePropertyMap: React.FC = () => {
                         />
                     </div>
 
+                    {/* Validation Message */}
+                    {!isLocationValid && (
+                        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                            <div className="flex items-start gap-3">
+                                <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-semibold text-red-800 mb-1">
+                                        Vị trí không trùng khớp với địa chỉ ban đầu
+                                    </h3>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Confirm Button */}
                     <Button
                         onClick={handleConfirmLocation}
-                        className="w-full h-12 transition-colors duration-200 bg-[#008DDA] cursor-pointer hover:bg-[#0064A6] text-base sm:text-lg font-semibold"
+                        disabled={!isLocationValid}
+                        className="w-full h-12 transition-colors duration-200 bg-[#008DDA] cursor-pointer hover:bg-[#0064A6] text-base sm:text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-[#008DDA]"
                     >
                         Đúng, đây là vị trí của tôi
                     </Button>
