@@ -1,28 +1,29 @@
-import React, {useState} from 'react';
-import { useForm } from 'react-hook-form';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Button } from '@/components/ui/button';
-import { Home, Key, MapPin, Upload, Image as ImageIcon, X } from 'lucide-react';
-import { cn } from '@/lib/utils';
-import { districtWards } from '@/constants/districtWard.ts';
-import { PROPERTY_TYPES } from '@/constants/propertyTypes';
-import { LEGAL_DOCS } from '@/constants/legalDocs';
-import { PROPERTY_FURNITURE } from '@/constants/propertyFurniture';
-import { PROPERTY_DIRECTIONS } from '@/constants/propertyDirections';
+import React, {useCallback, useEffect, useMemo, useRef, useState} from 'react';
+import {useForm} from 'react-hook-form';
+import {Form, FormField, FormItem, FormLabel, FormControl, FormMessage} from '@/components/ui/form';
+import {Input} from '@/components/ui/input';
+import {Textarea} from '@/components/ui/textarea';
+import {Select, SelectContent, SelectItem, SelectTrigger, SelectValue} from '@/components/ui/select';
+import {Button} from '@/components/ui/button';
+import {Home, Key, MapPin, Upload, Image as ImageIcon, X, Loader2, AlertCircle} from 'lucide-react';
+import {cn} from '@/lib/utils';
+import {PROPERTY_TYPES} from '@/constants/propertyTypes';
+import {LEGAL_DOCS} from '@/constants/legalDocs';
+import {PROPERTY_FURNITURE} from '@/constants/propertyFurniture';
+import {PROPERTY_DIRECTIONS} from '@/constants/propertyDirections';
 import DraggableMarkerMap from '@/components/draggable-marker-map';
-import type { Location } from '@/types/location.d.ts';
+import type {Location} from '@/types/location.d.ts';
+import {useDebounce} from "use-debounce";
+import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
+import {calculateDistance} from "@/utils/calculateDistance.ts";
+import type {PlacePrediction} from "@/types/place-prediction";
+import {parseAddress, extractStreetInfo} from '@/utils/addressParser';
 
 type DemandType = 'buy' | 'rent';
 
 type CreatePostFormData = {
     demand: DemandType;
-    province: string;
-    district: string;
-    ward: string;
-    street: string;
+    address: string;
     houseNumber: string;
     latitude: number | null;
     longitude: number | null;
@@ -46,27 +47,28 @@ type CreatePostFormData = {
 
 export const CreatePost: React.FC = () => {
     const [selectedDemand, setSelectedDemand] = useState<DemandType>('buy');
-    const [selectedDistrict, setSelectedDistrict] = useState<string>('');
-    const [selectedWard, setSelectedWard] = useState<string>('');
-    const [mapLocation, setMapLocation] = useState<Location>({
-        latitude: 10.8231,
-        longitude: 106.6297,
-        address: 'TP. Hồ Chí Minh'
-    });
+    const [mapLocation, setMapLocation] = useState<Location | null>(null);
+    const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
     const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
+    // Autocomplete states
+    const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
+    const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [addressSelected, setAddressSelected] = useState(false);
+    const suggestionRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+
     // Goong API Key
-    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
+    const GOONG_MAP_KEY = import.meta.env.VITE_MAPTILES_KEY;
+    const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
 
     const form = useForm<CreatePostFormData>({
         defaultValues: {
             demand: 'buy',
-            province: 'TP. Hồ Chí Minh',
-            district: '',
-            ward: '',
-            street: '',
-            houseNumber: '',
+            address: '',
             latitude: null,
             longitude: null,
             propertyType: '',
@@ -88,30 +90,141 @@ export const CreatePost: React.FC = () => {
         mode: 'onSubmit',
     });
 
-    // Get wards based on selected district
-    const getWardsByDistrict = (districtId: string) => {
-        const district = districtWards.find(d => d.id === districtId);
-        return district?.ward || [];
+    // Watch address value
+    const addressValue = form.watch('address');
+
+    // Debounce address value with 300ms delay
+    const [debouncedAddress] = useDebounce(addressValue, 300);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node) &&
+                inputRef.current && !inputRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const fetchAutocompleteSuggestions = useCallback(async (input: string) => {
+        setIsLoadingAddress(true);
+        try {
+            const response = await fetch(
+                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch suggestions');
+
+            const data = await response.json();
+
+            if (data.predictions && data.predictions.length > 0) {
+                setSuggestions(data.predictions);
+                setShowSuggestions(true);
+                setSelectedIndex(-1);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Error fetching autocomplete:', error);
+            setSuggestions([]);
+        } finally {
+            setIsLoadingAddress(false);
+        }
+    }, [GOONG_API_KEY]);
+
+    // Fetch autocomplete suggestions when debounced address changes
+    useEffect(() => {
+        if (!debouncedAddress || debouncedAddress.length < 3 || addressSelected) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        fetchAutocompleteSuggestions(debouncedAddress);
+    }, [debouncedAddress, fetchAutocompleteSuggestions, addressSelected]);
+
+    // Hide map when user manually changes address (not from suggestion)
+    useEffect(() => {
+        if (!addressSelected && mapLocation) {
+            // User is typing or changed the address manually, hide the map
+            setMapLocation(null);
+            setOriginalLocation(null);
+            form.setValue('latitude', null);
+            form.setValue('longitude', null);
+        }
+    }, [addressSelected, mapLocation, form]);
+
+    const fetchPlaceDetail = async (placeId: string) => {
+        setIsLoadingAddress(true);
+        try {
+            const response = await fetch(
+                `https://rsapi.goong.io/Place/Detail?place_id=${encodeURIComponent(placeId)}&api_key=${GOONG_API_KEY}`
+            );
+
+            if (!response.ok) throw new Error('Failed to fetch place details');
+
+            const data = await response.json();
+
+            if (data.result && data.result.geometry && data.result.geometry.location) {
+                const {lat, lng} = data.result.geometry.location;
+                const location: Location = {
+                    latitude: lat,
+                    longitude: lng,
+                    address: form.getValues('address')
+                };
+                setMapLocation(location);
+                setOriginalLocation(location);
+                form.setValue('latitude', lat);
+                form.setValue('longitude', lng);
+                return {lat, lng};
+            }
+        } catch (error) {
+            console.error('Error fetching place details:', error);
+            alert('Không thể lấy tọa độ của địa chỉ này');
+        } finally {
+            setIsLoadingAddress(false);
+        }
+        return null;
     };
 
-    const handleDistrictChange = (districtId: string) => {
-        setSelectedDistrict(districtId);
-        setSelectedWard(''); // Reset ward state
-        // Reset map location to default HCM center
-        setMapLocation({
-            latitude: 10.8231,
-            longitude: 106.6297,
-            address: 'TP. Hồ Chí Minh'
-        });
-        form.setValue('district', districtId);
-        form.setValue('ward', ''); // Reset ward when district changes
-        form.setValue('latitude', null);
-        form.setValue('longitude', null);
+    const handleSelectSuggestion = async (prediction: PlacePrediction) => {
+        setAddressSelected(true); // Mark as selected from suggestion
+        form.setValue('address', prediction.description);
+        setShowSuggestions(false);
+        setSuggestions([]);
+
+        // Fetch place details to get coordinates
+        await fetchPlaceDetail(prediction.place_id);
     };
 
-    const handleWardChange = (wardId: string) => {
-        setSelectedWard(wardId);
-        form.setValue('ward', wardId);
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showSuggestions || suggestions.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex(prev =>
+                    prev < suggestions.length - 1 ? prev + 1 : prev
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+                break;
+            case 'Enter':
+                if (selectedIndex >= 0) {
+                    e.preventDefault();
+                    handleSelectSuggestion(suggestions[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                setShowSuggestions(false);
+                break;
+        }
     };
 
     const handleLocationChange = (newLocation: Location) => {
@@ -119,6 +232,20 @@ export const CreatePost: React.FC = () => {
         form.setValue('latitude', newLocation.latitude);
         form.setValue('longitude', newLocation.longitude);
     };
+
+    // Calculate distance from original location
+    const distanceFromOriginal = useMemo(() => {
+        if (!originalLocation || !mapLocation) return 0;
+        return calculateDistance(
+            originalLocation.latitude,
+            originalLocation.longitude,
+            mapLocation.latitude,
+            mapLocation.longitude
+        );
+    }, [originalLocation, mapLocation]);
+
+    // Check if location is valid (within 100m)
+    const isLocationValid = distanceFromOriginal <= MAX_DISTANCE_METERS;
 
     const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
         const files = event.target.files;
@@ -177,9 +304,8 @@ export const CreatePost: React.FC = () => {
         form.setValue('images', updatedImages);
     };
 
-    const onSubmit = async (data: CreatePostFormData) => {
-        console.log('Create post data:', data);
-        // TODO: Implement API call to create post
+    const onSubmit = async () => {
+
     };
 
     return (
@@ -224,7 +350,7 @@ export const CreatePost: React.FC = () => {
                                             ? "bg-[#008DDA] text-white"
                                             : "bg-gray-100 text-gray-600"
                                     )}>
-                                        <Home className="w-8 h-8" />
+                                        <Home className="w-8 h-8"/>
                                     </div>
                                     <div className="text-center">
                                         <h3 className={cn(
@@ -262,7 +388,7 @@ export const CreatePost: React.FC = () => {
                                             ? "bg-[#008DDA] text-white"
                                             : "bg-gray-100 text-gray-600"
                                     )}>
-                                        <Key className="w-8 h-8" />
+                                        <Key className="w-8 h-8"/>
                                     </div>
                                     <div className="text-center">
                                         <h3 className={cn(
@@ -284,180 +410,120 @@ export const CreatePost: React.FC = () => {
                     <div className="bg-white rounded-lg shadow-md p-6">
                         <h2 className="text-xl font-semibold mb-4">Địa chỉ <span className="text-red-500">*</span></h2>
                         <p className="text-sm text-gray-500 mb-6">
-                            Vui lòng cung cấp địa chỉ chính xác của bất động sản
+                            Nhập địa chỉ của bất động sản và chọn vị trí chính xác trên bản đồ
                         </p>
 
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                            {/* Province/City - Disabled */}
-                            <FormField
-                                control={form.control}
-                                name="province"
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Tỉnh/Thành phố</FormLabel>
-                                        <Select value={field.value} disabled>
-                                            <FormControl>
-                                                <SelectTrigger className="cursor-not-allowed opacity-75 w-full">
-                                                    <SelectValue placeholder="Chọn tỉnh/thành phố" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                <SelectItem value="TP. Hồ Chí Minh">TP. Hồ Chí Minh</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* District */}
-                            <FormField
-                                control={form.control}
-                                name="district"
-                                rules={{
-                                    required: 'Vui lòng chọn quận/huyện',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Quận/Huyện <span className="text-red-500">*</span></FormLabel>
-                                        <Select
-                                            value={field.value}
-                                            onValueChange={handleDistrictChange}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                    <SelectValue placeholder="Chọn quận/huyện" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {districtWards.map((district) => (
-                                                    <SelectItem key={district.id} value={district.id}>
-                                                        {district.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-
-                            {/* Ward */}
-                            <FormField
-                                control={form.control}
-                                name="ward"
-                                rules={{
-                                    required: 'Vui lòng chọn phường/xã',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Phường/Xã <span className="text-red-500">*</span></FormLabel>
-                                        <Select
-                                            value={field.value}
-                                            onValueChange={handleWardChange}
-                                            disabled={!selectedDistrict}
-                                        >
-                                            <FormControl>
-                                                <SelectTrigger className={cn("cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full",
-                                                    !selectedDistrict && "cursor-not-allowed opacity-50"
-                                                )}>
-                                                    <SelectValue placeholder="Chọn phường/xã" />
-                                                </SelectTrigger>
-                                            </FormControl>
-                                            <SelectContent>
-                                                {getWardsByDistrict(selectedDistrict).map((ward) => (
-                                                    <SelectItem key={ward.id} value={ward.id}>
-                                                        {ward.name}
-                                                    </SelectItem>
-                                                ))}
-                                            </SelectContent>
-                                        </Select>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                            {/* Street */}
-                            <FormField
-                                control={form.control}
-                                name="street"
-                                rules={{
-                                    required: 'Vui lòng nhập tên đường',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Đường <span className="text-red-500">*</span></FormLabel>
-                                        <FormControl>
+                        {/* Address Autocomplete Input */}
+                        <FormField
+                            control={form.control}
+                            name="address"
+                            rules={{
+                                required: "Địa chỉ không được để trống!",
+                            }}
+                            render={({field}) => (
+                                <FormItem className="mb-6">
+                                    <FormLabel className="text-base">Địa chỉ bất động sản</FormLabel>
+                                    <FormControl>
+                                        <div className="relative">
                                             <Input
-                                                placeholder="Nhập tên đường"
-                                                className="focus-visible:ring-[#008DDA]"
+                                                className="focus-visible:ring-[#008DDA] h-11"
+                                                placeholder="Nhập địa chỉ (VD: 123 Nguyễn Huệ, Quận 1, TP.HCM)"
                                                 {...field}
+                                                ref={(e) => {
+                                                    field.ref(e);
+                                                    inputRef.current = e;
+                                                }}
+                                                onKeyDown={handleKeyDown}
+                                                autoComplete="off"
+                                                onChange={(e) => {
+                                                    field.onChange(e);
+                                                    setAddressSelected(false);
+                                                    // Hide map immediately when user changes input
+                                                    if (mapLocation) {
+                                                        setMapLocation(null);
+                                                        setOriginalLocation(null);
+                                                        form.setValue('latitude', null);
+                                                        form.setValue('longitude', null);
+                                                    }
+                                                }}
                                             />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
 
-                            {/* House Number */}
-                            <FormField
-                                control={form.control}
-                                name="houseNumber"
-                                rules={{
-                                    required: 'Vui lòng nhập số nhà',
-                                }}
-                                render={({ field }) => (
-                                    <FormItem>
-                                        <FormLabel>Số nhà <span className="text-red-500">*</span></FormLabel>
-                                        <FormControl>
-                                            <Input
-                                                placeholder="Nhập số nhà"
-                                                className="focus-visible:ring-[#008DDA]"
-                                                {...field}
-                                            />
-                                        </FormControl>
-                                        <FormMessage />
-                                    </FormItem>
-                                )}
-                            />
-                        </div>
+                                            {/* Loading indicator */}
+                                            {isLoadingAddress && (
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <Loader2 className="w-5 h-5 animate-spin text-[#008DDA]"/>
+                                                </div>
+                                            )}
 
-                        {/* Map Location Picker - Only shown when district and ward are selected */}
-                        {selectedDistrict && selectedWard && (
-                            <div className="mt-6 pt-6 border-t">
+                                            {/* Autocomplete suggestions dropdown */}
+                                            {showSuggestions && suggestions.length > 0 && (
+                                                <div
+                                                    ref={suggestionRef}
+                                                    className="absolute z-50 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-y-auto"
+                                                >
+                                                    {suggestions.map((prediction, index) => (
+                                                        <div
+                                                            key={prediction.place_id}
+                                                            onClick={() => handleSelectSuggestion(prediction)}
+                                                            className={cn(
+                                                                "flex items-start gap-3 p-3 cursor-pointer transition-colors border-b border-gray-100 last:border-b-0",
+                                                                selectedIndex === index
+                                                                    ? "bg-blue-50"
+                                                                    : "hover:bg-gray-50"
+                                                            )}
+                                                        >
+                                                            <MapPin
+                                                                className="w-5 h-5 text-[#008DDA] flex-shrink-0 mt-0.5"/>
+                                                            <div className="flex-1 min-w-0">
+                                                                <p className="text-sm font-medium text-gray-900">
+                                                                    {prediction.structured_formatting.main_text}
+                                                                </p>
+                                                                <p className="text-xs text-gray-500 mt-0.5 truncate">
+                                                                    {prediction.structured_formatting.secondary_text}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+                                    </FormControl>
+                                    <FormMessage/>
+                                </FormItem>
+                            )}
+                        />
+
+                        {/* Map Location Picker - Only shown when address is selected */}
+                        {mapLocation && (
+                            <div className="mt-6 pt-6 border-t space-y-4">
+                                <div>
+                                    <h3 className="text-base font-semibold mb-1">
+                                        Chọn vị trí chính xác trên bản đồ <span className="text-red-500">*</span>
+                                    </h3>
+                                </div>
+
+                                {/* Map */}
                                 <FormField
                                     control={form.control}
                                     name="latitude"
                                     rules={{
                                         required: 'Vui lòng chọn vị trí trên bản đồ',
-                                        validate: (value) => value !== null || 'Vui lòng chọn vị trí trên bản đồ'
+                                        validate: (value) => {
+                                            if (value === null) return 'Vui lòng chọn vị trí trên bản đồ';
+                                            if (!isLocationValid) return 'Vị trí quá xa so với địa chỉ ban đầu (> 100m)';
+                                            return true;
+                                        }
                                     }}
                                     render={() => (
                                         <FormItem>
-                                            <div className="flex items-center justify-between mb-3">
-                                                <div>
-                                                    <FormLabel className="text-base font-semibold">
-                                                        Chọn vị trí trên bản đồ <span className="text-red-500">*</span>
-                                                    </FormLabel>
-                                                    <p className="text-sm text-gray-500 mt-1">
-                                                        Kéo thả marker màu đỏ để chọn vị trí chính xác
-                                                    </p>
-                                                </div>
-                                                {form.watch('latitude') !== null && form.watch('longitude') !== null && (
-                                                    <div className="flex items-center gap-2 text-green-600 bg-green-50 px-3 py-1.5 rounded-lg">
-                                                        <MapPin className="w-4 h-4" />
-                                                        <span className="text-sm font-medium">Vị trí đã được chọn</span>
-                                                    </div>
-                                                )}
-                                            </div>
                                             <FormControl>
-                                                <div className="rounded-lg overflow-hidden border-2 border-gray-300">
-                                                    {/* Draggable Marker Map */}
+                                                <div className={cn(
+                                                    "rounded-lg overflow-hidden border-2",
+                                                    !isLocationValid ? "border-red-300" : "border-gray-300"
+                                                )}>
                                                     <DraggableMarkerMap
                                                         location={mapLocation}
-                                                        goongApiKey={GOONG_API_KEY}
+                                                        goongApiKey={GOONG_MAP_KEY}
                                                         onLocationChange={handleLocationChange}
                                                         defaultZoom={16}
                                                         height="500px"
@@ -465,7 +531,21 @@ export const CreatePost: React.FC = () => {
                                                     />
                                                 </div>
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage/>
+                                            {/* Validation Messages */}
+                                            {!isLocationValid && distanceFromOriginal > 0 && (
+                                                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
+                                                    <div className="flex items-start gap-3">
+                                                        <AlertCircle
+                                                            className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"/>
+                                                        <div className="flex-1">
+                                                            <h3 className="text-sm font-semibold text-red-800 mb-1">
+                                                                Vị trí không trùng khớp với địa chỉ ban đầu
+                                                            </h3>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </FormItem>
                                     )}
                                 />
@@ -488,7 +568,7 @@ export const CreatePost: React.FC = () => {
                                 rules={{
                                     required: 'Vui lòng chọn loại bất động sản',
                                 }}
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Loại bất động sản <span className="text-red-500">*</span></FormLabel>
                                         <Select
@@ -496,8 +576,9 @@ export const CreatePost: React.FC = () => {
                                             onValueChange={field.onChange}
                                         >
                                             <FormControl>
-                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
-                                                    <SelectValue placeholder="Chọn loại bất động sản" />
+                                                <SelectTrigger
+                                                    className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
+                                                    <SelectValue placeholder="Chọn loại bất động sản"/>
                                                 </SelectTrigger>
                                             </FormControl>
                                             <SelectContent>
@@ -508,7 +589,7 @@ export const CreatePost: React.FC = () => {
                                                 ))}
                                             </SelectContent>
                                         </Select>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -525,7 +606,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Diện tích phải là số hợp lệ',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Diện tích <span className="text-red-500">*</span></FormLabel>
                                             <div className="relative">
@@ -541,11 +622,12 @@ export const CreatePost: React.FC = () => {
                                                         }}
                                                     />
                                                 </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                <div
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
                                                     m²
                                                 </div>
                                             </div>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -561,7 +643,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Mức giá chỉ được nhập số',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Mức giá <span className="text-red-500">*</span></FormLabel>
                                             <div className="relative">
@@ -585,11 +667,12 @@ export const CreatePost: React.FC = () => {
                                                         }}
                                                     />
                                                 </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                <div
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
                                                     VND
                                                 </div>
                                             </div>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -610,7 +693,7 @@ export const CreatePost: React.FC = () => {
                                         message: 'Tiêu đề không được vượt quá 100 ký tự',
                                     },
                                 }}
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Tiêu đề <span className="text-red-500">*</span></FormLabel>
                                         <FormControl>
@@ -623,7 +706,7 @@ export const CreatePost: React.FC = () => {
                                         <p className="text-xs text-gray-500 mt-1">
                                             {field.value.length}/100 ký tự
                                         </p>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -643,7 +726,7 @@ export const CreatePost: React.FC = () => {
                                         message: 'Mô tả không được vượt quá 2000 ký tự',
                                     },
                                 }}
-                                render={({ field }) => (
+                                render={({field}) => (
                                     <FormItem>
                                         <FormLabel>Mô tả <span className="text-red-500">*</span></FormLabel>
                                         <FormControl>
@@ -656,7 +739,7 @@ export const CreatePost: React.FC = () => {
                                         <p className="text-xs text-gray-500 mt-1">
                                             {field.value.length}/2000 ký tự
                                         </p>
-                                        <FormMessage />
+                                        <FormMessage/>
                                     </FormItem>
                                 )}
                             />
@@ -676,7 +759,7 @@ export const CreatePost: React.FC = () => {
                                 <FormField
                                     control={form.control}
                                     name="legalDoc"
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Giấy tờ pháp lý</FormLabel>
                                             <Select
@@ -684,8 +767,9 @@ export const CreatePost: React.FC = () => {
                                                 onValueChange={field.onChange}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                        <SelectValue placeholder="Chọn loại giấy tờ" />
+                                                    <SelectTrigger
+                                                        className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
+                                                        <SelectValue placeholder="Chọn loại giấy tờ"/>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
@@ -696,7 +780,7 @@ export const CreatePost: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -705,7 +789,7 @@ export const CreatePost: React.FC = () => {
                                 <FormField
                                     control={form.control}
                                     name="furniture"
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Nội thất</FormLabel>
                                             <Select
@@ -713,8 +797,9 @@ export const CreatePost: React.FC = () => {
                                                 onValueChange={field.onChange}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                        <SelectValue placeholder="Chọn tình trạng nội thất" />
+                                                    <SelectTrigger
+                                                        className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
+                                                        <SelectValue placeholder="Chọn tình trạng nội thất"/>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
@@ -725,7 +810,7 @@ export const CreatePost: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -742,7 +827,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Chỉ được nhập số',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Số phòng ngủ</FormLabel>
                                             <FormControl>
@@ -757,7 +842,7 @@ export const CreatePost: React.FC = () => {
                                                     value={field.value}
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -772,7 +857,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Chỉ được nhập số',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Số phòng tắm</FormLabel>
                                             <FormControl>
@@ -787,7 +872,7 @@ export const CreatePost: React.FC = () => {
                                                     value={field.value}
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -802,7 +887,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Chỉ được nhập số',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Số tầng</FormLabel>
                                             <FormControl>
@@ -817,7 +902,7 @@ export const CreatePost: React.FC = () => {
                                                     value={field.value}
                                                 />
                                             </FormControl>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -828,7 +913,7 @@ export const CreatePost: React.FC = () => {
                                 <FormField
                                     control={form.control}
                                     name="houseDirection"
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Hướng nhà</FormLabel>
                                             <Select
@@ -836,8 +921,9 @@ export const CreatePost: React.FC = () => {
                                                 onValueChange={field.onChange}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                        <SelectValue placeholder="Chọn hướng nhà" />
+                                                    <SelectTrigger
+                                                        className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
+                                                        <SelectValue placeholder="Chọn hướng nhà"/>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
@@ -848,7 +934,7 @@ export const CreatePost: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -857,7 +943,7 @@ export const CreatePost: React.FC = () => {
                                 <FormField
                                     control={form.control}
                                     name="balconyDirection"
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Hướng ban công</FormLabel>
                                             <Select
@@ -865,8 +951,9 @@ export const CreatePost: React.FC = () => {
                                                 onValueChange={field.onChange}
                                             >
                                                 <FormControl>
-                                                    <SelectTrigger className="w-full cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
-                                                        <SelectValue placeholder="Chọn hướng ban công" />
+                                                    <SelectTrigger
+                                                        className="w-full cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
+                                                        <SelectValue placeholder="Chọn hướng ban công"/>
                                                     </SelectTrigger>
                                                 </FormControl>
                                                 <SelectContent>
@@ -877,7 +964,7 @@ export const CreatePost: React.FC = () => {
                                                     ))}
                                                 </SelectContent>
                                             </Select>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -894,7 +981,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Chỉ được nhập số',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Đường vào</FormLabel>
                                             <div className="relative">
@@ -910,11 +997,12 @@ export const CreatePost: React.FC = () => {
                                                         value={field.value}
                                                     />
                                                 </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                <div
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
                                                     m
                                                 </div>
                                             </div>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -929,7 +1017,7 @@ export const CreatePost: React.FC = () => {
                                             message: 'Chỉ được nhập số',
                                         },
                                     }}
-                                    render={({ field }) => (
+                                    render={({field}) => (
                                         <FormItem>
                                             <FormLabel>Mặt tiền</FormLabel>
                                             <div className="relative">
@@ -945,11 +1033,12 @@ export const CreatePost: React.FC = () => {
                                                         value={field.value}
                                                     />
                                                 </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                <div
+                                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
                                                     m
                                                 </div>
                                             </div>
-                                            <FormMessage />
+                                            <FormMessage/>
                                         </FormItem>
                                     )}
                                 />
@@ -985,7 +1074,8 @@ export const CreatePost: React.FC = () => {
                                     <FormControl>
                                         <div className="space-y-4">
                                             {/* Image Grid */}
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                                            <div
+                                                className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                                 {/* Uploaded Images */}
                                                 {imagePreviews.map((preview, index) => (
                                                     <div
@@ -998,7 +1088,8 @@ export const CreatePost: React.FC = () => {
                                                             className="w-full h-full object-cover"
                                                         />
                                                         {/* Image number badge */}
-                                                        <div className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                                                        <div
+                                                            className="absolute top-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                                                             {index === 0 ? 'Ảnh đại diện' : `${index + 1}`}
                                                         </div>
                                                         {/* Remove button */}
@@ -1007,7 +1098,7 @@ export const CreatePost: React.FC = () => {
                                                             onClick={() => handleRemoveImage(index)}
                                                             className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                                                         >
-                                                            <X className="w-4 h-4" />
+                                                            <X className="w-4 h-4"/>
                                                         </button>
                                                     </div>
                                                 ))}
@@ -1024,8 +1115,9 @@ export const CreatePost: React.FC = () => {
                                                             onChange={handleImageUpload}
                                                             className="hidden"
                                                         />
-                                                        <div className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
-                                                            <Upload className="w-6 h-6 text-gray-600" />
+                                                        <div
+                                                            className="w-12 h-12 rounded-full bg-gray-200 flex items-center justify-center">
+                                                            <Upload className="w-6 h-6 text-gray-600"/>
                                                         </div>
                                                         <div className="text-center px-2">
                                                             <p className="text-sm font-medium text-gray-700">
@@ -1042,7 +1134,7 @@ export const CreatePost: React.FC = () => {
                                             {/* Upload Instructions */}
                                             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                                                 <div className="flex items-start gap-3">
-                                                    <ImageIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
+                                                    <ImageIcon className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5"/>
                                                     <div className="text-sm text-blue-800">
                                                         <p className="font-medium mb-1">Lưu ý khi tải ảnh:</p>
                                                         <ul className="list-disc list-inside space-y-1 text-xs">
@@ -1058,7 +1150,8 @@ export const CreatePost: React.FC = () => {
                                             {/* Image count display */}
                                             <div className="flex items-center justify-between text-sm">
                                                 <span className="text-gray-600">
-                                                    Đã tải: <span className="font-semibold text-[#008DDA]">{uploadedImages.length}</span> ảnh
+                                                    Đã tải: <span
+                                                    className="font-semibold text-[#008DDA]">{uploadedImages.length}</span> ảnh
                                                 </span>
                                                 <span className="text-gray-500">
                                                     Còn lại: {10 - uploadedImages.length} ảnh
@@ -1066,7 +1159,7 @@ export const CreatePost: React.FC = () => {
                                             </div>
                                         </div>
                                     </FormControl>
-                                    <FormMessage />
+                                    <FormMessage/>
                                 </FormItem>
                             )}
                         />

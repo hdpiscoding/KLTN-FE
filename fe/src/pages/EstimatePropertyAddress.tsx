@@ -9,15 +9,7 @@ import { cn } from '@/lib/utils';
 import { useDebounce } from 'use-debounce';
 import {HCMC_RADIUS, HCMC_LAT, HCMC_LNG} from "@/constants/mapConstants.ts";
 import {toast} from "react-toastify";
-
-interface PlacePrediction {
-    place_id: string;
-    description: string;
-    structured_formatting: {
-        main_text: string;
-        secondary_text: string;
-    };
-}
+import type {PlacePrediction} from "@/types/place-prediction";
 
 export const EstimatePropertyAddress: React.FC = () => {
     const navigate = useNavigate();
@@ -62,7 +54,7 @@ export const EstimatePropertyAddress: React.FC = () => {
         setIsLoading(true);
         try {
             const response = await fetch(
-                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10&location=${HCMC_LAT},${HCMC_LNG}&radius=${HCMC_RADIUS}`
+                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10&location=${HCMC_LAT},${HCMC_LNG}&radius=${HCMC_RADIUS}&more_compound=true`
             );
 
             if (!response.ok) throw new Error('Failed to fetch suggestions');
@@ -70,6 +62,7 @@ export const EstimatePropertyAddress: React.FC = () => {
             const data = await response.json();
 
             if (data.predictions && data.predictions.length > 0) {
+                console.log('Autocomplete suggestions:', data.predictions[0]);
                 setSuggestions(data.predictions);
                 setShowSuggestions(true);
                 setSelectedIndex(-1);
@@ -189,7 +182,7 @@ export const EstimatePropertyAddress: React.FC = () => {
                                             <div className="relative">
                                                 <Input
                                                     className="focus-visible:ring-[#008DDA] h-11"
-                                                    placeholder="Nhập địa chỉ của bạn (VD: 123 Nguyễn Huệ, Quận 1)"
+                                                    placeholder="Nhập địa chỉ của bạn (VD: 123 Nguyễn Huệ, Phường 1, Quận 1)"
                                                     {...field}
                                                     ref={(e) => {
                                                         field.ref(e);
@@ -197,6 +190,14 @@ export const EstimatePropertyAddress: React.FC = () => {
                                                     }}
                                                     onKeyDown={handleKeyDown}
                                                     autoComplete="off"
+                                                    onChange={(e) => {
+                                                        field.onChange(e);
+                                                        // Reset coordinates when user manually changes address
+                                                        if (lat || lon) {
+                                                            setLat(null);
+                                                            setLon(null);
+                                                        }
+                                                    }}
                                                 />
 
                                                 {/* Loading indicator */}
@@ -239,15 +240,6 @@ export const EstimatePropertyAddress: React.FC = () => {
                                             </div>
                                         </FormControl>
                                         <FormMessage />
-
-                                        {/* Coordinate display */}
-                                        {lat && lon && (
-                                            <div className="mt-2 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                                <p className="text-sm text-green-800">
-                                                    ✓ Đã xác định tọa độ: <span className="font-mono">{lat.toFixed(6)}, {lon.toFixed(6)}</span>
-                                                </p>
-                                            </div>
-                                        )}
                                     </FormItem>
                                 )}
                             />
