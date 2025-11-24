@@ -6,7 +6,6 @@ import type { Location } from "@/types/location.d.ts";
 
 export interface DraggableMarkerMapProps {
     location: Location;
-    goongApiKey: string;
     onLocationChange: (newLocation: Location) => void;
     defaultZoom?: number;
     height?: string;
@@ -18,7 +17,6 @@ export interface DraggableMarkerMapProps {
 
 const DraggableMarkerMap: React.FC<DraggableMarkerMapProps> = ({
     location,
-    goongApiKey,
     onLocationChange,
     defaultZoom = 15,
     height = '100%',
@@ -42,8 +40,10 @@ const DraggableMarkerMap: React.FC<DraggableMarkerMapProps> = ({
 
     const [isDragging, setIsDragging] = useState(false);
     const [isHovering, setIsHovering] = useState(false);
-
     const cursor = disabled ? 'default' : isDragging ? 'grabbing' : isHovering ? 'grab' : 'default';
+
+    // Goong API Key
+    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
 
     const onMarkerDragStart = useCallback(() => {
         if (!disabled) {
@@ -108,7 +108,7 @@ const DraggableMarkerMap: React.FC<DraggableMarkerMapProps> = ({
                 height="100%"
                 mapStyle={mapStyle}
                 onViewportChange={setViewport}
-                goongApiAccessToken={goongApiKey}
+                goongApiAccessToken={GOONG_API_KEY}
                 getCursor={() => cursor}
                 onResize={() => {}}
                 touchAction="pan-y"

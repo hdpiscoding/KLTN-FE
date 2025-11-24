@@ -6,7 +6,6 @@ import type {Location} from "@/types/location.d.ts";
 
 export interface GoongMapProps {
     location: Location;
-    goongApiKey: string;
     defaultZoom?: number;
     height?: string;
     width?: string;
@@ -17,7 +16,6 @@ export interface GoongMapProps {
 
 const StaticMarkerMap: React.FC<GoongMapProps> = ({
                                                location,
-                                               goongApiKey,
                                                defaultZoom = 15,
                                                height = '100%',
                                                width = '100%',
@@ -36,6 +34,9 @@ const StaticMarkerMap: React.FC<GoongMapProps> = ({
     const [isHovering] = useState(false);
     const cursor = isDragging ? 'grabbing' : isHovering ? 'pointer' : 'default';
 
+    // Goong API Key
+    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
+
     return (
         <div className="relative" style={{ width, height }}>
             <ReactMapGL
@@ -44,7 +45,7 @@ const StaticMarkerMap: React.FC<GoongMapProps> = ({
                 height="100%"
                 mapStyle={mapStyle}
                 onViewportChange={setViewport}
-                goongApiAccessToken={goongApiKey}
+                goongApiAccessToken={GOONG_API_KEY}
                 getCursor={() => cursor}
                 onResize={() => {}}
                 touchAction="pan-y"

@@ -23,9 +23,6 @@ export const EstimatePropertyMap: React.FC = () => {
         address: params.get("address") ?? ""
     });
 
-    // Goong API Key
-    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
-
     // Calculate distance from original location
     const distanceFromOriginal = useMemo(() => {
         return calculateDistance(
@@ -69,7 +66,6 @@ export const EstimatePropertyMap: React.FC = () => {
                     <div className="w-full rounded-lg overflow-hidden border-2 border-gray-300" style={{ height: '600px' }}>
                         <DraggableMarkerMap
                             location={currentLocation}
-                            goongApiKey={GOONG_API_KEY}
                             onLocationChange={handleLocationChange}
                             defaultZoom={16}
                             height="600px"

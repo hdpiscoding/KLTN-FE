@@ -30,8 +30,6 @@ export const BuyProperty: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [isMapOpen, setIsMapOpen] = useState(false);
 
-    // Goong API Key
-    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
 
     // Sample data for properties
     const sampleProperties = [
@@ -358,7 +356,6 @@ export const BuyProperty: React.FC = () => {
                             <div className="fixed top-0 right-0 h-screen" style={{ width: '60%' }}>
                                 <MultipleMarkerMap
                                     properties={propertyMarkers}
-                                    goongApiKey={GOONG_API_KEY}
                                     defaultZoom={12}
                                     showNavigation={true}
                                 />

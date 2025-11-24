@@ -17,6 +17,7 @@ import {useDebounce} from "use-debounce";
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {calculateDistance} from "@/utils/calculateDistance.ts";
 import type {PlacePrediction} from "@/types/place-prediction";
+import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPI.ts";
 
 type DemandType = 'buy' | 'rent';
 
@@ -59,10 +60,7 @@ export const CreatePost: React.FC = () => {
     const [addressSelected, setAddressSelected] = useState(false);
     const suggestionRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    // Goong API Key
-    const GOONG_MAP_KEY = import.meta.env.VITE_MAPTILES_KEY;
-    const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
+    const lastTrimmedAddressRef = useRef<string>('');
 
     const form = useForm<CreatePostFormData>({
         defaultValues: {
@@ -111,13 +109,7 @@ export const CreatePost: React.FC = () => {
     const fetchAutocompleteSuggestions = useCallback(async (input: string) => {
         setIsLoadingAddress(true);
         try {
-            const response = await fetch(
-                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10`
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch suggestions');
-
-            const data = await response.json();
+            const data = await placeAutocomplete(input, 10);
 
             if (data.predictions && data.predictions.length > 0) {
                 setSuggestions(data.predictions);
@@ -133,17 +125,22 @@ export const CreatePost: React.FC = () => {
         } finally {
             setIsLoadingAddress(false);
         }
-    }, [GOONG_API_KEY]);
+    }, []);
 
     // Fetch autocomplete suggestions when debounced address changes
     useEffect(() => {
-        if (!debouncedAddress || debouncedAddress.length < 3 || addressSelected) {
+        const trimmedAddress = debouncedAddress.trim();
+        if (!trimmedAddress || trimmedAddress.length < 3 || addressSelected) {
             setSuggestions([]);
             setShowSuggestions(false);
+            lastTrimmedAddressRef.current = '';
             return;
         }
-
-        fetchAutocompleteSuggestions(debouncedAddress);
+        if (trimmedAddress === lastTrimmedAddressRef.current) {
+            return;
+        }
+        lastTrimmedAddressRef.current = trimmedAddress;
+        fetchAutocompleteSuggestions(trimmedAddress);
     }, [debouncedAddress, fetchAutocompleteSuggestions, addressSelected]);
 
     // Hide map when user manually changes address (not from suggestion)
@@ -160,13 +157,7 @@ export const CreatePost: React.FC = () => {
     const fetchPlaceDetail = async (placeId: string) => {
         setIsLoadingAddress(true);
         try {
-            const response = await fetch(
-                `https://rsapi.goong.io/Place/Detail?place_id=${encodeURIComponent(placeId)}&api_key=${GOONG_API_KEY}`
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch place details');
-
-            const data = await response.json();
+            const data = await getPlaceDetails(placeId);
 
             if (data.result && data.result.geometry && data.result.geometry.location) {
                 const {lat, lng} = data.result.geometry.location;
@@ -522,7 +513,6 @@ export const CreatePost: React.FC = () => {
                                                 )}>
                                                     <DraggableMarkerMap
                                                         location={mapLocation}
-                                                        goongApiKey={GOONG_MAP_KEY}
                                                         onLocationChange={handleLocationChange}
                                                         defaultZoom={16}
                                                         height="500px"

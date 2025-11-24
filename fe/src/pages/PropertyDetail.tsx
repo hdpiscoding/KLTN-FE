@@ -24,7 +24,6 @@ export const PropertyDetail: React.FC = () => {
     const [isFavorited, setIsFavorited] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(1);
     const [carouselApi, setCarouselApi] = useState<CarouselApi>();
-    const staticMarkerMapKey = import.meta.env.VITE_MAPTILES_KEY;
 
     // Sample data - TODO: Replace with real API call
     const property = {
@@ -372,7 +371,6 @@ export const PropertyDetail: React.FC = () => {
                             <div className="w-full h-96 rounded-lg bg-gradient-to-br from-blue-50 to-gray-100 flex items-center justify-center relative overflow-hidden border border-gray-200">
                                 <StaticMarkerMap
                                     location={location}
-                                    goongApiKey={staticMarkerMapKey}
                                     defaultZoom={16}
                                 />
                             </div>

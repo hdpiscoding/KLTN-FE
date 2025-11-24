@@ -7,9 +7,9 @@ import {useNavigate} from "react-router-dom";
 import { MapPin, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useDebounce } from 'use-debounce';
-import {HCMC_RADIUS, HCMC_LAT, HCMC_LNG} from "@/constants/mapConstants.ts";
 import {toast} from "react-toastify";
 import type {PlacePrediction} from "@/types/place-prediction";
+import {getPlaceDetails, placeAutocomplete} from "@/services/goongAPI.ts";
 
 export const EstimatePropertyAddress: React.FC = () => {
     const navigate = useNavigate();
@@ -21,8 +21,7 @@ export const EstimatePropertyAddress: React.FC = () => {
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const suggestionRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
-    const GOONG_API_KEY = import.meta.env.VITE_GOONG_API_KEY;
+    const lastTrimmedAddressRef = useRef<string>('');
 
     const form = useForm({
         defaultValues: {
@@ -53,13 +52,7 @@ export const EstimatePropertyAddress: React.FC = () => {
     const fetchAutocompleteSuggestions = useCallback(async (input: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch(
-                `https://rsapi.goong.io/Place/AutoComplete?api_key=${GOONG_API_KEY}&input=${encodeURIComponent(input)}&limit=10&location=${HCMC_LAT},${HCMC_LNG}&radius=${HCMC_RADIUS}&more_compound=true`
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch suggestions');
-
-            const data = await response.json();
+            const data = await placeAutocomplete(input, 10);
 
             if (data.predictions && data.predictions.length > 0) {
                 console.log('Autocomplete suggestions:', data.predictions[0]);
@@ -76,29 +69,35 @@ export const EstimatePropertyAddress: React.FC = () => {
         } finally {
             setIsLoading(false);
         }
-    }, [GOONG_API_KEY]);
+    }, []);
 
     // Fetch autocomplete suggestions when debounced address changes
     useEffect(() => {
-        if (!debouncedAddress || debouncedAddress.length < 3) {
+        // Trim whitespace to check actual content length
+        const trimmedAddress = debouncedAddress.trim();
+
+        // Don't call API if empty, only whitespace, or less than 3 characters
+        if (!trimmedAddress || trimmedAddress.length < 3) {
             setSuggestions([]);
             setShowSuggestions(false);
+            lastTrimmedAddressRef.current = ''; // Reset when clearing
             return;
         }
 
-        fetchAutocompleteSuggestions(debouncedAddress);
+        // Don't call API if trimmed address hasn't changed (e.g., "abc" -> "abc ")
+        if (trimmedAddress === lastTrimmedAddressRef.current) {
+            return;
+        }
+
+        // Update last trimmed address and call API
+        lastTrimmedAddressRef.current = trimmedAddress;
+        fetchAutocompleteSuggestions(trimmedAddress);
     }, [debouncedAddress, fetchAutocompleteSuggestions]);
 
     const fetchPlaceDetail = async (placeId: string) => {
         setIsLoading(true);
         try {
-            const response = await fetch(
-                `https://rsapi.goong.io/Place/Detail?place_id=${encodeURIComponent(placeId)}&api_key=${GOONG_API_KEY}`
-            );
-
-            if (!response.ok) throw new Error('Failed to fetch place details');
-
-            const data = await response.json();
+            const data = await getPlaceDetails(placeId);
 
             if (data.result && data.result.geometry && data.result.geometry.location) {
                 const { lat, lng } = data.result.geometry.location;

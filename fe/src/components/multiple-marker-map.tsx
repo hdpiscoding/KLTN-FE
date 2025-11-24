@@ -14,7 +14,6 @@ export interface PropertyMarker {
 
 export interface MultipleMarkerMapProps {
     properties: PropertyMarker[];
-    goongApiKey: string;
     defaultZoom?: number;
     height?: string;
     width?: string;
@@ -26,7 +25,6 @@ export interface MultipleMarkerMapProps {
 
 const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     properties,
-    goongApiKey,
     defaultZoom = 13,
     height = '100%',
     width = '100%',
@@ -53,6 +51,9 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
             longitude: sumLng / properties.length,
         };
     };
+
+    // Goong API Key
+    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
 
     const center = calculateCenter();
 
@@ -89,7 +90,7 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
                 height="100%"
                 mapStyle={mapStyle}
                 onViewportChange={setViewport}
-                goongApiAccessToken={goongApiKey}
+                goongApiAccessToken={GOONG_API_KEY}
                 onResize={() => {}}
                 touchAction="pan-y"
                 getCursor={() => cursor}
