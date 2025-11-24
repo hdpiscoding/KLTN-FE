@@ -1211,7 +1211,7 @@ export const EditPost: React.FC = () => {
                                                         <button
                                                             type="button"
                                                             onClick={() => handleRemoveImage(existingImages.length + index, false)}
-                                                            className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                                                            className="cursor-pointer absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                                                         >
                                                             <X className="w-4 h-4" />
                                                         </button>
