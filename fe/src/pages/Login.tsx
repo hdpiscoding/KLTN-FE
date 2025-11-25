@@ -1,35 +1,47 @@
-import React, {useEffect} from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { PasswordInput } from "@/components/ui/input-password";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import {Spinner} from "@/components/ui/spinner.tsx";
+import {login} from "@/services/authServices.ts";
+import {useUserStore} from "@/store/userStore.ts";
+import {toast} from "react-toastify";
+import {useNavigate} from "react-router-dom";
 
 
 export const Login = () => {
     const [isLoading, setIsLoading] = React.useState(false);
+    const navigate = useNavigate();
     const form = useForm({
         defaultValues: {
-            email_phone: "",
+            email: "",
             password: "",
         },
-        mode: "onChange",
+        mode: "onSubmit",
     });
+    const loginData = useUserStore((state) => state.login);
 
-    const onSubmit = async (data: any) => {
+    const onSubmit = async (data: {email: string, password: string}) => {
         setIsLoading(true);
-        console.log(data);
-    };
-
-    useEffect(() => {
-        if (isLoading) {
-            const timer = setTimeout(() => {
-                setIsLoading(false);
-            }, 2000);
-            return () => clearTimeout(timer);
+        try {
+            const response = await login(data.email, data.password);
+            console.log(response);
+            if (response.status === "200") {
+                loginData(response.data.token);
+                toast.success("Đăng nhập thành công!");
+                navigate("/");
+            }
         }
-    }, [isLoading]);
+        catch (error) {
+            toast.error("Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
+            console.log(error);
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
 
     return (
         <div className="bg-[#fff] w-screen h-screen flex items-center justify-center">
@@ -43,15 +55,19 @@ export const Login = () => {
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <FormField
                             control={form.control}
-                            name="email_phone"
+                            name="email"
                             rules={{
-                                required: "Email/Số điện thoại không được để trống!",
+                                required: "Email không được để trống!",
+                                pattern: {
+                                    value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                                    message: "Email không hợp lệ!",
+                                },
                             }}
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Email/Số điện thoại</FormLabel>
+                                    <FormLabel>Email</FormLabel>
                                     <FormControl>
-                                        <Input className="focus-visible:ring-[#008DDA]" placeholder="Nhập email hoặc số điện thoại của bạn" {...field} />
+                                        <Input className="focus-visible:ring-[#008DDA]" placeholder="Nhập email của bạn" {...field} />
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>

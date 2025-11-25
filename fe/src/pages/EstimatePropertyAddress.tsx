@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { useDebounce } from 'use-debounce';
 import {toast} from "react-toastify";
 import type {PlacePrediction} from "@/types/place-prediction";
-import {getPlaceDetails, placeAutocomplete} from "@/services/goongAPI.ts";
+import {getPlaceDetails, placeAutocomplete} from "@/services/goongAPIServices.ts";
 
 export const EstimatePropertyAddress: React.FC = () => {
     const navigate = useNavigate();

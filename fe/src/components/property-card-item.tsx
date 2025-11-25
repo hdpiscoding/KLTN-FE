@@ -28,6 +28,7 @@ export const PropertyCardItem = ({
 }: PropertyCardItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isFavorite, setIsFavorite] = useState(isFavorited);
+    const isLoggedIn = false;
 
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent card link click
@@ -81,16 +82,20 @@ export const PropertyCardItem = ({
                     <span className="text-gray-500 text-xs">
                         {formatRelativeTime(createdAt)}
                     </span>
-                    <button
-                        onClick={handleFavoriteClick}
-                        className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
-                    >
-                        <Heart
-                            className={`w-5 h-5 ${
-                                isFavorite ? 'fill-red-500 text-red-500' : ''
-                            }`}
-                        />
-                    </button>
+                    {isLoggedIn
+                        &&
+                        <button
+                            onClick={handleFavoriteClick}
+                            className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                        >
+                            <Heart
+                                className={`w-5 h-5 ${
+                                    isFavorite ? 'fill-red-500 text-red-500' : ''
+                                }`}
+                            />
+                        </button>
+                    }
+
                 </div>
             </div>
         </Link>

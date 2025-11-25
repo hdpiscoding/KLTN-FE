@@ -151,6 +151,8 @@ export const PropertyDetail: React.FC = () => {
         alert('Đã copy số điện thoại!');
     };
 
+    const isLoggedIn = false;
+
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 py-6">
@@ -225,19 +227,23 @@ export const PropertyDetail: React.FC = () => {
                                 </div>
 
                                 {/* Favorite Button */}
-                                <button
-                                    onClick={() => setIsFavorited(!isFavorited)}
-                                    className={cn(
-                                        'cursor-pointer p-3 rounded-full transition-all duration-200 bg-white',
-                                        isFavorited
-                                            ? 'text-red-500'
-                                            : 'text-gray-400 hover:text-red-500'
-                                    )}
-                                >
-                                    <Heart
-                                        className={cn('w-6 h-6', isFavorited && 'fill-current')}
-                                    />
-                                </button>
+                                {isLoggedIn
+                                    &&
+                                    <button
+                                        onClick={() => setIsFavorited(!isFavorited)}
+                                        className={cn(
+                                            'cursor-pointer p-3 rounded-full transition-all duration-200 bg-white',
+                                            isFavorited
+                                                ? 'text-red-500'
+                                                : 'text-gray-400 hover:text-red-500'
+                                        )}
+                                    >
+                                        <Heart
+                                            className={cn('w-6 h-6', isFavorited && 'fill-current')}
+                                        />
+                                    </button>
+                                }
+
                             </div>
 
                             {/* Property Code, Created Date, Expiration Date */}

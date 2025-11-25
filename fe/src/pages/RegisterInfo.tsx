@@ -14,7 +14,7 @@ export const RegisterInfo = () => {
             phoneNumber: "",
             fullName: "",
         },
-        mode: "onChange",
+        mode: "onSubmit",
     });
     const navigate = useNavigate();
     const onSubmit = (data: {

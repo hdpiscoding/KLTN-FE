@@ -17,7 +17,7 @@ import {useDebounce} from "use-debounce";
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {calculateDistance} from "@/utils/calculateDistance.ts";
 import type {PlacePrediction} from "@/types/place-prediction";
-import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPI.ts";
+import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts";
 
 type DemandType = 'buy' | 'rent';
 

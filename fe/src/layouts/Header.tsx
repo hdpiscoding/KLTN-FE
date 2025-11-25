@@ -24,7 +24,7 @@ import {
 
 export const Header = () => {
     const navigate = useNavigate();
-    const isLoggin = true; // Placeholder for future authentication logic
+    const isLoggin = false; // Placeholder for future authentication logic
 
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },

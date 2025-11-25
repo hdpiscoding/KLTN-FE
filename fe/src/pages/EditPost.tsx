@@ -19,7 +19,7 @@ import type { PlacePrediction } from '@/types/place-prediction';
 import {calculateDistance} from "@/utils/calculateDistance.ts";
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {toast} from "react-toastify";
-import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPI.ts";
+import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts";
 
 type DemandType = 'buy' | 'rent';
 
