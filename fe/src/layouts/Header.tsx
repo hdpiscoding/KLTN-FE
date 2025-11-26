@@ -21,10 +21,13 @@ import {
     DropdownMenuTrigger,
     DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import {useUserStore} from "@/store/userStore.ts";
+import {toast} from "react-toastify";
 
 export const Header = () => {
     const navigate = useNavigate();
-    const isLoggin = false; // Placeholder for future authentication logic
+    const isLoggedIn = useUserStore((state) => state.isLoggedIn);
+    const logout = useUserStore((state) => state.logout);
 
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
@@ -34,14 +37,14 @@ export const Header = () => {
     ];
 
     // Add "Đăng tin" when logged in
-    const navItems = isLoggin
+    const navItems = isLoggedIn
         ? [...baseNavItems, { label: "Đăng tin", path: "/dang-tin", icon: <PenSquare className="w-4 h-4" /> }]
         : baseNavItems;
 
     const handleLogout = () => {
-        
-        // Add your logout logic here
+        logout();
         navigate('/');
+        toast.success("Đăng xuất thành công!");
     };
 
     return (
@@ -67,7 +70,7 @@ export const Header = () => {
 
                         {/* Auth Section */}
                         <div className="pl-6">
-                            {!isLoggin ? (
+                            {!isLoggedIn ? (
                                 <div className="flex items-center">
                                     <Link
                                         to="/dang-nhap"
@@ -152,7 +155,7 @@ export const Header = () => {
                                     </DropdownMenuItem>
                                 ))}
 
-                                {isLoggin ? (
+                                {isLoggedIn ? (
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild className="cursor-pointer">

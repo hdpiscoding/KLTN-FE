@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapPin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import {formatPrice, formatRelativeTime, formatArea} from "@/utils/generalFormat.ts";
+import {useUserStore} from "@/store/userStore.ts";
 
 interface PropertyCardItemProps {
     id: string;
@@ -28,8 +29,7 @@ export const PropertyCardItem = ({
 }: PropertyCardItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isFavorite, setIsFavorite] = useState(isFavorited);
-    const isLoggedIn = false;
-
+    const isLoggedIn = useUserStore((state) => state.isLoggedIn);
     const handleFavoriteClick = (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent card link click
         setIsFavorite(!isFavorite);

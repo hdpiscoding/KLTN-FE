@@ -18,6 +18,7 @@ import {formatDate} from "@/utils/generalFormat.ts";
 import {PropertyCardItem} from '@/components/property-card-item';
 import StaticMarkerMap from "@/components/static-marker-map.tsx";
 import type {Location} from "@/types/location.ts";
+import {useUserStore} from "@/store/userStore.ts";
 
 export const PropertyDetail: React.FC = () => {
     const {id} = useParams();
@@ -151,8 +152,7 @@ export const PropertyDetail: React.FC = () => {
         alert('Đã copy số điện thoại!');
     };
 
-    const isLoggedIn = false;
-
+    const isLoggedIn = useUserStore((state) => state.isLoggedIn);
     return (
         <div className="min-h-screen bg-gray-50">
             <div className="max-w-7xl mx-auto px-4 py-6">

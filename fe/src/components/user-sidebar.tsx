@@ -9,6 +9,8 @@ import {
     LogOut
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {useUserStore} from "@/store/userStore.ts";
+import {toast} from "react-toastify";
 
 interface SidebarItemProps {
     icon: React.ReactNode;
@@ -112,13 +114,13 @@ const BottomNavItem: React.FC<SidebarItemProps & { isCentral?: boolean }> = ({
 export const UserSidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
+    const logout = useUserStore((state) => state.logout);
 
     const handleLogout = () => {
-        // TODO: Implement logout logic
+        logout();
         navigate('/');
+        toast.success("Đăng xuất thành công!");
         console.log('Logging out...');
-        // Clear user data, tokens, etc.
-        // navigate('/dang-nhap');
     };
 
     const menuItems = [

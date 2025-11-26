@@ -15,7 +15,6 @@ interface MyPropertyListItemProps {
     createdAt: string;
     status: PropertyStatus;
     code?: string; // mã bất động sản
-    expirationDate?: string; // ngày hết hạn
 }
 
 const getStatusStyles = (status: PropertyStatus) => {
@@ -28,8 +27,6 @@ const getStatusStyles = (status: PropertyStatus) => {
             return "bg-gray-100 text-gray-700 border-gray-300";
         case "Không duyệt":
             return "bg-red-100 text-red-700 border-red-300";
-        case "Hết hạn":
-            return "bg-orange-100 text-orange-700 border-orange-300";
         default:
             return "bg-gray-100 text-gray-700 border-gray-300";
     }
@@ -45,7 +42,6 @@ export const MyPropertyListItem = ({
     createdAt,
     status,
     code,
-    expirationDate,
 }: MyPropertyListItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
 
@@ -103,9 +99,6 @@ export const MyPropertyListItem = ({
                 {/* Date Time - Bottom row */}
                 <div className="flex flex-wrap gap-3 mt-auto pt-2">
                     <span className="text-gray-500 text-xs">Ngày đăng: {formatDateTime(createdAt)}</span>
-                    {expirationDate && (
-                        <span className="text-gray-500 text-xs">Hết hạn: {formatDateTime(expirationDate)}</span>
-                    )}
                 </div>
             </div>
         </Link>

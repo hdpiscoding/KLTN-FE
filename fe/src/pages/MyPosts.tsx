@@ -89,7 +89,7 @@ export const MyPosts: React.FC = () => {
             address: '321 Võ Văn Tần, Phường 5, Quận 3, TP.HCM',
             imageUrl: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=500',
             createdAt: '2024-09-15T08:00:00',
-            status: 'Hết hạn' as const,
+            status: 'Chờ duyệt' as const,
             code: 'TN0005',
             expirationDate: '2024-10-15T23:59:00'
         },
@@ -128,7 +128,6 @@ export const MyPosts: React.FC = () => {
         { label: 'Chờ duyệt', value: 'Chờ duyệt', color: 'text-yellow-600 border-yellow-600' },
         { label: 'Đã gỡ', value: 'Đã gỡ', color: 'text-gray-600 border-gray-600' },
         { label: 'Không duyệt', value: 'Không duyệt', color: 'text-red-600 border-red-600' },
-        { label: 'Hết hạn', value: 'Hết hạn', color: 'text-orange-600 border-orange-600' },
     ];
 
     // Get count for each status
@@ -173,7 +172,7 @@ export const MyPosts: React.FC = () => {
                 </div>
 
                 {/* Status Tabs */}
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-5">
                     {tabs.map((tab) => (
                         <button
                             key={tab.value}
@@ -202,7 +201,7 @@ export const MyPosts: React.FC = () => {
 
             {/* Filter/Stats Bar - Keep for visual consistency */}
             <div className="bg-white rounded-lg shadow-md p-4">
-                <div className="flex flex-wrap gap-3 text-sm">
+                <div className="flex flex-wrap gap-5 text-sm">
                     <div className="flex items-center gap-2">
                         <span className="w-3 h-3 rounded-full bg-green-500"></span>
                         <span className="text-gray-600">
@@ -227,12 +226,6 @@ export const MyPosts: React.FC = () => {
                             Không duyệt: {myProperties.filter(p => p.status === 'Không duyệt').length}
                         </span>
                     </div>
-                    <div className="flex items-center gap-2">
-                        <span className="w-3 h-3 rounded-full bg-orange-500"></span>
-                        <span className="text-gray-600">
-                            Hết hạn: {myProperties.filter(p => p.status === 'Hết hạn').length}
-                        </span>
-                    </div>
                 </div>
             </div>
 
@@ -250,7 +243,6 @@ export const MyPosts: React.FC = () => {
                         createdAt={property.createdAt}
                         status={property.status}
                         code={property.code}
-                        expirationDate={property.expirationDate}
                     />
                 ))}
             </div>
