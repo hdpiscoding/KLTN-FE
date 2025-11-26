@@ -1,13 +1,20 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music, Loader2 } from 'lucide-react';
 import { PreferencePresetCard } from '@/components/preference-preset-card';
 import type { PreferencePreset } from '@/types/preference-preset';
+import {getMyProfile} from "@/services/userServices.ts";
+import {toast} from "react-toastify";
+import { useDebounce } from 'use-debounce';
+import type { PlacePrediction } from '@/types/place-prediction';
+import { placeAutocomplete } from '@/services/goongAPIServices.ts';
+import { cn } from '@/lib/utils';
 
 type UserProfileFormData = {
     fullName: string;
@@ -17,19 +24,46 @@ type UserProfileFormData = {
 };
 
 type PreferenceFormData = {
-    security: number;
+    safety: number;
     healthcare: number;
     education: number;
-    amenities: number;
+    shopping: number;
     transportation: number;
     environment: number;
     entertainment: number;
 };
 
 export const UserProfile: React.FC = () => {
+    const [isLoadingProfile, setIsLoadingProfile] = useState(true);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+    const [fullName, setFullName] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
+    const [phoneNumber, setPhoneNumber] = useState<string>('');
+    const [address, setAddress] = useState<string>('');
+    const [preferences, setPreferences] = useState({
+        safety: 50,
+        healthcare: 50,
+        education: 50,
+        shopping: 50,
+        transportation: 50,
+        environment: 50,
+        entertainment: 50,
+    })
+
+    // Autocomplete states for address
+    const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
+    const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [hasUserInteracted, setHasUserInteracted] = useState(false);
+    const suggestionRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const lastTrimmedAddressRef = useRef<string>('');
+
+    // Flag to prevent clearing preset selection during preset update
+    const isUpdatingPresetRef = useRef(false);
 
     // Preset data
     const presets: PreferencePreset[] = [
@@ -38,10 +72,10 @@ export const UserProfile: React.FC = () => {
             name: 'Nhà đông con',
             image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500',
             description: 'Phù hợp cho gia đình có nhiều trẻ em, ưu tiên giáo dục, an ninh và môi trường sống an toàn',
-            preferenceSecurity: 90,
+            preferenceSafety: 90,
             preferenceHealthcare: 75,
             preferenceEducation: 95,
-            preferenceAmenities: 80,
+            preferenceShopping: 80,
             preferenceTransportation: 70,
             preferenceEnvironment: 85,
             preferenceEntertainment: 60
@@ -51,10 +85,10 @@ export const UserProfile: React.FC = () => {
             name: 'Dành cho người cao tuổi',
             image: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=500',
             description: 'Ưu tiên y tế, môi trường yên tĩnh và giao thông thuận tiện cho người lớn tuổi',
-            preferenceSecurity: 80,
+            preferenceSafety: 80,
             preferenceHealthcare: 95,
             preferenceEducation: 40,
-            preferenceAmenities: 85,
+            preferenceShopping: 85,
             preferenceTransportation: 90,
             preferenceEnvironment: 90,
             preferenceEntertainment: 30
@@ -64,10 +98,10 @@ export const UserProfile: React.FC = () => {
             name: 'Người độc thân bận rộn',
             image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500',
             description: 'Tập trung vào giao thông, tiện ích và giải trí cho lối sống năng động',
-            preferenceSecurity: 70,
+            preferenceSafety: 70,
             preferenceHealthcare: 60,
             preferenceEducation: 50,
-            preferenceAmenities: 90,
+            preferenceShopping: 90,
             preferenceTransportation: 95,
             preferenceEnvironment: 60,
             preferenceEntertainment: 85
@@ -77,53 +111,213 @@ export const UserProfile: React.FC = () => {
             name: 'Cân bằng toàn diện',
             image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500',
             description: 'Mức độ ưu tiên cân bằng cho tất cả các yếu tố, phù hợp cho hầu hết mọi người',
-            preferenceSecurity: 70,
+            preferenceSafety: 70,
             preferenceHealthcare: 70,
             preferenceEducation: 70,
-            preferenceAmenities: 70,
+            preferenceShopping: 70,
             preferenceTransportation: 70,
             preferenceEnvironment: 70,
             preferenceEntertainment: 70
         },
     ];
 
+    const getProfile = async () => {
+        try {
+            setIsLoadingProfile(true);
+            const response = await getMyProfile();
+            setFullName(response?.data.fullName);
+            setEmail(response?.data.email);
+            setPhoneNumber(response?.data.phoneNumber);
+            setAddress(response?.data.liveAddress);
+            setAvatarPreview(response?.data.avatarUrl);
+            setPreferences({
+                safety: response?.data.preferenceSafety,
+                healthcare: response?.data.preferenceHealthcare,
+                education: response?.data.preferenceEducation,
+                shopping: response?.data.preferenceShopping,
+                transportation: response?.data.preferenceTransportation,
+                environment: response?.data.preferenceEnvironment,
+                entertainment: response?.data.preferenceEntertainment
+            })
+        }
+        catch (error) {
+            console.log(error);
+        }
+        finally {
+            setIsLoadingProfile(false);
+        }
+    };
+
     const form = useForm<UserProfileFormData>({
         defaultValues: {
-            fullName: '',
-            email: '',
-            phoneNumber: '',
-            address: '',
+            fullName: fullName,
+            email: email,
+            phoneNumber: phoneNumber,
+            address: address,
         },
         mode: 'onSubmit',
     });
 
     const preferenceForm = useForm<PreferenceFormData>({
         defaultValues: {
-            security: 50,
-            healthcare: 50,
-            education: 50,
-            amenities: 50,
-            transportation: 50,
-            environment: 50,
-            entertainment: 50,
+            safety: preferences.safety,
+            healthcare: preferences.healthcare,
+            education: preferences.education,
+            shopping: preferences.shopping,
+            transportation: preferences.transportation,
+            environment: preferences.environment,
+            entertainment: preferences.entertainment,
         },
         mode: 'onChange',
     });
+
+    // Load profile data only once on mount
+    useEffect(() => {
+        getProfile();
+    }, []);
+
+    // Update form values when profile data is loaded
+    useEffect(() => {
+        if (fullName || email || phoneNumber || address) {
+            form.reset({
+                fullName: fullName,
+                email: email,
+                phoneNumber: phoneNumber,
+                address: address,
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [fullName, email, phoneNumber, address]);
+
+    // Update preference form values when preferences data is loaded
+    useEffect(() => {
+        if (preferences.safety !== undefined) {
+            preferenceForm.reset({
+                safety: preferences.safety,
+                healthcare: preferences.healthcare,
+                education: preferences.education,
+                shopping: preferences.shopping,
+                transportation: preferences.transportation,
+                environment: preferences.environment,
+                entertainment: preferences.entertainment,
+            });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [preferences.safety, preferences.healthcare, preferences.education, preferences.shopping, preferences.transportation, preferences.environment, preferences.entertainment]);
+
+    // Watch address value
+    const addressValue = form.watch('address');
+
+    // Debounce address value with 300ms delay
+    const [debouncedAddress] = useDebounce(addressValue, 300);
+
+    // Close suggestions when clicking outside
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (suggestionRef.current && !suggestionRef.current.contains(event.target as Node) &&
+                inputRef.current && !inputRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const fetchAutocompleteSuggestions = useCallback(async (input: string) => {
+        setIsLoadingAddress(true);
+        try {
+            const data = await placeAutocomplete(input, 10);
+            if (data.predictions && data.predictions.length > 0) {
+                setSuggestions(data.predictions);
+                setShowSuggestions(true);
+                setSelectedIndex(-1);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Error fetching autocomplete:', error);
+            setSuggestions([]);
+        } finally {
+            setIsLoadingAddress(false);
+        }
+    }, []);
+
+    // Fetch autocomplete suggestions when debounced address changes
+    useEffect(() => {
+        // Only fetch suggestions if user has interacted with the input
+        if (!hasUserInteracted) {
+            return;
+        }
+
+        const trimmedAddress = debouncedAddress.trim();
+        if (!trimmedAddress || trimmedAddress.length < 3) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            lastTrimmedAddressRef.current = '';
+            return;
+        }
+        if (trimmedAddress === lastTrimmedAddressRef.current) {
+            return;
+        }
+        lastTrimmedAddressRef.current = trimmedAddress;
+        fetchAutocompleteSuggestions(trimmedAddress);
+    }, [debouncedAddress, fetchAutocompleteSuggestions, hasUserInteracted]);
+
+    const handleSelectSuggestion = (prediction: PlacePrediction) => {
+        form.setValue('address', prediction.description);
+        setShowSuggestions(false);
+        setSuggestions([]);
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+        if (!showSuggestions || suggestions.length === 0) return;
+
+        switch (e.key) {
+            case 'ArrowDown':
+                e.preventDefault();
+                setSelectedIndex(prev =>
+                    prev < suggestions.length - 1 ? prev + 1 : prev
+                );
+                break;
+            case 'ArrowUp':
+                e.preventDefault();
+                setSelectedIndex(prev => prev > 0 ? prev - 1 : -1);
+                break;
+            case 'Enter':
+                if (selectedIndex >= 0) {
+                    e.preventDefault();
+                    handleSelectSuggestion(suggestions[selectedIndex]);
+                }
+                break;
+            case 'Escape':
+                setShowSuggestions(false);
+                break;
+        }
+    };
+
+
 
     // Watch all preference form values
     const watchedPreferences = preferenceForm.watch();
 
     // Effect to clear preset selection when user manually adjusts any slider
     useEffect(() => {
+        // Skip if we're currently updating from preset selection
+        if (isUpdatingPresetRef.current) {
+            return;
+        }
+
         if (selectedPresetId) {
             const selectedPreset = presets.find(p => p.id === selectedPresetId);
             if (selectedPreset) {
                 // Check if any value has been changed from the preset values
                 const hasChanged =
-                    watchedPreferences.security !== selectedPreset.preferenceSecurity ||
+                    watchedPreferences.safety !== selectedPreset.preferenceSafety ||
                     watchedPreferences.healthcare !== selectedPreset.preferenceHealthcare ||
                     watchedPreferences.education !== selectedPreset.preferenceEducation ||
-                    watchedPreferences.amenities !== selectedPreset.preferenceAmenities ||
+                    watchedPreferences.shopping !== selectedPreset.preferenceShopping ||
                     watchedPreferences.transportation !== selectedPreset.preferenceTransportation ||
                     watchedPreferences.environment !== selectedPreset.preferenceEnvironment ||
                     watchedPreferences.entertainment !== selectedPreset.preferenceEntertainment;
@@ -175,27 +369,35 @@ export const UserProfile: React.FC = () => {
     };
 
     const handlePresetSelect = (presetId: string) => {
+        // Set flag to prevent clearing preset during update
+        isUpdatingPresetRef.current = true;
+
         setSelectedPresetId(presetId);
         const preset = presets.find(p => p.id === presetId);
         if (preset) {
             // Update preference form values with preset values
-            preferenceForm.setValue('security', preset.preferenceSecurity);
+            preferenceForm.setValue('safety', preset.preferenceSafety);
             preferenceForm.setValue('healthcare', preset.preferenceHealthcare);
             preferenceForm.setValue('education', preset.preferenceEducation);
-            preferenceForm.setValue('amenities', preset.preferenceAmenities);
+            preferenceForm.setValue('shopping', preset.preferenceShopping);
             preferenceForm.setValue('transportation', preset.preferenceTransportation);
             preferenceForm.setValue('environment', preset.preferenceEnvironment);
             preferenceForm.setValue('entertainment', preset.preferenceEntertainment);
         }
+
+        // Reset flag after a short delay to allow form values to settle
+        setTimeout(() => {
+            isUpdatingPresetRef.current = false;
+        }, 100);
     };
 
     const handlePreferenceDefault = () => {
         setSelectedPresetId(null); // Clear preset selection
         preferenceForm.reset({
-            security: 50,
+            safety: 50,
             healthcare: 50,
             education: 50,
-            amenities: 50,
+            shopping: 50,
             transportation: 50,
             environment: 50,
             entertainment: 50,
@@ -206,13 +408,13 @@ export const UserProfile: React.FC = () => {
         console.log('Profile data:', data);
         console.log('Avatar file:', avatarFile);
         // TODO: Implement API call to update profile
-        alert('Cập nhật thông tin thành công!');
+        toast.success('Cập nhật thông tin thành công!')
     };
 
     const onSubmitPreferences = async (data: PreferenceFormData) => {
         console.log('Preference data:', data);
         // TODO: Implement API call to update preferences
-        alert('Lưu cài đặt ưu tiên thành công!');
+        toast.success('Lưu cài đặt ưu tiên thành công!')
     };
 
     return (
@@ -223,70 +425,107 @@ export const UserProfile: React.FC = () => {
 
                 {/* Avatar Upload */}
                 <div className="flex flex-col sm:flex-row items-center gap-6 mb-8 pb-6 border-b">
-                    {/* Avatar Preview */}
-                    <div className="relative">
-                        <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-gray-200 flex items-center justify-center">
-                            {avatarPreview ? (
-                                <img
-                                    src={avatarPreview}
-                                    alt="Avatar preview"
-                                    className="w-full h-full object-cover"
-                                />
-                            ) : (
-                                <User className="w-16 h-16 text-gray-400" />
-                            )}
-                        </div>
-                    </div>
+                    {isLoadingProfile ? (
+                        <>
+                            {/* Avatar Skeleton */}
+                            <Skeleton className="w-32 h-32 rounded-full" />
+                            {/* Upload Button Skeleton */}
+                            <div className="flex flex-col items-center gap-3">
+                                <Skeleton className="h-10 w-32" />
+                                <Skeleton className="h-4 w-48" />
+                            </div>
+                        </>
+                    ) : (
+                        <>
+                            {/* Avatar Preview */}
+                            <div className="relative">
+                                <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-100 border-4 border-gray-200 flex items-center justify-center">
+                                    {avatarPreview ? (
+                                        <img
+                                            src={avatarPreview}
+                                            alt="Avatar preview"
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <User className="w-16 h-16 text-gray-400" />
+                                    )}
+                                </div>
+                            </div>
 
-                    {/* Upload Button */}
-                    <div className="flex flex-col gap-2">
-                        <input
-                            type="file"
-                            id="avatar-upload"
-                            accept=".png,.jpg,.jpeg,.webp"
-                            onChange={handleAvatarChange}
-                            className="hidden"
-                        />
-                        <div className="flex flex-col items-center gap-3">
-                            <label htmlFor="avatar-upload">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="cursor-pointer"
-                                    onClick={() => document.getElementById('avatar-upload')?.click()}
-                                >
-                                    <Upload className="w-4 h-4 mr-2" />
-                                    Tải ảnh
-                                </Button>
-                            </label>
-                            <p className="text-xs text-gray-500">
-                                Chấp nhận: PNG, JPG, JPEG, WEBP
-                            </p>
-                        </div>
-                    </div>
+                            {/* Upload Button */}
+                            <div className="flex flex-col gap-2">
+                                <input
+                                    type="file"
+                                    id="avatar-upload"
+                                    accept=".png,.jpg,.jpeg,.webp"
+                                    onChange={handleAvatarChange}
+                                    className="hidden"
+                                />
+                                <div className="flex flex-col items-center gap-3">
+                                    <label htmlFor="avatar-upload">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="cursor-pointer"
+                                            onClick={() => document.getElementById('avatar-upload')?.click()}
+                                        >
+                                            <Upload className="w-4 h-4 mr-2" />
+                                            Tải ảnh
+                                        </Button>
+                                    </label>
+                                    <p className="text-xs text-gray-500">
+                                        Chấp nhận: PNG, JPG, JPEG, WEBP
+                                    </p>
+                                </div>
+                            </div>
+                        </>
+                    )}
                 </div>
 
                 {/* Profile Form */}
-                <Form {...form}>
-                    <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                        {/* Full Name */}
-                        <FormField
-                            control={form.control}
-                            name="fullName"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Họ tên</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            placeholder="Nhập họ tên của bạn"
-                                            className="focus-visible:ring-[#008DDA]"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                {isLoadingProfile ? (
+                    <div className="space-y-6">
+                        {/* Skeleton for form fields */}
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-20" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-28" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <div className="pt-4">
+                            <Skeleton className="h-10 w-32" />
+                        </div>
+                    </div>
+                ) : (
+                    <Form {...form}>
+                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                            {/* Full Name */}
+                            <FormField
+                                control={form.control}
+                                name="fullName"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Họ tên</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                className="focus-visible:ring-[#008DDA]"
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                         {/* Email */}
                         <FormField
@@ -304,7 +543,6 @@ export const UserProfile: React.FC = () => {
                                     <FormControl>
                                         <Input
                                             type="email"
-                                            placeholder="example@email.com"
                                             className="focus-visible:ring-[#008DDA]"
                                             {...field}
                                         />
@@ -330,8 +568,8 @@ export const UserProfile: React.FC = () => {
                                     <FormControl>
                                         <Input
                                             type="tel"
-                                            placeholder="0123456789"
-                                            className="focus-visible:ring-[#008DDA]"
+                                            disabled={true}
+                                            className="focus-visible:ring-[#008DDA] cursor-not-allowed"
                                             maxLength={10}
                                             {...field}
                                         />
@@ -348,38 +586,95 @@ export const UserProfile: React.FC = () => {
                                 <FormItem>
                                     <FormLabel>Địa chỉ</FormLabel>
                                     <FormControl>
-                                        <Input
-                                            placeholder="Nhập địa chỉ của bạn"
-                                            className="focus-visible:ring-[#008DDA]"
-                                            {...field}
-                                        />
+                                        <div className="relative">
+                                            <Input
+                                                className="focus-visible:ring-[#008DDA]"
+                                                {...field}
+                                                ref={(e) => {
+                                                    field.ref(e);
+                                                    inputRef.current = e;
+                                                }}
+                                                onKeyDown={handleKeyDown}
+                                                onFocus={() => setHasUserInteracted(true)}
+                                                onChange={(e) => {
+                                                    setHasUserInteracted(true);
+                                                    field.onChange(e);
+                                                }}
+                                                autoComplete="off"
+                                            />
+                                            {isLoadingAddress && (
+                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                    <Loader2 className="w-4 h-4 animate-spin text-[#008DDA]" />
+                                                </div>
+                                            )}
+                                            {showSuggestions && suggestions.length > 0 && (
+                                                <div
+                                                    ref={suggestionRef}
+                                                    className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                                                >
+                                                    {suggestions.map((suggestion, index) => (
+                                                        <div
+                                                            key={suggestion.place_id}
+                                                            className={cn(
+                                                                "px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors",
+                                                                selectedIndex === index && "bg-gray-100"
+                                                            )}
+                                                            onClick={() => handleSelectSuggestion(suggestion)}
+                                                        >
+                                                            <div className="text-sm text-gray-900">
+                                                                {suggestion.structured_formatting?.main_text || suggestion.description}
+                                                            </div>
+                                                            {suggestion.structured_formatting?.secondary_text && (
+                                                                <div className="text-xs text-gray-500 mt-0.5">
+                                                                    {suggestion.structured_formatting.secondary_text}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
                                     </FormControl>
                                     <FormMessage />
                                 </FormItem>
                             )}
                         />
 
-                        {/* Submit Button */}
-                        <div className="pt-4">
-                            <Button
-                                type="submit"
-                                className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
-                            >
-                                Lưu thay đổi
-                            </Button>
-                        </div>
-                    </form>
-                </Form>
+                            {/* Submit Button */}
+                            <div className="pt-4">
+                                <Button
+                                    type="submit"
+                                    className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                                >
+                                    Lưu thay đổi
+                                </Button>
+                            </div>
+                        </form>
+                    </Form>
+                )}
             </div>
 
             {/* Section 2: Preference Settings */}
             <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
                 <h2 className="text-2xl font-semibold mb-2">Cài đặt ưu tiên</h2>
                 <p className="text-sm text-gray-500 mb-6">
-                    Hãy cho chúng tôi biết điều gì là quan trọng nhất với bạn. Hệ thống sẽ sử dụng các ưu tiên này để tính toán "Điểm của bạn" cho mỗi bất động sản.
+                    Hãy cho chúng tôi biết điều gì là quan trọng nhất với bạn. Hệ thống sẽ sử dụng các ưu tiên này để tính toán và gợi ý các bất động sản phù hợp nhất với bạn.
                 </p>
 
-                <Tabs defaultValue="presets" className="w-full">
+                {isLoadingProfile ? (
+                    <div className="space-y-6">
+                        {/* Skeleton for tabs */}
+                        <Skeleton className="h-10 w-full" />
+                        {/* Skeleton for preset cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <Skeleton className="h-64 w-full" />
+                            <Skeleton className="h-64 w-full" />
+                            <Skeleton className="h-64 w-full" />
+                            <Skeleton className="h-64 w-full" />
+                        </div>
+                    </div>
+                ) : (
+                    <Tabs defaultValue="presets" className="w-full">
                     <TabsList className="grid w-full grid-cols-2 mb-6">
                         <TabsTrigger value="presets" className="cursor-pointer">Bộ có sẵn</TabsTrigger>
                         <TabsTrigger value="custom" className="cursor-pointer">Tùy chỉnh</TabsTrigger>
@@ -434,7 +729,7 @@ export const UserProfile: React.FC = () => {
                         {/* Security Slider */}
                         <FormField
                             control={preferenceForm.control}
-                            name="security"
+                            name="safety"
                             render={({ field }) => (
                                 <FormItem>
                                     <div className="flex items-start justify-between gap-4 mb-3">
@@ -545,7 +840,7 @@ export const UserProfile: React.FC = () => {
                         {/* Amenities Slider */}
                         <FormField
                             control={preferenceForm.control}
-                            name="amenities"
+                            name="shopping"
                             render={({ field }) => (
                                 <FormItem>
                                     <div className="flex items-start justify-between gap-4 mb-3">
@@ -714,6 +1009,7 @@ export const UserProfile: React.FC = () => {
                         </Form>
                     </TabsContent>
                 </Tabs>
+                )}
             </div>
         </div>
     );

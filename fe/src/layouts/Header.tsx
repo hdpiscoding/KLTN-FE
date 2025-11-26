@@ -1,6 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
 import logo from "@/assets/timnha-landscape.png";
-import avatarImg from "@/assets/timnha-icon.png";
 import {
     Menu,
     Home,
@@ -12,7 +11,8 @@ import {
     UserCircle,
     Lock,
     LogOut,
-    Heart
+    Heart,
+    User
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -28,6 +28,8 @@ export const Header = () => {
     const navigate = useNavigate();
     const isLoggedIn = useUserStore((state) => state.isLoggedIn);
     const logout = useUserStore((state) => state.logout);
+    const avatarUrl = useUserStore((state) => state.avatarUrl);
+    const clearAvatar = useUserStore((state) => state.clearAvatar);
 
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
@@ -43,6 +45,7 @@ export const Header = () => {
 
     const handleLogout = () => {
         logout();
+        clearAvatar();
         navigate('/');
         toast.success("Đăng xuất thành công!");
     };
@@ -90,11 +93,18 @@ export const Header = () => {
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild className="cursor-pointer">
                                         <button className="p-1 rounded-full overflow-hidden border-2 border-transparent hover:border-[#008DDA] transition-colors">
-                                            <img
-                                                src={avatarImg}
-                                                alt="User avatar"
-                                                className="h-8 w-8 rounded-full object-cover"
-                                            />
+                                            {avatarUrl
+                                                ?
+                                                <img
+                                                    src={avatarUrl}
+                                                    alt="User avatar"
+                                                    className="h-8 w-8 rounded-full object-cover"
+                                                />
+                                                :
+                                                <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center text-gray-400">
+                                                    <User className="w-6 h-6 text-gray-400" />
+                                                </div>
+                                                }
                                         </button>
                                     </DropdownMenuTrigger>
                                     <DropdownMenuContent align="end" className="w-56">

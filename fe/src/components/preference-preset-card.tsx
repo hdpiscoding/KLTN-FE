@@ -11,7 +11,7 @@ export interface PreferencePresetCardProps {
 
 const preferenceConfig = [
     {
-        key: 'preferenceSecurity' as keyof PreferencePreset,
+        key: 'preferenceSafety' as keyof PreferencePreset,
         label: 'An ninh',
         icon: Shield,
         color: 'bg-blue-100 text-blue-600',
@@ -32,7 +32,7 @@ const preferenceConfig = [
         barColor: 'bg-purple-500'
     },
     {
-        key: 'preferenceAmenities' as keyof PreferencePreset,
+        key: 'preferenceShopping' as keyof PreferencePreset,
         label: 'Tiện ích',
         icon: ShoppingBag,
         color: 'bg-green-100 text-green-600',

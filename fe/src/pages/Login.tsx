@@ -9,6 +9,7 @@ import {login} from "@/services/authServices.ts";
 import {useUserStore} from "@/store/userStore.ts";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
+import {getMyProfile} from "@/services/userServices.ts";
 
 
 export const Login = () => {
@@ -22,6 +23,7 @@ export const Login = () => {
         mode: "onSubmit",
     });
     const loginData = useUserStore((state) => state.login);
+    const setAvatar = useUserStore((state) => state.setAvatar);
 
     const onSubmit = async (data: {email: string, password: string}) => {
         setIsLoading(true);
@@ -31,6 +33,8 @@ export const Login = () => {
             if (response.status === "200") {
                 loginData(response.data.token);
                 toast.success("Đăng nhập thành công!");
+                const avatarRes = await getMyProfile();
+                setAvatar(avatarRes?.data.avatarUrl);
                 navigate("/");
             }
         }

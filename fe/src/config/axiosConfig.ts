@@ -1,18 +1,20 @@
 import axios from "axios";
+import {useUserStore} from "@/store/userStore.ts";
 
 
 const instance = axios.create({
-    baseURL: "https://api-emobeat.sonata.io.vn/api/v1/",
+    baseURL: "https://kltn-api-staging.sonata.io.vn/api/v1/",
     timeout: 100000
 });
 
-// const getAccessToken = () => {
-//     //
-// }
+const getAccessToken = () => {
+    const token = useUserStore.getState().token;
+    return token ? `Bearer ${token}` : "";
+}
 
 instance.interceptors.request.use(
     (config) => {
-        // config.headers["Authorization"] = getAccessToken();
+        config.headers["Authorization"] = getAccessToken();
         return config;
     },
     (error) => {

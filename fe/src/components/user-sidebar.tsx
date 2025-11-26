@@ -115,9 +115,11 @@ export const UserSidebar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const logout = useUserStore((state) => state.logout);
+    const clearAvatar = useUserStore((state) => state.clearAvatar);
 
     const handleLogout = () => {
         logout();
+        clearAvatar();
         navigate('/');
         toast.success("Đăng xuất thành công!");
         console.log('Logging out...');
