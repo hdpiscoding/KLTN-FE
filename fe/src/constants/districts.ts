@@ -2,14 +2,12 @@ import type { District } from '@/types/district.d.ts';
 
 export const DISTRICTS: District[] = [
     { id: 'quan1', name: 'Quận 1' },
-    { id: 'quan2', name: 'Quận 2 (TP. Thủ Đức)' },
     { id: 'quan3', name: 'Quận 3' },
     { id: 'quan4', name: 'Quận 4' },
     { id: 'quan5', name: 'Quận 5' },
     { id: 'quan6', name: 'Quận 6' },
     { id: 'quan7', name: 'Quận 7' },
     { id: 'quan8', name: 'Quận 8' },
-    { id: 'quan9', name: 'Quận 9 (TP. Thủ Đức)' },
     { id: 'quan10', name: 'Quận 10' },
     { id: 'quan11', name: 'Quận 11' },
     { id: 'quan12', name: 'Quận 12' },
@@ -19,7 +17,7 @@ export const DISTRICTS: District[] = [
     { id: 'phunhuan', name: 'Quận Phú Nhuận' },
     { id: 'tanbinh', name: 'Quận Tân Bình' },
     { id: 'tanphu', name: 'Quận Tân Phú' },
-    { id: 'thuduc', name: 'Quận Thủ Đức (TP. Thủ Đức)' },
+    { id: 'thuduc', name: 'Thành phố Thủ Đức' },
     { id: 'binhchanh', name: 'Huyện Bình Chánh' },
     { id: 'cangio', name: 'Huyện Cần Giờ' },
     { id: 'cuchi', name: 'Huyện Củ Chi' },
