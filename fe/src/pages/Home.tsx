@@ -6,6 +6,7 @@ import homeBackground from "@/assets/timnha-home-background.png";
 import { Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import {
     Carousel,
     CarouselContent,
@@ -30,213 +31,39 @@ export const Home: React.FC = () => {
     const [isLoadingSale, setIsLoadingSale] = useState(true);
     const [isLoadingRent, setIsLoadingRent] = useState(true);
 
-    // // Sample data for properties
-    // const sampleProperties = [
-    //     {
-    //         id: "1",
-    //         title: "Căn hộ cao cấp tại trung tâm quận 1, view sông Sài Gòn tuyệt đẹp",
-    //         price: 2500000000,
-    //         area: 85,
-    //         address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-05T09:00:00.000Z",
-    //     },
-    //     {
-    //         id: "2",
-    //         title: "Nhà phố liền kề khu compound an ninh 24/7",
-    //         price: 4200000000,
-    //         area: 120,
-    //         address: "Palm City, Quận 9, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-06T15:30:00.000Z",
-    //     },
-    //     {
-    //         id: "3",
-    //         title: "Căn hộ 2 phòng ngủ full nội thất cao cấp",
-    //         price: 1800000000,
-    //         area: 65,
-    //         address: "Masteri Thảo Điền, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=2084&auto=format&fit=crop",
-    //         createdAt: "2025-11-07T08:15:00.000Z",
-    //     },
-    //     {
-    //         id: "4",
-    //         title: "Biệt thự sân vườn phong cách hiện đại",
-    //         price: 8500000000,
-    //         area: 300,
-    //         address: "Thảo Điền, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop",
-    //         createdAt: "2025-11-07T10:45:00.000Z",
-    //     },
-    //     {
-    //         id: "5",
-    //         title: "Căn hộ Duplex view công viên",
-    //         price: 3200000000,
-    //         area: 110,
-    //         address: "Lumière Riverside, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1512916194211-3f2b7f5f7de3?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-06T11:20:00.000Z",
-    //     },
-    //     {
-    //         id: "6",
-    //         title: "Nhà phố thương mại mặt tiền đường lớn",
-    //         price: 12000000000,
-    //         area: 160,
-    //         address: "Phú Mỹ Hưng, Quận 7, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
-    //         createdAt: "2025-11-05T14:10:00.000Z",
-    //     },
-    //     {
-    //         id: "7",
-    //         title: "Căn hộ Duplex view công viên",
-    //         price: 3200000000,
-    //         area: 110,
-    //         address: "Lumière Riverside, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1512916194211-3f2b7f5f7de3?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-06T11:20:00.000Z",
-    //     },
-    //     {
-    //         id: "8",
-    //         title: "Nhà phố thương mại mặt tiền đường lớn",
-    //         price: 12000000000,
-    //         area: 160,
-    //         address: "Phú Mỹ Hưng, Quận 7, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
-    //         createdAt: "2025-11-05T14:10:00.000Z",
-    //     },
-    // ];
-
     // Sample data for districts
     const sampleDistricts = [
         {
-            id: "quan1",
+            id: "quan-1",
             name: "Quận 1",
             postCount: 1234,
             imageUrl: "https://owa.bestprice.vn/images/destinations/uploads/quan-1-6094b9a6a8de1.jpg",
         },
         {
-            id: "quan3",
+            id: "quan-3",
             name: "Quận 3",
             postCount: 856,
             imageUrl: "https://blog.rever.vn/hubfs/Blog%20images/PhuLH/quan-2-1.jpg",
         },
         {
-            id: "quan7",
+            id: "quan-7",
             name: "Quận 7",
             postCount: 2451,
             imageUrl: "https://iwater.vn/Image/Picture/New/333/quan_7.jpg",
         },
         {
-            id: "binhthanh",
+            id: "binh-thanh",
             name: "Quận Bình Thạnh",
             postCount: 1876,
             imageUrl: "https://nhadathoangviet.com/wp-content/uploads/2024/04/Anh-man-hinh-2024-04-17-luc-10.29.19.png",
         },
         {
-            id: "quan11",
+            id: "quan-11",
             name: "Quận 11",
             postCount: 943,
             imageUrl: "https://maisonoffice.vn/wp-content/uploads/2024/04/1-gioi-thieu-tong-quan-ve-quan-11-tphcm.jpg",
         },
     ];
-
-    // // Sample data for sale properties
-    // const sampleSaleProperties = [
-    //     {
-    //         id: "7",
-    //         title: "Penthouse Duplex view toàn cảnh thành phố",
-    //         price: 15000000000,
-    //         area: 250,
-    //         address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T09:00:00.000Z",
-    //     },
-    //     {
-    //         id: "8",
-    //         title: "Căn hộ 3 phòng ngủ view sông",
-    //         price: 5500000000,
-    //         area: 110,
-    //         address: "Saigon Pearl, Quận Bình Thạnh, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?q=80&w=2080&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T10:30:00.000Z",
-    //     },
-    //     {
-    //         id: "9",
-    //         title: "Biệt thự đơn lập khu compound",
-    //         price: 28000000000,
-    //         area: 400,
-    //         address: "Riviera Cove, Quận 9, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?q=80&w=2075&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T11:15:00.000Z",
-    //     },
-    //     {
-    //         id: "10",
-    //         title: "Căn hộ Officetel trung tâm quận 1",
-    //         price: 3200000000,
-    //         area: 45,
-    //         address: "Vinhomes Golden River, Quận 1, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T12:00:00.000Z",
-    //     },
-    //     {
-    //         id: "11",
-    //         title: "Nhà phố 4 tầng mặt tiền",
-    //         price: 18500000000,
-    //         area: 200,
-    //         address: "Đường Nguyễn Văn Trỗi, Phú Nhuận, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1605276374104-dee2a0ed3cd6?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T13:30:00.000Z",
-    //     },
-    // ];
-    //
-    // // Sample data for rent properties
-    // const sampleRentProperties = [
-    //     {
-    //         id: "12",
-    //         title: "Căn hộ cao cấp 2PN full nội thất Vinhomes Central Park",
-    //         price: 15000000,
-    //         area: 70,
-    //         address: "Vinhomes Central Park, Bình Thạnh, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T09:00:00.000Z",
-    //     },
-    //     {
-    //         id: "13",
-    //         title: "Studio Landmark 81 view sông và thành phố",
-    //         price: 12000000,
-    //         area: 45,
-    //         address: "Landmark 81, Bình Thạnh, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1502672023488-70e25813eb80?q=80&w=2069&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T10:30:00.000Z",
-    //     },
-    //     {
-    //         id: "14",
-    //         title: "Nhà phố nguyên căn khu compound",
-    //         price: 35000000,
-    //         area: 200,
-    //         address: "Park Riverside, Quận 9, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1568605114967-8130f3a36994?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T11:15:00.000Z",
-    //     },
-    //     {
-    //         id: "15",
-    //         title: "Căn hộ duplex 3PN Feliz En Vista",
-    //         price: 25000000,
-    //         area: 120,
-    //         address: "Feliz En Vista, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1598928506311-c55ded91a20c?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T12:00:00.000Z",
-    //     },
-    //     {
-    //         id: "16",
-    //         title: "Căn hộ 2PN The Estella An Phú",
-    //         price: 18000000,
-    //         area: 98,
-    //         address: "The Estella, An Phú, Quận 2, TP.HCM",
-    //         imageUrl: "https://images.unsplash.com/photo-1493809842364-78817add7ffb?q=80&w=2070&auto=format&fit=crop",
-    //         createdAt: "2025-11-08T13:30:00.000Z",
-    //     },
-    // ];
 
     const getSaleProperties = async () => {
         try {
@@ -324,25 +151,7 @@ export const Home: React.FC = () => {
     }
 
     const handleDistrictClick = (districtId: string) => {
-        let districtName = "";
-        switch (districtId) {
-            case "quan1":
-                districtName = "Quận 1";
-                break;
-            case "quan3":
-                districtName = "Quận 3";
-                break;
-            case "quan7":
-                districtName = "Quận 7";
-                break;
-            case "binhthanh":
-                districtName = "Quận Bình Thạnh";
-                break;
-            case "quan11":
-                districtName = "Quận 11";
-                break;
-        }
-        navigate(`/mua-nha?addressDistrict_eq=${encodeURIComponent(districtName)}`)
+        navigate(`/mua-nha?addressDistrict_eq=${encodeURIComponent(districtId)}`)
     }
 
     useEffect(() => {
@@ -351,14 +160,22 @@ export const Home: React.FC = () => {
         getRentProperties();
     }, [])
 
+    const executeSearch = () => {
+        const trimmedValue = searchValue.trim();
+        if (!trimmedValue) return;
+        const encodedValue = encodeURIComponent(trimmedValue);
+        if (searchType === 'for_sale') {
+            navigate(`/mua-nha?title_lk=${encodedValue}`)
+        } else {
+            navigate(`/thue-nha?title_lk=${encodedValue}`)
+        }
+        console.log('Searching for:', trimmedValue, 'Type:', searchType);
+    }
+
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            if (searchType === 'for_sale')
-                navigate(`/mua-nha?title=${encodeURIComponent(searchValue)}`)
-            else
-                navigate(`/thue-nha?title=${encodeURIComponent(searchValue)}`)
-            console.log('Searching for:', searchValue, 'Type:', searchType);
+            executeSearch();
         }
     };
 
@@ -411,16 +228,22 @@ export const Home: React.FC = () => {
 
                         {/* Search Box */}
                         <div className="w-full">
-                            <div className="relative">
+                            <div className="flex w-full">
                                 <Input
                                     type="text"
                                     value={searchValue}
                                     onChange={(e) => setSearchValue(e.target.value)}
                                     onKeyDown={handleSearch}
                                     placeholder={`Tìm kiếm ${searchType === 'for_sale' ? 'nhà để mua' : 'nhà để thuê'}...`}
-                                    className="pl-12 h-[52px] bg-white text-gray-600 text-base sm:text-lg w-full focus-visible:ring-[#008DDA] focus-visible:ring-2 focus-visible:ring-offset-0"
+                                    className="h-[52px] bg-white text-gray-600 text-base sm:text-lg w-full rounded-r-none border-r-0 focus-visible:ring-[#008DDA] focus-visible:ring-2 focus-visible:ring-offset-0"
                                 />
-                                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                                <Button
+                                    type="button"
+                                    onClick={executeSearch}
+                                    className="h-[52px] rounded-l-none px-4 bg-[#008DDA] hover:bg-[#0072b0] cursor-pointer"
+                                >
+                                    <Search className="w-5 h-5 text-white" />
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -665,3 +488,4 @@ export const Home: React.FC = () => {
         </div>
     );
 }
+

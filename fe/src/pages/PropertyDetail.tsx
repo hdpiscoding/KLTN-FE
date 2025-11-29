@@ -13,8 +13,6 @@ import {Skeleton} from '@/components/ui/skeleton';
 import {Heart, MapPin, Phone, User} from 'lucide-react';
 import {cn} from '@/lib/utils';
 import {formatPrice, formatArea} from '@/utils/generalFormat';
-import {PropertyTypeFilter} from "@/components/property-type-filter.tsx";
-import {PropertyDistrictFilter} from "@/components/property-district-filter.tsx";
 import {formatDate} from "@/utils/generalFormat.ts";
 import {PropertyCardItem} from '@/components/property-card-item';
 import StaticMarkerMap from "@/components/static-marker-map.tsx";
@@ -547,12 +545,6 @@ export const PropertyDetail: React.FC = () => {
                                 Click để copy số điện thoại
                             </p>
                         </div>
-
-                        <div className="hidden sm:block space-y-4">
-                            <PropertyTypeFilter/>
-                            <PropertyDistrictFilter/>
-                        </div>
-
                     </aside>
                 </div>
             </div>

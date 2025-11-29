@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, MapIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -20,6 +20,13 @@ import {ControlledPagination} from "@/components/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
 import {PropertyCardItem} from "@/components/property-card-item.tsx";
 import MultipleMarkerMap, { type PropertyMarker } from '@/components/multiple-marker-map';
+import type {PropertyListing} from "@/types/property-listing";
+import { useSearchFilters } from '@/hooks/use-search-filters';
+import { searchProperties } from '@/services/propertyServices';
+import { Skeleton } from '@/components/ui/skeleton';
+import { getPriceRangeValue, getPriceRangeId } from '@/utils/priceRangeHelper';
+import { getSortCriteriaValue } from '@/utils/sortCriteriaHelper';
+import { useSearchParams } from 'react-router-dom';
 
 export const RentProperty: React.FC = () => {
     const [searchValue, setSearchValue] = useState('');
@@ -28,8 +35,12 @@ export const RentProperty: React.FC = () => {
     const [priceRange, setPriceRange] = useState('all');
     const [sortCriteria, setSortCriteria] = useState('default');
     const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
     const [isMapOpen, setIsMapOpen] = useState(false);
-
+    const [propertyList, setPropertyList] = useState<PropertyListing[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const { filters, setFilter } = useSearchFilters();
+    const [searchParams, setSearchParams] = useSearchParams();
 
     // Sample data for properties
     const sampleProperties = [
@@ -157,16 +168,198 @@ export const RentProperty: React.FC = () => {
         area: property.area
     }));
 
-    const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             e.preventDefault();
-            console.log('Searching for:', searchValue);
+            executeSearch();
+        }
+    };
+
+    const executeSearch = () => {
+        const trimmedValue = searchValue.trim();
+        if (trimmedValue) {
+            setFilter('title', 'lk', trimmedValue);
+            console.log('Searching for:', trimmedValue);
+        } else {
+            setFilter('title', 'lk', ''); // Xóa filter nếu rỗng
         }
     };
 
     const handleToggleMap = () => {
         setIsMapOpen(!isMapOpen);
     };
+
+    // Handle district select change
+    const handleDistrictChange = (value: string) => {
+        setDistrict(value);
+        if (value === 'all') {
+            setFilter('addressDistrict', 'eq', '');
+        } else {
+            const districtName = DISTRICTS.find(d => d.id === value)?.name;
+            if (districtName) {
+                setFilter('addressDistrict', 'eq', districtName);
+            }
+        }
+    };
+
+    // Handle property type select change
+    const handlePropertyTypeChange = (value: string) => {
+        setPropertyType(value);
+        if (value === 'all') {
+            setFilter('propertyType', 'eq', '');
+        } else {
+            setFilter('propertyType', 'eq', value);
+        }
+    };
+
+    // Handle sort criteria change
+    const handleSortChange = (value: string) => {
+        setSortCriteria(value);
+        const params = new URLSearchParams(searchParams);
+        if (value === 'default') {
+            params.delete('sort');
+        } else {
+            params.set('sort', value);
+        }
+        setSearchParams(params);
+    };
+
+    // Handle price range select change
+    const handlePriceRangeChange = (value: string) => {
+        setPriceRange(value);
+        if (value === 'all') {
+            setFilter('price', 'rng', '');
+        } else {
+            const rangeValue = getPriceRangeValue(value);
+            if (rangeValue) {
+                setFilter('price', 'rng', rangeValue);
+            }
+        }
+    };
+
+    // Handle page change
+    const handlePageChange = (page: number) => {
+        setCurrentPage(page);
+        // Scroll to top when page changes
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // Sync district state with URL filters
+    useEffect(() => {
+        const districtFilter = filters.find(f => f.key === 'addressDistrict' && f.operator === 'eq');
+        if (districtFilter) {
+            // Filter có district name, cần tìm id tương ứng
+            const districtId = DISTRICTS.find(d => d.name === districtFilter.value)?.id;
+            if (districtId) {
+                setDistrict(districtId);
+            }
+        } else {
+            setDistrict('all');
+        }
+    }, [filters]);
+
+    // Sync property type state with URL filters
+    useEffect(() => {
+        const propertyTypeFilter = filters.find(f => f.key === 'propertyType' && f.operator === 'eq');
+        if (propertyTypeFilter) {
+            setPropertyType(propertyTypeFilter.value);
+        } else {
+            setPropertyType('all');
+        }
+    }, [filters]);
+
+    // Sync sort criteria state with URL
+    useEffect(() => {
+        const sortParam = searchParams.get('sort');
+        if (sortParam) {
+            setSortCriteria(sortParam);
+        } else {
+            setSortCriteria('default');
+        }
+    }, [searchParams]);
+
+    // Sync price range state with URL filters
+    useEffect(() => {
+        const priceFilter = filters.find(f => f.key === 'price' && f.operator === 'rng');
+        if (priceFilter) {
+            // Filter có min-max value, cần tìm id tương ứng
+            const rangeId = getPriceRangeId(priceFilter.value);
+            if (rangeId) {
+                setPriceRange(rangeId);
+            }
+        } else {
+            setPriceRange('all');
+        }
+    }, [filters]);
+
+    // Reset về trang 1 khi filters thay đổi
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [filters]);
+
+    // Fetch properties based on filters from URL
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                setIsLoading(true);
+
+                // Convert filters from URL to API format
+                const apiFilters = filters.map(filter => ({
+                    key: filter.key,
+                    operator: filter.operator === 'eq' ? 'equal' :
+                        filter.operator === 'gt' ? 'greater' :
+                            filter.operator === 'lt' ? 'less' :
+                                filter.operator === 'gte' ? 'greater_equal' :
+                                    filter.operator === 'lte' ? 'less_equal' :
+                                        filter.operator === 'lk' ? 'like' :
+                                            filter.operator === 'rng' ? 'range' : 'equal',
+                    value: filter.value
+                }));
+
+                // Always add listingType filter for buy properties
+                const filtersWithType = [
+                    ...apiFilters,
+                    {
+                        key: 'listingType',
+                        operator: 'equal',
+                        value: 'for_rent'
+                    }
+                ];
+
+                // Determine sorts based on sort criteria from URL
+                let sorts = [
+                    {
+                        key: 'createdAt',
+                        type: 'DESC'
+                    }
+                ];
+
+                const sortParam = searchParams.get('sort');
+                if (sortParam && sortParam !== 'default') {
+                    const sortValue = getSortCriteriaValue(sortParam);
+                    if (sortValue) {
+                        sorts = [sortValue];
+                    }
+                }
+
+                const response = await searchProperties({
+                    filters: filtersWithType,
+                    sorts: sorts,
+                    rpp: 10,
+                    page: currentPage
+                });
+
+                setPropertyList(response.data.items);
+                setTotalPages(response.data.pages || 1);
+            } catch (error) {
+                console.error('Error fetching properties:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProperties();
+    }, [filters, currentPage, searchParams]);
 
     // Cleanup effect: Reset body overflow when component unmounts
     useEffect(() => {
@@ -198,22 +391,28 @@ export const RentProperty: React.FC = () => {
                     <div className={isMapOpen ? "lg:w-[40%] overflow-y-auto px-4 py-6 h-screen" : "flex-1 lg:w-3/4"}>
                         {/* Search and Map Button */}
                         <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
-                            <div className="flex flex-col sm:flex-row gap-3">
-                                <div className="relative flex-1">
+                            <div className="flex flex-col sm:flex-row gap-3 items-center">
+                                <div className="flex flex-1">
                                     <Input
                                         type="text"
                                         value={searchValue}
                                         onChange={(e) => setSearchValue(e.target.value)}
-                                        onKeyDown={handleSearch}
+                                        onKeyDown={handleSearchKeyDown}
                                         placeholder="Tìm kiếm theo địa điểm, dự án..."
-                                        className="pl-10 focus-visible:ring-[#008DDA] focus-visible:ring-2 focus-visible:ring-offset-0"
+                                        className="h-[48px] bg-white text-gray-600 flex-1 rounded-r-none border-r-0 focus-visible:ring-[#008DDA] focus-visible:ring-2 focus-visible:ring-offset-0"
                                     />
-                                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                                    <Button
+                                        type="button"
+                                        onClick={executeSearch}
+                                        className="h-[48px] rounded-l-none px-3 bg-[#008DDA] hover:bg-[#0072b0] cursor-pointer"
+                                    >
+                                        <Search className="w-4 h-4 text-white" />
+                                    </Button>
                                 </div>
                                 <Button
                                     onClick={handleToggleMap}
                                     variant="outline"
-                                    className="flex items-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
+                                    className="flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
                                 >
                                     <MapIcon className="w-4 h-4" />
                                     {isMapOpen ? 'Đóng bản đồ' : 'Mở bản đồ'}
@@ -225,7 +424,7 @@ export const RentProperty: React.FC = () => {
                         <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 {/* District Filter */}
-                                <Select value={district} onValueChange={setDistrict}>
+                                <Select value={district} onValueChange={handleDistrictChange}>
                                     <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
                                         <SelectValue placeholder="Khu vực" />
                                     </SelectTrigger>
@@ -240,7 +439,7 @@ export const RentProperty: React.FC = () => {
                                 </Select>
 
                                 {/* Property Type Filter */}
-                                <Select value={propertyType} onValueChange={setPropertyType}>
+                                <Select value={propertyType} onValueChange={handlePropertyTypeChange}>
                                     <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
                                         <SelectValue placeholder="Loại bất động sản" />
                                     </SelectTrigger>
@@ -255,7 +454,7 @@ export const RentProperty: React.FC = () => {
                                 </Select>
 
                                 {/* Price Range Filter */}
-                                <Select value={priceRange} onValueChange={setPriceRange}>
+                                <Select value={priceRange} onValueChange={handlePriceRangeChange}>
                                     <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
                                         <SelectValue placeholder="Giá bán" />
                                     </SelectTrigger>
@@ -278,10 +477,10 @@ export const RentProperty: React.FC = () => {
                         </h2>
 
                         <div className="flex justify-between items-center mb-4">
-                            <p className="text-gray-600 text-sm">Hiện có 1.000 bất động sản</p>
+                            <p className="text-gray-600 text-sm">Hiện có {propertyList.length} bất động sản</p>
 
                             <div className="flex items-center lg:w-1/3">
-                                <Select value={sortCriteria} onValueChange={setSortCriteria}>
+                                <Select value={sortCriteria} onValueChange={handleSortChange}>
                                     <SelectTrigger className="w-full bg-white focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
                                         <SelectValue placeholder="Mặc định" />
                                     </SelectTrigger>
@@ -300,22 +499,56 @@ export const RentProperty: React.FC = () => {
 
                         {/* Property List */}
                         <div className="space-y-4 mb-6">
-                            {sampleProperties.map((property) => (
-                                <PropertyListItem
-                                    key={property.id}
-                                    {...property}
-                                    onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
-                                />
-                            ))}
+                            {isLoading ? (
+                                <>
+                                    {[...Array(5)].map((_, index) => (
+                                        <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex gap-4">
+                                            <Skeleton className="w-64 h-48 rounded-lg flex-shrink-0" />
+                                            <div className="flex-1 space-y-3">
+                                                <Skeleton className="h-6 w-3/4" />
+                                                <Skeleton className="h-4 w-1/2" />
+                                                <Skeleton className="h-4 w-1/3" />
+                                                <Skeleton className="h-4 w-1/4" />
+                                                <div className="flex justify-between items-center mt-4">
+                                                    <Skeleton className="h-4 w-24" />
+                                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </>
+                            ) : propertyList.length > 0 ? (
+                                propertyList.map((property) => (
+                                    <PropertyListItem
+                                        key={property.id}
+                                        id={String(property.id)}
+                                        title={property.title}
+                                        price={property.price}
+                                        area={property.area}
+                                        address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
+                                        imageUrl={property.imageUrls[0] || ""}
+                                        createdAt={property.createdAt}
+                                        onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                    />
+                                ))
+                            ) : (
+                                <div className="text-center py-8">
+                                    <p className="text-gray-500">Không tìm thấy bất động sản nào</p>
+                                </div>
+                            )}
                         </div>
 
                         {/* Pagination */}
-                        <div className="flex justify-center mb-6">
-                            <ControlledPagination
-                                currentPage={currentPage}
-                                onPageChange={setCurrentPage}
-                                totalPages={10}/>
-                        </div>
+                        {!isLoading && propertyList.length > 0 && (
+                            <div className="flex justify-center mb-6">
+                                <ControlledPagination
+                                    currentPage={currentPage}
+                                    onPageChange={handlePageChange}
+                                    totalPages={totalPages}
+                                />
+                            </div>
+                        )}
+
 
                         {/* Suggested Properties - Always show */}
                         <section className={isMapOpen ? "py-8" : "py-12 px-4 max-w-7xl mx-auto"}>

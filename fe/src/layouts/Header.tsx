@@ -206,13 +206,13 @@ export const Header = () => {
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild>
-                                            <Link to="/login" className="w-full flex items-center gap-2">
+                                            <Link to="/dang-nhap" className="w-full flex items-center gap-2">
                                                 <UserCircle className="w-4 h-4" />
                                                 Đăng nhập
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild>
-                                            <Link to="/register" className="w-full flex items-center gap-2">
+                                            <Link to="/dang-ky" className="w-full flex items-center gap-2">
                                                 <PenSquare className="w-4 h-4" />
                                                 Đăng ký
                                             </Link>
