@@ -4,11 +4,14 @@ import { persist } from "zustand/middleware";
 interface UserState {
     isLoggedIn: boolean;
     token: string | null;
+    userId: number | null;
     avatarUrl: string | null;
     login: (token: string) => void;
     logout: () => void;
     setAvatar: (avatarUrl: string) => void;
     clearAvatar: () => void;
+    setUserId: (userId: number | null) => void;
+    clearUserId: () => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -17,6 +20,7 @@ export const useUserStore = create<UserState>()(
             isLoggedIn: false,
             token: null,
             avatarUrl: null,
+            userId: null,
 
             login: (token: string) =>
                 set({
@@ -35,6 +39,10 @@ export const useUserStore = create<UserState>()(
 
             clearAvatar: () =>
                 set({ avatarUrl: null}),
+
+            setUserId: (userId: number | null) => set({userId}),
+
+            clearUserId: () => set({userId: null})
         }),
         {
             name: "user-store", // key lưu trong localStorage

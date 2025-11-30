@@ -258,7 +258,7 @@ export const EditPost: React.FC = () => {
                     address: '208 Nguyễn Hữu Cảnh, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh',
                     latitude: 10.8231,
                     longitude: 106.6297,
-                    propertyType: 'canho',
+                    propertyType: 'apartment',
                     area: '120',
                     price: '5500000000',
                     title: 'Căn hộ cao cấp Vinhomes Central Park, 3 phòng ngủ, view sông đẹp',

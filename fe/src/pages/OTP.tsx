@@ -22,6 +22,7 @@ export const OTP = ({from}: {from:string}) => {
     });
     const navigate = useNavigate();
     const email = useAuthStore((state) => state.email);
+    const clear = useAuthStore((state) => state.clear);
 
     useEffect(() => {
         if (countdown > 0) {
@@ -62,6 +63,7 @@ export const OTP = ({from}: {from:string}) => {
             if (response.status === "200") {
                 toast.success("Đăng ký thành công!");
                 navigate("/dang-nhap");
+                clear();
             }
         }
         catch (error) {
