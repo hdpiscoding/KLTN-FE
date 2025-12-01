@@ -6,12 +6,11 @@ interface UserState {
     token: string | null;
     userId: number | null;
     avatarUrl: string | null;
+    becomeSellerApproveStatus: string | null;
     login: (token: string) => void;
     logout: () => void;
-    setAvatar: (avatarUrl: string) => void;
-    clearAvatar: () => void;
-    setUserId: (userId: number | null) => void;
-    clearUserId: () => void;
+    setUserInfo: (userId: number | null, avatarUrl: string | null, becomeSellerApprovalStatus: string | null) => void;
+    clearUserInfo: () => void;
 }
 
 export const useUserStore = create<UserState>()(
@@ -21,6 +20,7 @@ export const useUserStore = create<UserState>()(
             token: null,
             avatarUrl: null,
             userId: null,
+            becomeSellerApproveStatus: null,
 
             login: (token: string) =>
                 set({
@@ -34,15 +34,19 @@ export const useUserStore = create<UserState>()(
                     token: null,
                 }),
 
-            setAvatar: (avatarUrl: string) =>
-                set({ avatarUrl }),
+            setUserInfo: (userId: number | null, avatarUrl: string | null, becomeSellerApprovalStatus: string | null) =>
+                set({
+                    userId: userId,
+                    avatarUrl: avatarUrl,
+                    becomeSellerApproveStatus: becomeSellerApprovalStatus,
+                }),
 
-            clearAvatar: () =>
-                set({ avatarUrl: null}),
-
-            setUserId: (userId: number | null) => set({userId}),
-
-            clearUserId: () => set({userId: null})
+            clearUserInfo: () =>
+                set({
+                    userId: null,
+                    avatarUrl: null,
+                    becomeSellerApproveStatus: null,
+                }),
         }),
         {
             name: "user-store", // key lưu trong localStorage

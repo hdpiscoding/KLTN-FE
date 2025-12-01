@@ -31,3 +31,8 @@ export const updateMyProfile = async (data: {
     });
     return response.data;
 }
+
+export const requestBecomeSeller = async () => {
+    const response = await instance.post("user/request-seller-role");
+    return response.data;
+}

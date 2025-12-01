@@ -29,7 +29,7 @@ export const Header = () => {
     const isLoggedIn = useUserStore((state) => state.isLoggedIn);
     const logout = useUserStore((state) => state.logout);
     const avatarUrl = useUserStore((state) => state.avatarUrl);
-    const clearAvatar = useUserStore((state) => state.clearAvatar);
+    const clearUserInfo = useUserStore((state) => state.clearUserInfo);
 
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
@@ -45,7 +45,7 @@ export const Header = () => {
 
     const handleLogout = () => {
         logout();
-        clearAvatar();
+        clearUserInfo();
         navigate('/');
         toast.success("Đăng xuất thành công!");
     };

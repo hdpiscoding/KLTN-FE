@@ -24,8 +24,8 @@ export const Login = () => {
         mode: "onSubmit",
     });
     const loginData = useUserStore((state) => state.login);
-    const setAvatar = useUserStore((state) => state.setAvatar);
-    const setUserId = useUserStore((state) => state.setUserId);
+    const setUserInfo = useUserStore((state) => state.setUserInfo);
+
 
     const onSubmit = async (data: {email: string, password: string}) => {
         setIsLoading(true);
@@ -35,10 +35,9 @@ export const Login = () => {
             if (response.status === "200") {
                 loginData(response.data.token);
                 toast.success("Đăng nhập thành công!");
-                setUserId(getUserIdFromToken(response.data.token));
-                console.log(getUserIdFromToken(response.data.token));
                 const res = await getMyProfile();
-                setAvatar(res?.data.avatarUrl);
+                setUserInfo(getUserIdFromToken(response.data.token), res?.data.avatarUrl, res.data.becomeSellerApproveStatus);
+                console.log(res);
                 navigate("/");
             }
         }
