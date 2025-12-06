@@ -133,14 +133,15 @@ export const UserProfile: React.FC = () => {
             setPhoneNumber(response?.data.phoneNumber);
             setAddress(response?.data.liveAddress);
             setAvatarPreview(response?.data.avatarUrl);
+            // Convert decimal values (0-1) from API to percentage values (0-100) for display
             setPreferences({
-                safety: response?.data.preferenceSafety,
-                healthcare: response?.data.preferenceHealthcare,
-                education: response?.data.preferenceEducation,
-                shopping: response?.data.preferenceShopping,
-                transportation: response?.data.preferenceTransportation,
-                environment: response?.data.preferenceEnvironment,
-                entertainment: response?.data.preferenceEntertainment
+                safety: Math.round((response?.data.preferenceSafety ?? 0.5) * 100),
+                healthcare: Math.round((response?.data.preferenceHealthcare ?? 0.5) * 100),
+                education: Math.round((response?.data.preferenceEducation ?? 0.5) * 100),
+                shopping: Math.round((response?.data.preferenceShopping ?? 0.5) * 100),
+                transportation: Math.round((response?.data.preferenceTransportation ?? 0.5) * 100),
+                environment: Math.round((response?.data.preferenceEnvironment ?? 0.5) * 100),
+                entertainment: Math.round((response?.data.preferenceEntertainment ?? 0.5) * 100)
             })
         }
         catch (error) {
@@ -436,17 +437,18 @@ export const UserProfile: React.FC = () => {
             // Note: avatarFile is kept in state for future avatar upload implementation
 
             // Call API to update profile
+            // Convert percentage values (0-100) to decimal values (0-1) for API
             await updateMyProfile({
                 fullName: profileData.fullName,
                 avatarUrl: avatarUrl,
                 liveAddress: profileData.address,
-                preferenceSafety: preferenceData.safety,
-                preferenceHealthcare: preferenceData.healthcare,
-                preferenceEducation: preferenceData.education,
-                preferenceShopping: preferenceData.shopping,
-                preferenceTransportation: preferenceData.transportation,
-                preferenceEnvironment: preferenceData.environment,
-                preferenceEntertainment: preferenceData.entertainment,
+                preferenceSafety: preferenceData.safety / 100,
+                preferenceHealthcare: preferenceData.healthcare / 100,
+                preferenceEducation: preferenceData.education / 100,
+                preferenceShopping: preferenceData.shopping / 100,
+                preferenceTransportation: preferenceData.transportation / 100,
+                preferenceEnvironment: preferenceData.environment / 100,
+                preferenceEntertainment: preferenceData.entertainment / 100,
             });
 
             toast.success('Cập nhật thông tin thành công!');
@@ -569,119 +571,119 @@ export const UserProfile: React.FC = () => {
                                 )}
                             />
 
-                        {/* Email */}
-                        <FormField
-                            control={form.control}
-                            name="email"
-                            rules={{
-                                pattern: {
-                                    value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
-                                    message: 'Email không đúng định dạng',
-                                },
-                            }}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Email</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="email"
-                                            disabled={true}
-                                            className="focus-visible:ring-[#008DDA]"
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Phone Number */}
-                        <FormField
-                            control={form.control}
-                            name="phoneNumber"
-                            rules={{
-                                pattern: {
-                                    value: /^[0-9]{10}$/,
-                                    message: 'Số điện thoại phải gồm đúng 10 chữ số',
-                                },
-                            }}
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Số điện thoại</FormLabel>
-                                    <FormControl>
-                                        <Input
-                                            type="tel"
-                                            disabled={true}
-                                            className="focus-visible:ring-[#008DDA] cursor-not-allowed"
-                                            maxLength={10}
-                                            {...field}
-                                        />
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-
-                        <FormField
-                            control={form.control}
-                            name="address"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Địa chỉ</FormLabel>
-                                    <FormControl>
-                                        <div className="relative">
+                            {/* Email */}
+                            <FormField
+                                control={form.control}
+                                name="email"
+                                rules={{
+                                    pattern: {
+                                        value: /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i,
+                                        message: 'Email không đúng định dạng',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Email</FormLabel>
+                                        <FormControl>
                                             <Input
+                                                type="email"
+                                                disabled={true}
                                                 className="focus-visible:ring-[#008DDA]"
                                                 {...field}
-                                                ref={(e) => {
-                                                    field.ref(e);
-                                                    inputRef.current = e;
-                                                }}
-                                                onKeyDown={handleKeyDown}
-                                                onFocus={() => setHasUserInteracted(true)}
-                                                onChange={(e) => {
-                                                    setHasUserInteracted(true);
-                                                    field.onChange(e);
-                                                }}
-                                                autoComplete="off"
                                             />
-                                            {isLoadingAddress && (
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                                                    <Loader2 className="w-4 h-4 animate-spin text-[#008DDA]" />
-                                                </div>
-                                            )}
-                                            {showSuggestions && suggestions.length > 0 && (
-                                                <div
-                                                    ref={suggestionRef}
-                                                    className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
-                                                >
-                                                    {suggestions.map((suggestion, index) => (
-                                                        <div
-                                                            key={suggestion.place_id}
-                                                            className={cn(
-                                                                "px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors",
-                                                                selectedIndex === index && "bg-gray-100"
-                                                            )}
-                                                            onClick={() => handleSelectSuggestion(suggestion)}
-                                                        >
-                                                            <div className="text-sm text-gray-900">
-                                                                {suggestion.structured_formatting?.main_text || suggestion.description}
-                                                            </div>
-                                                            {suggestion.structured_formatting?.secondary_text && (
-                                                                <div className="text-xs text-gray-500 mt-0.5">
-                                                                    {suggestion.structured_formatting.secondary_text}
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            {/* Phone Number */}
+                            <FormField
+                                control={form.control}
+                                name="phoneNumber"
+                                rules={{
+                                    pattern: {
+                                        value: /^[0-9]{10}$/,
+                                        message: 'Số điện thoại phải gồm đúng 10 chữ số',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số điện thoại</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="tel"
+                                                disabled={true}
+                                                className="focus-visible:ring-[#008DDA] cursor-not-allowed"
+                                                maxLength={10}
+                                                {...field}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
+
+                            <FormField
+                                control={form.control}
+                                name="address"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Địa chỉ</FormLabel>
+                                        <FormControl>
+                                            <div className="relative">
+                                                <Input
+                                                    className="focus-visible:ring-[#008DDA]"
+                                                    {...field}
+                                                    ref={(e) => {
+                                                        field.ref(e);
+                                                        inputRef.current = e;
+                                                    }}
+                                                    onKeyDown={handleKeyDown}
+                                                    onFocus={() => setHasUserInteracted(true)}
+                                                    onChange={(e) => {
+                                                        setHasUserInteracted(true);
+                                                        field.onChange(e);
+                                                    }}
+                                                    autoComplete="off"
+                                                />
+                                                {isLoadingAddress && (
+                                                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                                                        <Loader2 className="w-4 h-4 animate-spin text-[#008DDA]" />
+                                                    </div>
+                                                )}
+                                                {showSuggestions && suggestions.length > 0 && (
+                                                    <div
+                                                        ref={suggestionRef}
+                                                        className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto"
+                                                    >
+                                                        {suggestions.map((suggestion, index) => (
+                                                            <div
+                                                                key={suggestion.place_id}
+                                                                className={cn(
+                                                                    "px-4 py-2 cursor-pointer hover:bg-gray-100 transition-colors",
+                                                                    selectedIndex === index && "bg-gray-100"
+                                                                )}
+                                                                onClick={() => handleSelectSuggestion(suggestion)}
+                                                            >
+                                                                <div className="text-sm text-gray-900">
+                                                                    {suggestion.structured_formatting?.main_text || suggestion.description}
                                                                 </div>
-                                                            )}
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            )}
-                                        </div>
-                                    </FormControl>
-                                    <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                                                                {suggestion.structured_formatting?.secondary_text && (
+                                                                    <div className="text-xs text-gray-500 mt-0.5">
+                                                                        {suggestion.structured_formatting.secondary_text}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                         </form>
                     </Form>
                 )}
@@ -708,322 +710,322 @@ export const UserProfile: React.FC = () => {
                     </div>
                 ) : (
                     <Tabs defaultValue="presets" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-6">
-                        <TabsTrigger value="presets" className="cursor-pointer">Bộ có sẵn</TabsTrigger>
-                        <TabsTrigger value="custom" className="cursor-pointer">Tùy chỉnh</TabsTrigger>
-                    </TabsList>
+                        <TabsList className="grid w-full grid-cols-2 mb-6">
+                            <TabsTrigger value="presets" className="cursor-pointer">Bộ có sẵn</TabsTrigger>
+                            <TabsTrigger value="custom" className="cursor-pointer">Tùy chỉnh</TabsTrigger>
+                        </TabsList>
 
-                    {/* Tab 1: Bộ có sẵn (Presets) */}
-                    <TabsContent value="presets" className="space-y-6">
-                        <div className="mb-4">
-                            <p className="text-sm text-gray-600">
-                                Chọn một mẫu ưu tiên phù hợp với nhu cầu của bạn. Bạn có thể chỉnh sửa chi tiết ở tab "Tùy chỉnh".
-                            </p>
-                        </div>
-
-                        {/* Preset Cards Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {presets.map((preset) => (
-                                <PreferencePresetCard
-                                    key={preset.id}
-                                    preset={preset}
-                                    isSelected={selectedPresetId === preset.id}
-                                    onSelect={() => handlePresetSelect(preset.id)}
-                                />
-                            ))}
-                        </div>
-
-                        {/* Selected Indicator */}
-                        {selectedPresetId && (
-                            <div className="pt-6 border-t">
+                        {/* Tab 1: Bộ có sẵn (Presets) */}
+                        <TabsContent value="presets" className="space-y-6">
+                            <div className="mb-4">
                                 <p className="text-sm text-gray-600">
-                                    Đã chọn: <span className="font-semibold text-[#008DDA]">
-                                        {presets.find(p => p.id === selectedPresetId)?.name}
-                                    </span>
+                                    Chọn một mẫu ưu tiên phù hợp với nhu cầu của bạn. Bạn có thể chỉnh sửa chi tiết ở tab "Tùy chỉnh".
                                 </p>
                             </div>
-                        )}
-                    </TabsContent>
 
-                    {/* Tab 2: Tùy chỉnh (Custom Sliders) */}
-                    <TabsContent value="custom">
-                        <Form {...preferenceForm}>
-                            <form className="space-y-8">
+                            {/* Preset Cards Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                {presets.map((preset) => (
+                                    <PreferencePresetCard
+                                        key={preset.id}
+                                        preset={preset}
+                                        isSelected={selectedPresetId === preset.id}
+                                        onSelect={() => handlePresetSelect(preset.id)}
+                                    />
+                                ))}
+                            </div>
 
-                        {/* Security Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="safety"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
-                                                <Shield className="w-5 h-5 text-blue-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">An ninh</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Độ an toàn của khu vực, camera, bảo vệ</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Healthcare Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="healthcare"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
-                                                <Heart className="w-5 h-5 text-red-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">Y tế</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Bệnh viện, phòng khám gần khu vực</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Education Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="education"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
-                                                <GraduationCap className="w-5 h-5 text-purple-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">Giáo dục</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Trường học, trung tâm đào tạo</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Amenities Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="shopping"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
-                                                <ShoppingBag className="w-5 h-5 text-green-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">Tiện ích</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Chợ, siêu thị, nhà hàng, cửa hàng</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Transportation Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="transportation"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                                                <Car className="w-5 h-5 text-yellow-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">Giao thông</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Xe buýt, metro, gần trục đường chính</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Environment Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="environment"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
-                                                <Leaf className="w-5 h-5 text-teal-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">Môi trường</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Công viên, cây xanh, không khí trong lành</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                        {/* Entertainment Slider */}
-                        <FormField
-                            control={preferenceForm.control}
-                            name="entertainment"
-                            render={({ field }) => (
-                                <FormItem>
-                                    <div className="flex items-start justify-between gap-4 mb-3">
-                                        <div className="flex items-center gap-3">
-                                            <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
-                                                <Music className="w-5 h-5 text-pink-600" />
-                                            </div>
-                                            <div>
-                                                <FormLabel className="text-base font-semibold">Giải trí</FormLabel>
-                                                <p className="text-xs text-gray-500 mt-0.5">Rạp chiếu phim, khu vui chơi, gym</p>
-                                            </div>
-                                        </div>
-                                        <div className="text-right flex-shrink-0">
-                                            <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
-                                                {getPreferenceLabel(field.value)}
-                                            </div>
-                                            <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
-                                        </div>
-                                    </div>
-                                    <FormControl>
-                                        <Slider
-                                            min={0}
-                                            max={100}
-                                            step={1}
-                                            value={[field.value]}
-                                            onValueChange={(vals) => field.onChange(vals[0])}
-                                            className="cursor-pointer"
-                                        />
-                                    </FormControl>
-                                </FormItem>
-                            )}
-                        />
-
-                                {/* Reset Default Button */}
-                                <div className="pt-4 border-t">
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        className="cursor-pointer w-full sm:w-auto"
-                                        onClick={handlePreferenceDefault}
-                                    >
-                                        Đặt lại mặc định
-                                    </Button>
+                            {/* Selected Indicator */}
+                            {selectedPresetId && (
+                                <div className="pt-6 border-t">
+                                    <p className="text-sm text-gray-600">
+                                        Đã chọn: <span className="font-semibold text-[#008DDA]">
+                                        {presets.find(p => p.id === selectedPresetId)?.name}
+                                    </span>
+                                    </p>
                                 </div>
-                            </form>
-                        </Form>
-                    </TabsContent>
-                </Tabs>
+                            )}
+                        </TabsContent>
+
+                        {/* Tab 2: Tùy chỉnh (Custom Sliders) */}
+                        <TabsContent value="custom">
+                            <Form {...preferenceForm}>
+                                <form className="space-y-8">
+
+                                    {/* Security Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="safety"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                                            <Shield className="w-5 h-5 text-blue-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">An ninh</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Độ an toàn của khu vực, camera, bảo vệ</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Healthcare Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="healthcare"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0">
+                                                            <Heart className="w-5 h-5 text-red-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">Y tế</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Bệnh viện, phòng khám gần khu vực</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Education Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="education"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center flex-shrink-0">
+                                                            <GraduationCap className="w-5 h-5 text-purple-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">Giáo dục</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Trường học, trung tâm đào tạo</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Amenities Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="shopping"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0">
+                                                            <ShoppingBag className="w-5 h-5 text-green-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">Tiện ích</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Chợ, siêu thị, nhà hàng, cửa hàng</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Transportation Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="transportation"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-yellow-100 flex items-center justify-center flex-shrink-0">
+                                                            <Car className="w-5 h-5 text-yellow-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">Giao thông</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Xe buýt, metro, gần trục đường chính</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Environment Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="environment"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-teal-100 flex items-center justify-center flex-shrink-0">
+                                                            <Leaf className="w-5 h-5 text-teal-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">Môi trường</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Công viên, cây xanh, không khí trong lành</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Entertainment Slider */}
+                                    <FormField
+                                        control={preferenceForm.control}
+                                        name="entertainment"
+                                        render={({ field }) => (
+                                            <FormItem>
+                                                <div className="flex items-start justify-between gap-4 mb-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <div className="w-10 h-10 rounded-full bg-pink-100 flex items-center justify-center flex-shrink-0">
+                                                            <Music className="w-5 h-5 text-pink-600" />
+                                                        </div>
+                                                        <div>
+                                                            <FormLabel className="text-base font-semibold">Giải trí</FormLabel>
+                                                            <p className="text-xs text-gray-500 mt-0.5">Rạp chiếu phim, khu vui chơi, gym</p>
+                                                        </div>
+                                                    </div>
+                                                    <div className="text-right flex-shrink-0">
+                                                        <div className={`text-sm font-semibold ${getLabelColor(field.value)}`}>
+                                                            {getPreferenceLabel(field.value)}
+                                                        </div>
+                                                        <div className="text-xs text-gray-400 mt-0.5">{field.value}%</div>
+                                                    </div>
+                                                </div>
+                                                <FormControl>
+                                                    <Slider
+                                                        min={0}
+                                                        max={100}
+                                                        step={1}
+                                                        value={[field.value]}
+                                                        onValueChange={(vals) => field.onChange(vals[0])}
+                                                        className="cursor-pointer"
+                                                    />
+                                                </FormControl>
+                                            </FormItem>
+                                        )}
+                                    />
+
+                                    {/* Reset Default Button */}
+                                    <div className="pt-4 border-t">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            className="cursor-pointer w-full sm:w-auto"
+                                            onClick={handlePreferenceDefault}
+                                        >
+                                            Đặt lại mặc định
+                                        </Button>
+                                    </div>
+                                </form>
+                            </Form>
+                        </TabsContent>
+                    </Tabs>
                 )}
             </div>
 
