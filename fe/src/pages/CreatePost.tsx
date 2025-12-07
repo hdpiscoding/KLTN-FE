@@ -22,14 +22,19 @@ import {NoneSellerView} from "@/components/none-seller-view.tsx";
 import {PendingSellerView} from "@/components/pending-seller-view.tsx";
 import {useUserStore} from "@/store/userStore.ts";
 import type {PropertyListing} from "@/types/property-listing";
+import {createPropertyListing} from "@/services/propertyServices.ts";
+import {toast} from "react-toastify";
+import {useNavigate} from "react-router-dom";
 
 type DemandType = 'for_sale' | 'for_rent';
 
 export const CreatePost: React.FC = () => {
+    const navigate = useNavigate();
     const [selectedDemand, setSelectedDemand] = useState<DemandType>('for_sale');
     const [mapLocation, setMapLocation] = useState<Location | null>(null);
     const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Autocomplete states
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
@@ -310,46 +315,59 @@ export const CreatePost: React.FC = () => {
     };
 
     const onSubmit = async (data: CreatePostForm) => {
-        // Validate required fields
-        if (!data.addressInput.trim()) {
-            alert('Vui lòng nhập địa chỉ');
-            return;
+        try {
+            setIsSubmitting(true);
+
+            // Extract PropertyListing data (remove UI-only fields)
+            const { images, ...propertyData } = data;
+
+            // ========================================
+            // STEP 1: Upload images to server
+            // ========================================
+            // TODO: Replace this with actual image upload API call
+            // Example implementation:
+            // const uploadImageToServer = async (file: File): Promise<string> => {
+            //     const formData = new FormData();
+            //     formData.append('image', file);
+            //     const response = await instance.post('/upload/image', formData, {
+            //         headers: { 'Content-Type': 'multipart/form-data' }
+            //     });
+            //     return response.data.imageUrl;
+            // };
+            //
+            // const uploadPromises = images.map(file => uploadImageToServer(file));
+            // const uploadedImageUrls = await Promise.all(uploadPromises);
+
+            // MOCK DATA: Temporary mock URLs for testing
+            // Replace this block with actual upload logic above
+            console.log('Files to upload:', images);
+            const mockImageUrls = [
+                'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
+                'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
+                'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800',
+            ].slice(0, images.length); // Use as many URLs as uploaded files
+
+            // Simulate upload delay
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const finalData: PropertyListing = {
+                ...propertyData,
+                imageUrls: mockImageUrls, // TODO: Replace with uploadedImageUrls
+            };
+            await createPropertyListing(finalData);
+            toast.success('Đăng tin thành công!');
+
+            // Navigate to property detail or my posts page
+            // You can use response.data.id to navigate to detail page
+            setTimeout(() => {
+                navigate('/tin-dang'); // or navigate(`/property/${response.data.id}`)
+            }, 1500);
+
+        } catch (error) {
+            console.error('Error creating property:', error);
+            toast.error('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại!');
+        } finally {
+            setIsSubmitting(false);
         }
-
-        if (!mapLocation || data.location.coordinates[0] === 0) {
-            alert('Vui lòng chọn vị trí trên bản đồ');
-            return;
-        }
-
-        if (!isLocationValid) {
-            alert('Vị trí không trùng khớp với địa chỉ ban đầu (> 100m)');
-            return;
-        }
-
-        if (data.images.length === 0) {
-            alert('Vui lòng tải lên ít nhất 1 ảnh');
-            return;
-        }
-
-        if (data.images.length > 10) {
-            alert('Chỉ được tải lên tối đa 10 ảnh');
-            return;
-        }
-
-        // Extract PropertyListing data (remove UI-only fields)
-        const { images, ...propertyData } = data;
-
-        console.log('Property data to submit:', propertyData);
-        console.log('Images to upload:', images);
-
-        // TODO: Implement API call to create property
-        // This will include:
-        // 1. Upload images to server
-        // 2. Create property with data and image URLs
-        // Example:
-        // const imageUrls = await uploadImages(images);
-        // const finalData: PropertyListing = { ...propertyData, imageUrls };
-        // await createProperty(finalData);
     };
 
     const becomeSellerApproveStatus = useUserStore((state) => state.becomeSellerApproveStatus);
@@ -1213,13 +1231,21 @@ export const CreatePost: React.FC = () => {
                             <div className="sticky bottom-0 left-0 right-0 bg-white border-t shadow-lg rounded-lg p-4 z-50">
                                 <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
                                     <p className="text-sm text-gray-600 hidden sm:block">
-                                        Vui lòng kiểm tra kỹ thông tin trước khi đăng tin
+                                        {isSubmitting ? 'Đang xử lý...' : 'Vui lòng kiểm tra kỹ thông tin trước khi đăng tin'}
                                     </p>
                                     <Button
                                         type="submit"
-                                        className="cursor-pointer w-full sm:w-auto px-8 py-6 text-base font-semibold transition-all duration-200 bg-[#008DDA] hover:bg-[#0064A6] shadow-md hover:shadow-lg"
+                                        disabled={isSubmitting}
+                                        className="cursor-pointer w-full sm:w-auto px-8 py-6 text-base font-semibold transition-all duration-200 bg-[#008DDA] hover:bg-[#0064A6] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
-                                        Đăng tin
+                                        {isSubmitting ? (
+                                            <>
+                                                <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
+                                                Đang đăng tin...
+                                            </>
+                                        ) : (
+                                            'Đăng tin'
+                                        )}
                                     </Button>
                                 </div>
                             </div>

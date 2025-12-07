@@ -76,12 +76,9 @@ export const UserProfile: React.FC = () => {
         try {
             setIsLoadingPresets(true);
             const response = await getAllPreferencePresets();
-            console.log('Raw presets from API:', response.data);
-
             // Convert decimal values (0-1) from API to percentage values (0-100) for display
             const presetsWithPercentages = response.data.map((preset: PreferencePreset) => {
                 const presetId = String(preset.id); // Ensure ID is always string
-                console.log('Preset ID:', preset.id, '-> Converted to:', presetId, 'Type:', typeof presetId, 'Name:', preset.name);
                 return {
                     id: presetId,
                     name: preset.name,
@@ -207,19 +204,6 @@ export const UserProfile: React.FC = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [preferences.safety, preferences.healthcare, preferences.education, preferences.shopping, preferences.transportation, preferences.environment, preferences.entertainment]);
-
-    // Debug useEffect to monitor preset selection
-    useEffect(() => {
-        console.log('=== Preset Selection Debug ===');
-        console.log('selectedPresetId:', selectedPresetId);
-        console.log('presets count:', presets.length);
-        console.log('presets IDs:', presets.map(p => p.id));
-        if (selectedPresetId) {
-            const matchingPreset = presets.find(p => p.id === selectedPresetId);
-            console.log('Matching preset found:', matchingPreset ? matchingPreset.name : 'NOT FOUND');
-        }
-        console.log('==============================');
-    }, [selectedPresetId, presets]);
 
     // Watch address value
     const addressValue = form.watch('address');

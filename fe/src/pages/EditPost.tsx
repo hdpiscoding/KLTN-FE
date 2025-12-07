@@ -21,6 +21,7 @@ import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {toast} from "react-toastify";
 import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts";
 import type {PropertyListing} from "@/types/property-listing";
+import {getPropertyDetails as getPropertyDetailsAPI, updatePropertyListing} from "@/services/propertyServices.ts";
 
 type DemandType = 'for_sale' | 'for_rent';
 
@@ -39,6 +40,7 @@ export const EditPost: React.FC = () => {
     const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     // Autocomplete states
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
@@ -259,79 +261,61 @@ export const EditPost: React.FC = () => {
     // Load post data from API
     useEffect(() => {
         const loadPostData = async () => {
+            if (!id) {
+                toast.error('ID bài đăng không hợp lệ');
+                navigate('/tin-dang');
+                return;
+            }
+
             try {
                 setIsLoading(true);
-                // TODO: Replace with actual API call
-                // const response = await fetch(`/api/posts/${id}`);
-                // const data = await response.json();
 
-                // Mock data for now - simulating API response (PropertyListing format)
-                const mockData: PropertyListing = {
-                    id: Number(id),
-                    title: 'Căn hộ cao cấp Vinhomes Central Park, 3 phòng ngủ, view sông đẹp',
-                    description: 'Căn hộ nằm tại tầng cao, view thoáng mát hướng sông. Nội thất đầy đủ bao gồm: phòng khách, bếp, 3 phòng ngủ có giường tủ, máy lạnh. Khu vực an ninh 24/7, có hồ bơi, phòng gym...',
-                    listingType: 'for_sale',
-                    price: 5500000000,
-                    priceUnit: 'VND',
-                    area: 120,
-                    propertyType: 'apartment',
-                    legalStatus: 'Sổ đỏ/Sổ hồng',
-                    numBedrooms: 3,
-                    numBathrooms: 2,
-                    numFloors: 1,
-                    facadeWidthM: 6,
-                    roadWidthM: 8,
-                    houseDirection: 'east',
-                    balconyDirection: 'south',
-                    furnitureStatus: 'Đầy đủ',
-                    projectName: null,
-                    buildingBlock: null,
-                    floorNumber: null,
-                    addressStreet: '208 Nguyễn Hữu Cảnh',
-                    addressWard: 'Phường 25',
-                    addressDistrict: 'Quận Bình Thạnh',
-                    addressCity: 'TP. Hồ Chí Minh',
-                    location: {
-                        type: 'Point',
-                        coordinates: [106.6297, 10.8231]
-                    },
-                    imageUrls: [
-                        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800',
-                        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800',
-                        'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
-                    ],
-                    features: null,
-                    tagNames: null,
-                };
+                // Call API to get property details
+                const response = await getPropertyDetailsAPI(id);
 
-                // Set form values
-                setSelectedDemand(mockData.listingType as DemandType);
+                // response.data contains PropertyListing
+                const propertyData: PropertyListing = response.data;
+
+                console.log('Loaded property data:', propertyData);
+
+                // Set demand type from listingType
+                setSelectedDemand(propertyData.listingType as DemandType);
 
                 // Construct full address for display
-                const fullAddress = `${mockData.addressStreet}, ${mockData.addressWard}, ${mockData.addressDistrict}, ${mockData.addressCity}`;
+                const fullAddress = `${propertyData.addressStreet || ''}, ${propertyData.addressWard}, ${propertyData.addressDistrict}, ${propertyData.addressCity}`.trim();
 
                 // Set map location and mark address as selected (from API)
-                const location: Location = {
-                    latitude: mockData.location.coordinates[1],
-                    longitude: mockData.location.coordinates[0],
-                    address: fullAddress
-                };
-                setMapLocation(location);
-                setOriginalLocation(location);
-                setAddressSelected(true); // Mark as already selected since it's from API
+                if (propertyData.location && propertyData.location.coordinates) {
+                    const location: Location = {
+                        latitude: propertyData.location.coordinates[1],  // coordinates[1] is latitude
+                        longitude: propertyData.location.coordinates[0], // coordinates[0] is longitude
+                        address: fullAddress
+                    };
+                    setMapLocation(location);
+                    setOriginalLocation(location);
+                    setAddressSelected(true); // Mark as already selected since it's from API
+                }
 
+                // Reset form with all data from API
                 form.reset({
-                    ...mockData,
+                    ...propertyData,
                     addressInput: fullAddress,
                     newImages: [],
-                    existingImageUrls: mockData.imageUrls || [],
+                    existingImageUrls: propertyData.imageUrls || [],
                 });
 
-                setIsLoading(false);
-            } catch (error) {
+                toast.success('Tải dữ liệu thành công!');
+            } catch (error: any) {
                 console.error('Error loading post data:', error);
-                alert('Không thể tải dữ liệu tin đăng');
-                navigate('/tin-dang');
+                const errorMessage = error?.response?.data?.error || 'Không thể tải dữ liệu tin đăng';
+                toast.error(errorMessage);
+
+                // Navigate back to my posts after showing error
+                setTimeout(() => {
+                    navigate('/tin-dang');
+                }, 2000);
+            } finally {
+                setIsLoading(false);
             }
         };
 
@@ -407,63 +391,112 @@ export const EditPost: React.FC = () => {
     };
 
     const onSubmit = async (data: EditPostForm) => {
-        // Validate required fields
-        if (!data.addressInput.trim()) {
-            alert('Vui lòng nhập địa chỉ');
-            return;
-        }
+        try {
+            // Validate required fields
+            if (!data.addressInput.trim()) {
+                toast.error('Vui lòng nhập địa chỉ');
+                return;
+            }
 
-        if (!mapLocation || data.location.coordinates[0] === 0) {
-            alert('Vui lòng chọn vị trí trên bản đồ');
-            return;
-        }
+            if (!mapLocation || data.location.coordinates[0] === 0) {
+                toast.error('Vui lòng chọn vị trí trên bản đồ');
+                return;
+            }
 
-        if (!isLocationValid) {
-            alert('Vị trí không trùng khớp với địa chỉ ban đầu (> 100m)');
-            return;
-        }
+            if (!isLocationValid) {
+                toast.error('Vị trí không trùng khớp với địa chỉ ban đầu (> 100m)');
+                return;
+            }
 
-        const totalImages = data.existingImageUrls.length + data.newImages.length;
-        if (totalImages === 0) {
-            alert('Vui lòng tải lên ít nhất 1 ảnh');
-            return;
-        }
+            const totalImages = data.existingImageUrls.length + data.newImages.length;
+            if (totalImages === 0) {
+                toast.error('Vui lòng tải lên ít nhất 1 ảnh');
+                return;
+            }
 
-        if (totalImages > 10) {
-            alert('Chỉ được tải lên tối đa 10 ảnh');
-            return;
-        }
+            if (totalImages > 10) {
+                toast.error('Chỉ được tải lên tối đa 10 ảnh');
+                return;
+            }
+
+            setIsSubmitting(true);
 
         // Extract PropertyListing data (remove UI-only fields)
         const { addressInput: _addressInput, newImages, existingImageUrls, ...propertyData } = data;
 
-        console.log('Property data to update:', propertyData);
-        console.log('New images to upload:', newImages);
-        console.log('Existing images to keep:', existingImageUrls);
+        // ========================================
+        // STEP 1: Upload new images (if any)
+        // ========================================
+        let finalImageUrls = [...existingImageUrls];
 
-        // TODO: Implement API call to update property
-        // This will include:
-        // 1. Upload new images to server (if any)
-        // 2. Combine new imageUrls with existing ones
-        // 3. Update property with data
-        // Example:
-        // let finalImageUrls = [...existingImageUrls];
-        // if (newImages.length > 0) {
-        //     const newImageUrls = await uploadImages(newImages);
-        //     finalImageUrls = [...finalImageUrls, ...newImageUrls];
-        // }
-        // const finalData: PropertyListing = { ...propertyData, imageUrls: finalImageUrls };
-        // await updateProperty(id, finalData);
+        if (newImages.length > 0) {
+            // TODO: Replace with actual image upload API
+            // Example:
+            // const uploadImageToServer = async (file: File): Promise<string> => {
+            //     const formData = new FormData();
+            //     formData.append('image', file);
+            //     const response = await instance.post('/upload/image', formData, {
+            //         headers: { 'Content-Type': 'multipart/form-data' }
+            //     });
+            //     return response.data.imageUrl;
+            // };
+            // const uploadPromises = newImages.map(file => uploadImageToServer(file));
+            // const newUploadedUrls = await Promise.all(uploadPromises);
+            // finalImageUrls = [...existingImageUrls, ...newUploadedUrls];
 
-        toast.success('Cập nhật tin đăng thành công!');
-        navigate('/tin-dang');
+            // MOCK: Simulate new image uploads
+            console.log('New images to upload:', newImages);
+            toast.info('Đang tải ảnh mới lên server...');
+            await new Promise(resolve => setTimeout(resolve, 1000));
+
+            const mockNewUrls = [
+                'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
+                'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
+            ].slice(0, newImages.length);
+
+            finalImageUrls = [...existingImageUrls, ...mockNewUrls];
+        }
+
+        // ========================================
+        // STEP 2: Update property listing
+        // ========================================
+        const finalData: PropertyListing = {
+            ...propertyData,
+            imageUrls: finalImageUrls,
+        };
+
+        console.log('Property data to update:', finalData);
+
+            toast.info('Đang cập nhật tin đăng...');
+            const response = await updatePropertyListing(Number(id), finalData);
+
+            console.log('API Response:', response);
+
+            toast.success('Cập nhật tin đăng thành công!');
+
+            // Navigate to my posts page
+            setTimeout(() => {
+                navigate('/tin-dang');
+            }, 1500);
+
+        } catch (error: any) {
+            console.error('Error updating property:', error);
+            const errorMessage = error?.response?.data?.error || 'Có lỗi xảy ra khi cập nhật tin đăng. Vui lòng thử lại!';
+            toast.error(errorMessage);
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     if (isLoading) {
         return (
-            <div className="max-w-5xl mx-auto space-y-6">
-                <div className="bg-white rounded-lg shadow-md p-6 text-center">
-                    <p className="text-gray-600">Đang tải dữ liệu...</p>
+            <div className="max-w-5xl mx-auto space-y-6 py-8">
+                <div className="bg-white rounded-lg shadow-md p-6">
+                    <div className="flex flex-col items-center justify-center space-y-4">
+                        <Loader2 className="w-12 h-12 animate-spin text-[#008DDA]" />
+                        <p className="text-lg text-gray-600">Đang tải dữ liệu tin đăng...</p>
+                        <p className="text-sm text-gray-500">Vui lòng đợi trong giây lát</p>
+                    </div>
                 </div>
             </div>
         );
@@ -1338,13 +1371,21 @@ export const EditPost: React.FC = () => {
                     <div className="sticky bottom-0 left-0 right-0 bg-white border-t shadow-lg rounded-lg p-4 z-50">
                         <div className="max-w-5xl mx-auto flex items-center justify-between gap-4">
                             <p className="text-sm text-gray-600 hidden sm:block">
-                                Vui lòng kiểm tra kỹ thông tin trước khi cập nhật
+                                {isSubmitting ? 'Đang xử lý...' : 'Vui lòng kiểm tra kỹ thông tin trước khi cập nhật'}
                             </p>
                             <Button
                                 type="submit"
-                                className="cursor-pointer w-full sm:w-auto px-8 py-6 text-base font-semibold transition-all duration-200 bg-[#008DDA] hover:bg-[#0064A6] shadow-md hover:shadow-lg"
+                                disabled={isSubmitting}
+                                className="cursor-pointer w-full sm:w-auto px-8 py-6 text-base font-semibold transition-all duration-200 bg-[#008DDA] hover:bg-[#0064A6] shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Cập nhật tin đăng
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
+                                        Đang cập nhật...
+                                    </>
+                                ) : (
+                                    'Cập nhật tin đăng'
+                                )}
                             </Button>
                         </div>
                     </div>
