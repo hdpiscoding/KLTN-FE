@@ -2,15 +2,15 @@ import type {PropertyFurniture} from "@/types/property-furniture";
 
 export const PROPERTY_FURNITURE: PropertyFurniture[] = [
     {
-        id: 0,
+        id: "none",
         name: "Không có"
     },
     {
-        id: 1,
+        id: "basic",
         name: "Cơ bản"
     },
     {
-        id: 2,
+        id: "full",
         name: "Đầy đủ"
     },
 ];

@@ -1,4 +1,4 @@
 export interface LegalDoc {
-    id: number;
+    id: string;
     name: string;
 }

@@ -1,4 +1,5 @@
 import {instance} from "@/config/axiosConfig.ts";
+import type {PropertyListing} from "@/types/property-listing";
 
 interface FilterParams {
     key: string;
@@ -36,4 +37,12 @@ export const getPropertyDetails = async (id: string) => {
     return response.data;
 }
 
-export const createPropertyListing = async () => {}
+export const createPropertyListing = async (data: PropertyListing) => {
+    const response = await instance.post("properties", data);
+    return response.data;
+}
+
+export const updatePropertyListing = async (id: number, data: PropertyListing) => {
+    const response = await instance.put(`properties/${id}`, data);
+    return response.data;
+}

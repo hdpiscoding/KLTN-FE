@@ -20,42 +20,23 @@ import {calculateDistance} from "@/utils/calculateDistance.ts";
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {toast} from "react-toastify";
 import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts";
+import type {PropertyListing} from "@/types/property-listing";
 
-type DemandType = 'buy' | 'rent';
+type DemandType = 'for_sale' | 'for_rent';
 
-type EditPostFormData = {
-    demand: DemandType;
-    address: string;
-    latitude: number | null;
-    longitude: number | null;
-    propertyType: string;
-    area: string;
-    price: string;
-    title: string;
-    description: string;
-    // Optional fields
-    legalDoc: string;
-    furniture: string;
-    bedrooms: string;
-    bathrooms: string;
-    floors: string;
-    houseDirection: string;
-    balconyDirection: string;
-    roadWidth: string;
-    frontWidth: string;
-    images: File[];
+// Extend PropertyListing with UI-only fields for form management
+type EditPostForm = PropertyListing & {
+    addressInput: string;
+    newImages: File[];  // New images to upload
+    existingImageUrls: string[];  // URLs from API
 };
 
 export const EditPost: React.FC = () => {
     const { id } = useParams();
     const navigate = useNavigate();
-    const [selectedDemand, setSelectedDemand] = useState<DemandType>('buy');
+    const [selectedDemand, setSelectedDemand] = useState<DemandType>('for_sale');
     const [mapLocation, setMapLocation] = useState<Location | null>(null);
     const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
-
-    // Separate state for existing images (URLs from API) and new uploads (Files)
-    const [existingImages, setExistingImages] = useState<string[]>([]);
-    const [newImages, setNewImages] = useState<File[]>([]);
     const [newImagePreviews, setNewImagePreviews] = useState<string[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -69,36 +50,51 @@ export const EditPost: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const lastTrimmedAddressRef = useRef<string>('');
 
-    const form = useForm<EditPostFormData>({
+    const form = useForm<EditPostForm>({
         defaultValues: {
-            demand: 'buy',
-            address: '',
-            latitude: null,
-            longitude: null,
-            propertyType: '',
-            area: '',
-            price: '',
-            title: '',
-            description: '',
-            legalDoc: '',
-            furniture: '',
-            bedrooms: '',
-            bathrooms: '',
-            floors: '',
-            houseDirection: '',
-            balconyDirection: '',
-            roadWidth: '',
-            frontWidth: '',
-            images: [],
+            title: "",
+            description: "",
+            listingType: "for_sale",
+            price: 0,
+            priceUnit: "VND",
+            area: 0,
+            propertyType: "house",
+            legalStatus: null,
+            numBedrooms: null,
+            numBathrooms: null,
+            numFloors: null,
+            facadeWidthM: null,
+            roadWidthM: null,
+            houseDirection: null,
+            balconyDirection: null,
+            furnitureStatus: null,
+            projectName: null,
+            buildingBlock: null,
+            floorNumber: null,
+            addressStreet: null,
+            addressWard: "",
+            addressDistrict: "",
+            addressCity: "TPHCM",
+            location: {
+                type: "Point",
+                coordinates: [0, 0],
+            },
+            imageUrls: null,
+            features: null,
+            tagNames: null,
+            // UI-only fields
+            addressInput: "",
+            newImages: [],
+            existingImageUrls: [],
         },
         mode: 'onSubmit',
     });
 
-    // Watch address value
-    const addressValue = form.watch('address');
+    // Watch addressInput from form
+    const addressInput = form.watch('addressInput');
 
     // Debounce address value with 300ms delay
-    const [debouncedAddress] = useDebounce(addressValue, 300);
+    const [debouncedAddress] = useDebounce(addressInput, 300);
 
     // Close suggestions when clicking outside
     useEffect(() => {
@@ -155,8 +151,10 @@ export const EditPost: React.FC = () => {
             // User is typing or changed the address manually, hide the map
             setMapLocation(null);
             setOriginalLocation(null);
-            form.setValue('latitude', null);
-            form.setValue('longitude', null);
+            form.setValue('location', {
+                type: "Point",
+                coordinates: [0, 0]
+            });
         }
     }, [addressSelected, mapLocation, form]);
 
@@ -169,12 +167,14 @@ export const EditPost: React.FC = () => {
                 const location: Location = {
                     latitude: lat,
                     longitude: lng,
-                    address: form.getValues('address')
+                    address: addressInput
                 };
                 setMapLocation(location);
                 setOriginalLocation(location);
-                form.setValue('latitude', lat);
-                form.setValue('longitude', lng);
+                form.setValue('location', {
+                    type: "Point",
+                    coordinates: [lng, lat]
+                });
                 return { lat, lng };
             }
         } catch (error) {
@@ -188,9 +188,21 @@ export const EditPost: React.FC = () => {
 
     const handleSelectSuggestion = async (prediction: PlacePrediction) => {
         setAddressSelected(true); // Mark as selected from suggestion
-        form.setValue('address', prediction.description);
+        form.setValue('addressInput', prediction.description);
         setShowSuggestions(false);
         setSuggestions([]);
+
+        // Extract address parts from description
+        const parts = prediction.description.split(',').map(p => p.trim());
+        if (parts.length >= 3) {
+            const street = parts[0];
+            const ward = parts[1];
+            const district = parts[2];
+
+            form.setValue('addressStreet', street);
+            form.setValue('addressWard', ward);
+            form.setValue('addressDistrict', district);
+        }
 
         // Fetch place details to get coordinates
         await fetchPlaceDetail(prediction.place_id);
@@ -224,8 +236,10 @@ export const EditPost: React.FC = () => {
 
     const handleLocationChange = (newLocation: Location) => {
         setMapLocation(newLocation);
-        form.setValue('latitude', newLocation.latitude);
-        form.setValue('longitude', newLocation.longitude);
+        form.setValue('location', {
+            type: "Point",
+            coordinates: [newLocation.longitude, newLocation.latitude]
+        });
     };
 
     // Calculate distance from original location
@@ -251,69 +265,66 @@ export const EditPost: React.FC = () => {
                 // const response = await fetch(`/api/posts/${id}`);
                 // const data = await response.json();
 
-                // Mock data for now - simulating API response
-                const mockData = {
-                    demand: 'buy' as DemandType,
-                    // Full address from API
-                    address: '208 Nguyễn Hữu Cảnh, Phường 25, Quận Bình Thạnh, TP. Hồ Chí Minh',
-                    latitude: 10.8231,
-                    longitude: 106.6297,
-                    propertyType: 'apartment',
-                    area: '120',
-                    price: '5500000000',
+                // Mock data for now - simulating API response (PropertyListing format)
+                const mockData: PropertyListing = {
+                    id: Number(id),
                     title: 'Căn hộ cao cấp Vinhomes Central Park, 3 phòng ngủ, view sông đẹp',
                     description: 'Căn hộ nằm tại tầng cao, view thoáng mát hướng sông. Nội thất đầy đủ bao gồm: phòng khách, bếp, 3 phòng ngủ có giường tủ, máy lạnh. Khu vực an ninh 24/7, có hồ bơi, phòng gym...',
-                    legalDoc: '1',
-                    furniture: '2',
-                    bedrooms: '3',
-                    bathrooms: '2',
-                    floors: '1',
-                    houseDirection: '3',
-                    balconyDirection: '5',
-                    roadWidth: '8',
-                    frontWidth: '6',
-                    images: [
+                    listingType: 'for_sale',
+                    price: 5500000000,
+                    priceUnit: 'VND',
+                    area: 120,
+                    propertyType: 'apartment',
+                    legalStatus: 'Sổ đỏ/Sổ hồng',
+                    numBedrooms: 3,
+                    numBathrooms: 2,
+                    numFloors: 1,
+                    facadeWidthM: 6,
+                    roadWidthM: 8,
+                    houseDirection: 'east',
+                    balconyDirection: 'south',
+                    furnitureStatus: 'Đầy đủ',
+                    projectName: null,
+                    buildingBlock: null,
+                    floorNumber: null,
+                    addressStreet: '208 Nguyễn Hữu Cảnh',
+                    addressWard: 'Phường 25',
+                    addressDistrict: 'Quận Bình Thạnh',
+                    addressCity: 'TP. Hồ Chí Minh',
+                    location: {
+                        type: 'Point',
+                        coordinates: [106.6297, 10.8231]
+                    },
+                    imageUrls: [
                         'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800',
                         'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800',
                         'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=800',
                     ],
+                    features: null,
+                    tagNames: null,
                 };
 
                 // Set form values
-                setSelectedDemand(mockData.demand);
+                setSelectedDemand(mockData.listingType as DemandType);
+
+                // Construct full address for display
+                const fullAddress = `${mockData.addressStreet}, ${mockData.addressWard}, ${mockData.addressDistrict}, ${mockData.addressCity}`;
 
                 // Set map location and mark address as selected (from API)
                 const location: Location = {
-                    latitude: mockData.latitude,
-                    longitude: mockData.longitude,
-                    address: mockData.address
+                    latitude: mockData.location.coordinates[1],
+                    longitude: mockData.location.coordinates[0],
+                    address: fullAddress
                 };
                 setMapLocation(location);
                 setOriginalLocation(location);
                 setAddressSelected(true); // Mark as already selected since it's from API
 
-                setExistingImages(mockData.images);
-
                 form.reset({
-                    demand: mockData.demand,
-                    address: mockData.address,
-                    latitude: mockData.latitude,
-                    longitude: mockData.longitude,
-                    propertyType: mockData.propertyType,
-                    area: mockData.area,
-                    price: mockData.price,
-                    title: mockData.title,
-                    description: mockData.description,
-                    legalDoc: mockData.legalDoc,
-                    furniture: mockData.furniture,
-                    bedrooms: mockData.bedrooms,
-                    bathrooms: mockData.bathrooms,
-                    floors: mockData.floors,
-                    houseDirection: mockData.houseDirection,
-                    balconyDirection: mockData.balconyDirection,
-                    roadWidth: mockData.roadWidth,
-                    frontWidth: mockData.frontWidth,
-                    images: [],
+                    ...mockData,
+                    addressInput: fullAddress,
+                    newImages: [],
+                    existingImageUrls: mockData.imageUrls || [],
                 });
 
                 setIsLoading(false);
@@ -334,7 +345,9 @@ export const EditPost: React.FC = () => {
         if (!files) return;
 
         const newFiles = Array.from(files);
-        const totalImages = existingImages.length + newImages.length;
+        const existingImageUrls = form.getValues('existingImageUrls');
+        const currentNewImages = form.getValues('newImages');
+        const totalImages = existingImageUrls.length + currentNewImages.length;
         const availableSlots = 10 - totalImages;
 
         if (availableSlots <= 0) {
@@ -360,9 +373,8 @@ export const EditPost: React.FC = () => {
             return;
         }
 
-        const updatedNewImages = [...newImages, ...filesToAdd];
-        setNewImages(updatedNewImages);
-        form.setValue('images', updatedNewImages);
+        const updatedNewImages = [...currentNewImages, ...filesToAdd];
+        form.setValue('newImages', updatedNewImages);
 
         // Create previews for new images
         filesToAdd.forEach(file => {
@@ -380,22 +392,69 @@ export const EditPost: React.FC = () => {
     const handleRemoveImage = (index: number, isExisting: boolean) => {
         if (isExisting) {
             // Remove from existing images (URLs)
-            const updatedExisting = existingImages.filter((_, i) => i !== index);
-            setExistingImages(updatedExisting);
+            const updatedExisting = form.getValues('existingImageUrls').filter((_, i) => i !== index);
+            form.setValue('existingImageUrls', updatedExisting);
         } else {
             // Remove from new images (Files)
-            const adjustedIndex = index - existingImages.length;
-            const updatedNewImages = newImages.filter((_, i) => i !== adjustedIndex);
+            const existingImageUrls = form.getValues('existingImageUrls');
+            const adjustedIndex = index - existingImageUrls.length;
+            const updatedNewImages = form.getValues('newImages').filter((_, i) => i !== adjustedIndex);
             const updatedPreviews = newImagePreviews.filter((_, i) => i !== adjustedIndex);
 
-            setNewImages(updatedNewImages);
+            form.setValue('newImages', updatedNewImages);
             setNewImagePreviews(updatedPreviews);
-            form.setValue('images', updatedNewImages);
         }
     };
 
-    const onSubmit = async () => {
-        // TODO: Implement API call to update post
+    const onSubmit = async (data: EditPostForm) => {
+        // Validate required fields
+        if (!data.addressInput.trim()) {
+            alert('Vui lòng nhập địa chỉ');
+            return;
+        }
+
+        if (!mapLocation || data.location.coordinates[0] === 0) {
+            alert('Vui lòng chọn vị trí trên bản đồ');
+            return;
+        }
+
+        if (!isLocationValid) {
+            alert('Vị trí không trùng khớp với địa chỉ ban đầu (> 100m)');
+            return;
+        }
+
+        const totalImages = data.existingImageUrls.length + data.newImages.length;
+        if (totalImages === 0) {
+            alert('Vui lòng tải lên ít nhất 1 ảnh');
+            return;
+        }
+
+        if (totalImages > 10) {
+            alert('Chỉ được tải lên tối đa 10 ảnh');
+            return;
+        }
+
+        // Extract PropertyListing data (remove UI-only fields)
+        const { addressInput: _addressInput, newImages, existingImageUrls, ...propertyData } = data;
+
+        console.log('Property data to update:', propertyData);
+        console.log('New images to upload:', newImages);
+        console.log('Existing images to keep:', existingImageUrls);
+
+        // TODO: Implement API call to update property
+        // This will include:
+        // 1. Upload new images to server (if any)
+        // 2. Combine new imageUrls with existing ones
+        // 3. Update property with data
+        // Example:
+        // let finalImageUrls = [...existingImageUrls];
+        // if (newImages.length > 0) {
+        //     const newImageUrls = await uploadImages(newImages);
+        //     finalImageUrls = [...finalImageUrls, ...newImageUrls];
+        // }
+        // const finalData: PropertyListing = { ...propertyData, imageUrls: finalImageUrls };
+        // await updateProperty(id, finalData);
+
         toast.success('Cập nhật tin đăng thành công!');
         navigate('/tin-dang');
     };
@@ -434,13 +493,13 @@ export const EditPost: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setSelectedDemand('buy');
-                                    form.setValue('demand', 'buy');
+                                    setSelectedDemand('for_sale');
+                                    form.setValue('listingType', 'for_sale');
                                 }}
                                 className={cn(
                                     "p-6 rounded-lg border-2 transition-all duration-200 cursor-pointer",
                                     "hover:shadow-lg active:scale-[0.98]",
-                                    selectedDemand === 'buy'
+                                    selectedDemand === 'for_sale'
                                         ? "border-[#008DDA] bg-[#008DDA]/5 shadow-md"
                                         : "border-gray-200 hover:border-gray-300"
                                 )}
@@ -448,7 +507,7 @@ export const EditPost: React.FC = () => {
                                 <div className="flex flex-col items-center gap-3">
                                     <div className={cn(
                                         "w-16 h-16 rounded-full flex items-center justify-center transition-colors",
-                                        selectedDemand === 'buy'
+                                        selectedDemand === 'for_sale'
                                             ? "bg-[#008DDA] text-white"
                                             : "bg-gray-100 text-gray-600"
                                     )}>
@@ -457,7 +516,7 @@ export const EditPost: React.FC = () => {
                                     <div className="text-center">
                                         <h3 className={cn(
                                             "text-lg font-semibold",
-                                            selectedDemand === 'buy' ? "text-[#008DDA]" : "text-gray-700"
+                                            selectedDemand === 'for_sale' ? "text-[#008DDA]" : "text-gray-700"
                                         )}>
                                             Mua
                                         </h3>
@@ -472,13 +531,13 @@ export const EditPost: React.FC = () => {
                             <button
                                 type="button"
                                 onClick={() => {
-                                    setSelectedDemand('rent');
-                                    form.setValue('demand', 'rent');
+                                    setSelectedDemand('for_rent');
+                                    form.setValue('listingType', 'for_rent');
                                 }}
                                 className={cn(
                                     "p-6 rounded-lg border-2 transition-all duration-200 cursor-pointer",
                                     "hover:shadow-lg active:scale-[0.98]",
-                                    selectedDemand === 'rent'
+                                    selectedDemand === 'for_rent'
                                         ? "border-[#008DDA] bg-[#008DDA]/5 shadow-md"
                                         : "border-gray-200 hover:border-gray-300"
                                 )}
@@ -486,7 +545,7 @@ export const EditPost: React.FC = () => {
                                 <div className="flex flex-col items-center gap-3">
                                     <div className={cn(
                                         "w-16 h-16 rounded-full flex items-center justify-center transition-colors",
-                                        selectedDemand === 'rent'
+                                        selectedDemand === 'for_rent'
                                             ? "bg-[#008DDA] text-white"
                                             : "bg-gray-100 text-gray-600"
                                     )}>
@@ -495,7 +554,7 @@ export const EditPost: React.FC = () => {
                                     <div className="text-center">
                                         <h3 className={cn(
                                             "text-lg font-semibold",
-                                            selectedDemand === 'rent' ? "text-[#008DDA]" : "text-gray-700"
+                                            selectedDemand === 'for_rent' ? "text-[#008DDA]" : "text-gray-700"
                                         )}>
                                             Cho thuê
                                         </h3>
@@ -518,11 +577,17 @@ export const EditPost: React.FC = () => {
                         {/* Address Autocomplete Input */}
                         <FormField
                             control={form.control}
-                            name="address"
+                            name="addressInput"
                             rules={{
-                                required: "Địa chỉ không được để trống!",
+                                required: 'Địa chỉ không được để trống',
+                                validate: (_value) => {
+                                    if (!addressSelected) {
+                                        return 'Vui lòng chọn địa chỉ từ gợi ý';
+                                    }
+                                    return true;
+                                }
                             }}
-                            render={({field}) => (
+                            render={({ field }) => (
                                 <FormItem className="mb-6">
                                     <FormLabel className="text-base">Địa chỉ bất động sản</FormLabel>
                                     <FormControl>
@@ -544,8 +609,10 @@ export const EditPost: React.FC = () => {
                                                     if (mapLocation) {
                                                         setMapLocation(null);
                                                         setOriginalLocation(null);
-                                                        form.setValue('latitude', null);
-                                                        form.setValue('longitude', null);
+                                                        form.setValue('location', {
+                                                            type: "Point",
+                                                            coordinates: [0, 0]
+                                                        });
                                                     }
                                                 }}
                                             />
@@ -604,22 +671,8 @@ export const EditPost: React.FC = () => {
                                 </div>
 
                                 {/* Map */}
-                                <FormField
-                                    control={form.control}
-                                    name="latitude"
-                                    rules={{
-                                        required: 'Vui lòng chọn vị trí trên bản đồ',
-                                        validate: (value) => {
-                                            if (value === null) return 'Vui lòng chọn vị trí trên bản đồ';
-                                            if (!isLocationValid) return 'Vị trí quá xa so với địa chỉ ban đầu (> 100m)';
-                                            return true;
-                                        }
-                                    }}
-                                    render={() => (
-                                        <FormItem>
-                                            <FormControl>
-                                                <div className={cn(
-                                                    "rounded-lg overflow-hidden border-2",
+                                <div className={cn(
+                                    "rounded-lg overflow-hidden border-2",
                                                     !isLocationValid ? "border-red-300" : "border-gray-300"
                                                 )}>
                                                     <DraggableMarkerMap
@@ -630,24 +683,19 @@ export const EditPost: React.FC = () => {
                                                         showNavigation={true}
                                                     />
                                                 </div>
-                                            </FormControl>
-                                            <FormMessage />
-                                            {/* Validation Messages */}
-                                            {!isLocationValid && distanceFromOriginal > 0 && (
-                                                <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                                                    <div className="flex items-start gap-3">
-                                                        <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-                                                        <div className="flex-1">
-                                                            <h3 className="text-sm font-semibold text-red-800 mb-1">
-                                                                Vị trí không trùng khớp với địa chỉ ban đầu
-                                                            </h3>
-                                                        </div>
+                                        {/* Validation Messages */}
+                                        {!isLocationValid && distanceFromOriginal > 0 && (
+                                            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mt-4">
+                                                <div className="flex items-start gap-3">
+                                                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+                                                    <div className="flex-1">
+                                                        <h3 className="text-sm font-semibold text-red-800 mb-1">
+                                                            Vị trí không trùng khớp với địa chỉ ban đầu
+                                                        </h3>
                                                     </div>
                                                 </div>
-                                            )}
-                                        </FormItem>
-                                    )}
-                                />
+                                            </div>
+                                        )}
                             </div>
                         )}
                     </div>
@@ -694,40 +742,40 @@ export const EditPost: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Area */}
-                                <FormField
-                                    control={form.control}
-                                    name="area"
-                                    rules={{
-                                        required: 'Vui lòng nhập diện tích',
-                                        pattern: {
-                                            value: /^[0-9]+(\.[0-9]+)?$/,
-                                            message: 'Diện tích phải là số hợp lệ',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Diện tích <span className="text-red-500">*</span></FormLabel>
-                                            <div className="relative">
-                                                <FormControl>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder="Nhập diện tích"
-                                                        className="focus-visible:ring-[#008DDA] pr-16"
-                                                        value={field.value || ''}
-                                                        onChange={(e) => {
-                                                            const numericValue = e.target.value.replace(/\D/g, '');
-                                                            field.onChange(numericValue);
-                                                        }}
-                                                    />
-                                                </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
-                                                    m²
-                                                </div>
+                            <FormField
+                                control={form.control}
+                                name="area"
+                                rules={{
+                                    required: 'Vui lòng nhập diện tích',
+                                    pattern: {
+                                        value: /^[0-9]+(\.[0-9]+)?$/,
+                                        message: 'Diện tích phải là số hợp lệ',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Diện tích <span className="text-red-500">*</span></FormLabel>
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Nhập diện tích"
+                                                    className="focus-visible:ring-[#008DDA] pr-16"
+                                                    value={field.value || ''}
+                                                    onChange={(e) => {
+                                                        const numericValue = e.target.value.replace(/\D/g, '');
+                                                        field.onChange(numericValue ? Number(numericValue) : 0);
+                                                    }}
+                                                />
+                                            </FormControl>
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                m²
                                             </div>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                                 {/* Price */}
                                 <FormField
@@ -752,7 +800,7 @@ export const EditPost: React.FC = () => {
                                                         value={field.value || ''}
                                                         onChange={(e) => {
                                                             const numericValue = e.target.value.replace(/\D/g, '');
-                                                            field.onChange(numericValue);
+                                                            field.onChange(numericValue ? Number(numericValue) : 0);
                                                         }}
                                                         onBlur={(e) => {
                                                             // Format khi blur thay vì realtime
@@ -760,7 +808,7 @@ export const EditPost: React.FC = () => {
                                                         }}
                                                         onFocus={(e) => {
                                                             // Show raw number khi focus
-                                                            e.target.value = field.value || '';
+                                                            e.target.value = String(field.value || 0);
                                                         }}
                                                     />
                                                 </FormControl>
@@ -852,154 +900,154 @@ export const EditPost: React.FC = () => {
                         <div className="space-y-6">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Legal Documents */}
-                                <FormField
-                                    control={form.control}
-                                    name="legalDoc"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Giấy tờ pháp lý</FormLabel>
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                        <SelectValue placeholder="Chọn loại giấy tờ" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {LEGAL_DOCS.map((doc) => (
-                                                        <SelectItem key={doc.id} value={doc.id.toString()}>
-                                                            {doc.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <FormField
+                                control={form.control}
+                                name="legalStatus"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Giấy tờ pháp lý</FormLabel>
+                                        <Select
+                                            value={field.value ?? undefined}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
+                                                    <SelectValue placeholder="Chọn loại giấy tờ" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {LEGAL_DOCS.map((doc) => (
+                                                    <SelectItem key={doc.id} value={doc.name}>
+                                                        {doc.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                                 {/* Furniture */}
-                                <FormField
-                                    control={form.control}
-                                    name="furniture"
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Nội thất</FormLabel>
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                        <SelectValue placeholder="Chọn tình trạng nội thất" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {PROPERTY_FURNITURE.map((furniture) => (
-                                                        <SelectItem key={furniture.id} value={furniture.id.toString()}>
-                                                            {furniture.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <FormField
+                                control={form.control}
+                                name="furnitureStatus"
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Nội thất</FormLabel>
+                                        <Select
+                                            value={field.value ?? undefined}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
+                                                    <SelectValue placeholder="Chọn tình trạng nội thất" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {PROPERTY_FURNITURE.map((furniture) => (
+                                                    <SelectItem key={furniture.id} value={furniture.name}>
+                                                        {furniture.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                 {/* Bedrooms */}
-                                <FormField
-                                    control={form.control}
-                                    name="bedrooms"
-                                    rules={{
-                                        pattern: {
-                                            value: /^[0-9]*$/,
-                                            message: 'Chỉ được nhập số',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Số phòng ngủ</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="Nhập số phòng ngủ"
-                                                    className="focus-visible:ring-[#008DDA]"
-                                                    onChange={(e) => {
-                                                        const value = e.target.value.replace(/[^0-9]/g, '');
-                                                        field.onChange(value);
-                                                    }}
-                                                    value={field.value}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <FormField
+                                control={form.control}
+                                name="numBedrooms"
+                                rules={{
+                                    pattern: {
+                                        value: /^[0-9]*$/,
+                                        message: 'Chỉ được nhập số',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số phòng ngủ</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="text"
+                                                placeholder="Nhập số phòng ngủ"
+                                                className="focus-visible:ring-[#008DDA]"
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/[^0-9]/g, '');
+                                                    field.onChange(value ? Number(value) : null);
+                                                }}
+                                                value={field.value ?? ''}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                                 {/* Bathrooms */}
-                                <FormField
-                                    control={form.control}
-                                    name="bathrooms"
-                                    rules={{
-                                        pattern: {
-                                            value: /^[0-9]*$/,
-                                            message: 'Chỉ được nhập số',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Số phòng tắm</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="Nhập số phòng tắm"
-                                                    className="focus-visible:ring-[#008DDA]"
-                                                    onChange={(e) => {
-                                                        const value = e.target.value.replace(/[^0-9]/g, '');
-                                                        field.onChange(value);
-                                                    }}
-                                                    value={field.value}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <FormField
+                                control={form.control}
+                                name="numBathrooms"
+                                rules={{
+                                    pattern: {
+                                        value: /^[0-9]*$/,
+                                        message: 'Chỉ được nhập số',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số phòng tắm</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="text"
+                                                placeholder="Nhập số phòng tắm"
+                                                className="focus-visible:ring-[#008DDA]"
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/[^0-9]/g, '');
+                                                    field.onChange(value ? Number(value) : null);
+                                                }}
+                                                value={field.value ?? ''}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                                 {/* Floors */}
-                                <FormField
-                                    control={form.control}
-                                    name="floors"
-                                    rules={{
-                                        pattern: {
-                                            value: /^[0-9]*$/,
-                                            message: 'Chỉ được nhập số',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Số tầng</FormLabel>
-                                            <FormControl>
-                                                <Input
-                                                    type="text"
-                                                    placeholder="Nhập số tầng"
-                                                    className="focus-visible:ring-[#008DDA]"
-                                                    onChange={(e) => {
-                                                        const value = e.target.value.replace(/[^0-9]/g, '');
-                                                        field.onChange(value);
-                                                    }}
-                                                    value={field.value}
-                                                />
-                                            </FormControl>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                            <FormField
+                                control={form.control}
+                                name="numFloors"
+                                rules={{
+                                    pattern: {
+                                        value: /^[0-9]*$/,
+                                        message: 'Chỉ được nhập số',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Số tầng</FormLabel>
+                                        <FormControl>
+                                            <Input
+                                                type="text"
+                                                placeholder="Nhập số tầng"
+                                                className="focus-visible:ring-[#008DDA]"
+                                                onChange={(e) => {
+                                                    const value = e.target.value.replace(/[^0-9]/g, '');
+                                                    field.onChange(value ? Number(value) : null);
+                                                }}
+                                                value={field.value ?? ''}
+                                            />
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -1010,23 +1058,23 @@ export const EditPost: React.FC = () => {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Hướng nhà</FormLabel>
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
-                                                        <SelectValue placeholder="Chọn hướng nhà" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {PROPERTY_DIRECTIONS.map((direction) => (
-                                                        <SelectItem key={direction.id} value={direction.id.toString()}>
-                                                            {direction.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                        <Select
+                                            value={field.value ?? undefined}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger className="cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 w-full">
+                                                    <SelectValue placeholder="Chọn hướng nhà" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {PROPERTY_DIRECTIONS.map((direction) => (
+                                                    <SelectItem key={direction.id} value={direction.id.toString()}>
+                                                        {direction.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -1039,23 +1087,23 @@ export const EditPost: React.FC = () => {
                                     render={({ field }) => (
                                         <FormItem>
                                             <FormLabel>Hướng ban công</FormLabel>
-                                            <Select
-                                                value={field.value}
-                                                onValueChange={field.onChange}
-                                            >
-                                                <FormControl>
-                                                    <SelectTrigger className="w-full cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
-                                                        <SelectValue placeholder="Chọn hướng ban công" />
-                                                    </SelectTrigger>
-                                                </FormControl>
-                                                <SelectContent>
-                                                    {PROPERTY_DIRECTIONS.map((direction) => (
-                                                        <SelectItem key={direction.id} value={direction.id.toString()}>
-                                                            {direction.name}
-                                                        </SelectItem>
-                                                    ))}
-                                                </SelectContent>
-                                            </Select>
+                                        <Select
+                                            value={field.value ?? undefined}
+                                            onValueChange={field.onChange}
+                                        >
+                                            <FormControl>
+                                                <SelectTrigger className="w-full cursor-pointer focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0">
+                                                    <SelectValue placeholder="Chọn hướng ban công" />
+                                                </SelectTrigger>
+                                            </FormControl>
+                                            <SelectContent>
+                                                {PROPERTY_DIRECTIONS.map((direction) => (
+                                                    <SelectItem key={direction.id} value={direction.id.toString()}>
+                                                        {direction.name}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
                                             <FormMessage />
                                         </FormItem>
                                     )}
@@ -1064,74 +1112,74 @@ export const EditPost: React.FC = () => {
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {/* Road Width */}
-                                <FormField
-                                    control={form.control}
-                                    name="roadWidth"
-                                    rules={{
-                                        pattern: {
-                                            value: /^[0-9]*\.?[0-9]*$/,
-                                            message: 'Chỉ được nhập số',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Đường vào</FormLabel>
-                                            <div className="relative">
-                                                <FormControl>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder="Nhập độ rộng đường vào"
-                                                        className="focus-visible:ring-[#008DDA] pr-10"
-                                                        onChange={(e) => {
-                                                            const value = e.target.value.replace(/[^0-9.]/g, '');
-                                                            field.onChange(value);
-                                                        }}
-                                                        value={field.value}
-                                                    />
-                                                </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
-                                                    m
-                                                </div>
+                            <FormField
+                                control={form.control}
+                                name="roadWidthM"
+                                rules={{
+                                    pattern: {
+                                        value: /^[0-9]*\.?[0-9]*$/,
+                                        message: 'Chỉ được nhập số',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Đường vào</FormLabel>
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Nhập độ rộng đường vào"
+                                                    className="focus-visible:ring-[#008DDA] pr-10"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.replace(/[^0-9.]/g, '');
+                                                        field.onChange(value ? Number(value) : null);
+                                                    }}
+                                                    value={field.value ?? ''}
+                                                />
+                                            </FormControl>
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                m
                                             </div>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
                                 {/* Front Width */}
-                                <FormField
-                                    control={form.control}
-                                    name="frontWidth"
-                                    rules={{
-                                        pattern: {
-                                            value: /^[0-9]*\.?[0-9]*$/,
-                                            message: 'Chỉ được nhập số',
-                                        },
-                                    }}
-                                    render={({ field }) => (
-                                        <FormItem>
-                                            <FormLabel>Mặt tiền</FormLabel>
-                                            <div className="relative">
-                                                <FormControl>
-                                                    <Input
-                                                        type="text"
-                                                        placeholder="Nhập độ rộng mặt tiền"
-                                                        className="focus-visible:ring-[#008DDA] pr-10"
-                                                        onChange={(e) => {
-                                                            const value = e.target.value.replace(/[^0-9.]/g, '');
-                                                            field.onChange(value);
-                                                        }}
-                                                        value={field.value}
-                                                    />
-                                                </FormControl>
-                                                <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
-                                                    m
-                                                </div>
+                            <FormField
+                                control={form.control}
+                                name="facadeWidthM"
+                                rules={{
+                                    pattern: {
+                                        value: /^[0-9]*\.?[0-9]*$/,
+                                        message: 'Chỉ được nhập số',
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel>Mặt tiền</FormLabel>
+                                        <div className="relative">
+                                            <FormControl>
+                                                <Input
+                                                    type="text"
+                                                    placeholder="Nhập độ rộng mặt tiền"
+                                                    className="focus-visible:ring-[#008DDA] pr-10"
+                                                    onChange={(e) => {
+                                                        const value = e.target.value.replace(/[^0-9.]/g, '');
+                                                        field.onChange(value ? Number(value) : null);
+                                                    }}
+                                                    value={field.value ?? ''}
+                                                />
+                                            </FormControl>
+                                            <div className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
+                                                m
                                             </div>
-                                            <FormMessage />
-                                        </FormItem>
-                                    )}
-                                />
+                                        </div>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
                             </div>
                         </div>
                     </div>
@@ -1147,10 +1195,12 @@ export const EditPost: React.FC = () => {
 
                         <FormField
                             control={form.control}
-                            name="images"
+                            name="newImages"
                             rules={{
                                 validate: () => {
-                                    const totalImages = existingImages.length + newImages.length;
+                                    const existingImageUrls = form.getValues('existingImageUrls');
+                                    const newImages = form.getValues('newImages');
+                                    const totalImages = existingImageUrls.length + newImages.length;
                                     if (totalImages === 0) {
                                         return 'Vui lòng giữ lại hoặc tải lên ít nhất 1 ảnh';
                                     }
@@ -1160,14 +1210,14 @@ export const EditPost: React.FC = () => {
                                     return true;
                                 }
                             }}
-                            render={() => (
+                            render={({ field }) => (
                                 <FormItem>
                                     <FormControl>
                                         <div className="space-y-4">
                                             {/* Image Grid */}
                                             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                                                 {/* Existing Images from API (URLs) */}
-                                                {existingImages.map((imageUrl, index) => (
+                                                {form.watch('existingImageUrls').map((imageUrl, index) => (
                                                     <div
                                                         key={`existing-${index}`}
                                                         className="relative aspect-square rounded-lg overflow-hidden border-2 border-gray-200 group"
@@ -1205,12 +1255,12 @@ export const EditPost: React.FC = () => {
                                                         />
                                                         {/* Image number badge */}
                                                         <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs px-2 py-1 rounded">
-                                                            Mới {existingImages.length + index + 1}
+                                                            Mới {form.watch('existingImageUrls').length + index + 1}
                                                         </div>
                                                         {/* Remove button */}
                                                         <button
                                                             type="button"
-                                                            onClick={() => handleRemoveImage(existingImages.length + index, false)}
+                                                            onClick={() => handleRemoveImage(form.getValues('existingImageUrls').length + index, false)}
                                                             className="cursor-pointer absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
                                                         >
                                                             <X className="w-4 h-4" />
@@ -1219,7 +1269,7 @@ export const EditPost: React.FC = () => {
                                                 ))}
 
                                                 {/* Upload Button */}
-                                                {(existingImages.length + newImages.length) < 10 && (
+                                                {(form.watch('existingImageUrls').length + field.value.length) < 10 && (
                                                     <label
                                                         className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#008DDA] cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
                                                     >
@@ -1238,7 +1288,7 @@ export const EditPost: React.FC = () => {
                                                                 Tải ảnh lên
                                                             </p>
                                                             <p className="text-xs text-gray-500 mt-1">
-                                                                {existingImages.length + newImages.length}/10
+                                                                {form.watch('existingImageUrls').length + field.value.length}/10
                                                             </p>
                                                         </div>
                                                     </label>
@@ -1266,14 +1316,14 @@ export const EditPost: React.FC = () => {
                                             <div className="flex items-center justify-between text-sm">
                                                 <div className="flex items-center gap-4">
                                                     <span className="text-gray-600">
-                                                        Tổng: <span className="font-semibold text-[#008DDA]">{existingImages.length + newImages.length}</span> ảnh
+                                                        Tổng: <span className="font-semibold text-[#008DDA]">{form.watch('existingImageUrls').length + field.value.length}</span> ảnh
                                                     </span>
                                                     <span className="text-gray-500">
-                                                        (Cũ: {existingImages.length}, Mới: {newImages.length})
+                                                        (Cũ: {form.watch('existingImageUrls').length}, Mới: {field.value.length})
                                                     </span>
                                                 </div>
                                                 <span className="text-gray-500">
-                                                    Còn lại: {10 - existingImages.length - newImages.length} ảnh
+                                                    Còn lại: {10 - form.watch('existingImageUrls').length - field.value.length} ảnh
                                                 </span>
                                             </div>
                                         </div>

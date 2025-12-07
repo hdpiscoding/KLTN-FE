@@ -9,6 +9,7 @@ export const updateMyProfile = async (data: {
     fullName?: string;
     avatarUrl?: string;
     liveAddress?: string;
+    preferencePresetId?: number | null;
     preferenceSafety?: number;
     preferenceEducation?: number;
     preferenceShopping?: number;
@@ -17,18 +18,7 @@ export const updateMyProfile = async (data: {
     preferenceEntertainment?: number;
     preferenceHealthcare?: number;
 }) => {
-    const response = await instance.put("user/update/me", {
-        fullName: data.fullName,
-        avatarUrl: data.avatarUrl,
-        liveAddress: data.liveAddress,
-        preferenceSafety: data.preferenceSafety,
-        preferenceEducation: data.preferenceEducation,
-        preferenceShopping: data.preferenceShopping,
-        preferenceTransportation: data.preferenceTransportation,
-        preferenceEnvironment: data.preferenceEnvironment,
-        preferenceEntertainment: data.preferenceEntertainment,
-        preferenceHealthcare: data.preferenceHealthcare
-    });
+    const response = await instance.put("user/update/me", data);
     return response.data;
 }
 

@@ -2,19 +2,19 @@ import type {LegalDoc} from "@/types/legal-doc";
 
 export const LEGAL_DOCS: LegalDoc[] = [
     {
-        id: 0,
+        id: "undefined",
         name: "Không xác định"
     },
     {
-        id: 1,
+        id: "land-certificate",
         name: "Sổ đỏ/Sổ hồng"
     },
     {
-        id: 2,
+        id: "contract",
         name: "Hợp đồng mua bán"
     },
     {
-        id: 3,
+        id: "waiting-for-land-certificate",
         name: "Đang chờ sổ"
     },
 ];

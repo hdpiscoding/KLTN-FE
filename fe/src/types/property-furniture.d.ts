@@ -1,4 +1,4 @@
 export interface PropertyFurniture {
-    id: number;
+    id: string;
     name: string;
 }

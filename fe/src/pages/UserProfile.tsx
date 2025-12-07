@@ -12,6 +12,7 @@ import type { PreferencePreset } from '@/types/preference-preset';
 import {getMyProfile, updateMyProfile} from "@/services/userServices.ts";
 import {toast} from "react-toastify";
 import { useDebounce } from 'use-debounce';
+import { getAllPreferencePresets } from "@/services/preferencePresetServices.ts";
 import type { PlacePrediction } from '@/types/place-prediction';
 import { placeAutocomplete } from '@/services/goongAPIServices.ts';
 import { cn } from '@/lib/utils';
@@ -41,6 +42,8 @@ export const UserProfile: React.FC = () => {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+    const [presets, setPresets] = useState<PreferencePreset[]>([]);
+    const [isLoadingPresets, setIsLoadingPresets] = useState(true);
     const [fullName, setFullName] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [phoneNumber, setPhoneNumber] = useState<string>('');
@@ -68,61 +71,40 @@ export const UserProfile: React.FC = () => {
     // Flag to prevent clearing preset selection during preset update
     const isUpdatingPresetRef = useRef(false);
 
-    // Preset data
-    const presets: PreferencePreset[] = [
-        {
-            id: '1',
-            name: 'Nhà đông con',
-            image: 'https://images.unsplash.com/photo-1511895426328-dc8714191300?w=500',
-            description: 'Phù hợp cho gia đình có nhiều trẻ em, ưu tiên giáo dục, an ninh và môi trường sống an toàn',
-            preferenceSafety: 90,
-            preferenceHealthcare: 75,
-            preferenceEducation: 95,
-            preferenceShopping: 80,
-            preferenceTransportation: 70,
-            preferenceEnvironment: 85,
-            preferenceEntertainment: 60
-        },
-        {
-            id: '2',
-            name: 'Dành cho người cao tuổi',
-            image: 'https://images.unsplash.com/photo-1581579438747-1dc8d17bbce4?w=500',
-            description: 'Ưu tiên y tế, môi trường yên tĩnh và giao thông thuận tiện cho người lớn tuổi',
-            preferenceSafety: 80,
-            preferenceHealthcare: 95,
-            preferenceEducation: 40,
-            preferenceShopping: 85,
-            preferenceTransportation: 90,
-            preferenceEnvironment: 90,
-            preferenceEntertainment: 30
-        },
-        {
-            id: '3',
-            name: 'Người độc thân bận rộn',
-            image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=500',
-            description: 'Tập trung vào giao thông, tiện ích và giải trí cho lối sống năng động',
-            preferenceSafety: 70,
-            preferenceHealthcare: 60,
-            preferenceEducation: 50,
-            preferenceShopping: 90,
-            preferenceTransportation: 95,
-            preferenceEnvironment: 60,
-            preferenceEntertainment: 85
-        },
-        {
-            id: '4',
-            name: 'Cân bằng toàn diện',
-            image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=500',
-            description: 'Mức độ ưu tiên cân bằng cho tất cả các yếu tố, phù hợp cho hầu hết mọi người',
-            preferenceSafety: 70,
-            preferenceHealthcare: 70,
-            preferenceEducation: 70,
-            preferenceShopping: 70,
-            preferenceTransportation: 70,
-            preferenceEnvironment: 70,
-            preferenceEntertainment: 70
-        },
-    ];
+    // Fetch presets from API
+    const fetchPresets = async () => {
+        try {
+            setIsLoadingPresets(true);
+            const response = await getAllPreferencePresets();
+            console.log('Raw presets from API:', response.data);
+
+            // Convert decimal values (0-1) from API to percentage values (0-100) for display
+            const presetsWithPercentages = response.data.map((preset: PreferencePreset) => {
+                const presetId = String(preset.id); // Ensure ID is always string
+                console.log('Preset ID:', preset.id, '-> Converted to:', presetId, 'Type:', typeof presetId, 'Name:', preset.name);
+                return {
+                    id: presetId,
+                    name: preset.name,
+                    image: preset.image,
+                    description: preset.description,
+                    preferenceSafety: Math.round((preset.preferenceSafety ?? 0.5) * 100),
+                    preferenceHealthcare: Math.round((preset.preferenceHealthcare ?? 0.5) * 100),
+                    preferenceEducation: Math.round((preset.preferenceEducation ?? 0.5) * 100),
+                    preferenceShopping: Math.round((preset.preferenceShopping ?? 0.5) * 100),
+                    preferenceTransportation: Math.round((preset.preferenceTransportation ?? 0.5) * 100),
+                    preferenceEnvironment: Math.round((preset.preferenceEnvironment ?? 0.5) * 100),
+                    preferenceEntertainment: Math.round((preset.preferenceEntertainment ?? 0.5) * 100),
+                };
+            });
+            console.log('Processed presets:', presetsWithPercentages);
+            setPresets(presetsWithPercentages);
+        } catch (error) {
+            console.error('Error fetching presets:', error);
+            toast.error('Không thể tải danh sách bộ ưu tiên!');
+        } finally {
+            setIsLoadingPresets(false);
+        }
+    };
 
     const getProfile = async () => {
         try {
@@ -133,6 +115,7 @@ export const UserProfile: React.FC = () => {
             setPhoneNumber(response?.data.phoneNumber);
             setAddress(response?.data.liveAddress);
             setAvatarPreview(response?.data.avatarUrl);
+
             // Convert decimal values (0-1) from API to percentage values (0-100) for display
             setPreferences({
                 safety: Math.round((response?.data.preferenceSafety ?? 0.5) * 100),
@@ -143,6 +126,20 @@ export const UserProfile: React.FC = () => {
                 environment: Math.round((response?.data.preferenceEnvironment ?? 0.5) * 100),
                 entertainment: Math.round((response?.data.preferenceEntertainment ?? 0.5) * 100)
             })
+
+            // Set selected preset if exists
+            const presetIdFromAPI = response?.data.preferencePresetId;
+            console.log('PreferencePresetId from API:', presetIdFromAPI, 'Type:', typeof presetIdFromAPI);
+
+            if (presetIdFromAPI !== null && presetIdFromAPI !== undefined) {
+                // Convert to string to match preset.id type (which is always string)
+                const presetIdString = String(presetIdFromAPI);
+                console.log('Setting selectedPresetId to:', presetIdString);
+                setSelectedPresetId(presetIdString);
+            } else {
+                console.log('No preferencePresetId found in response (null or undefined)');
+                setSelectedPresetId(null);
+            }
         }
         catch (error) {
             console.log(error);
@@ -175,9 +172,11 @@ export const UserProfile: React.FC = () => {
         mode: 'onChange',
     });
 
-    // Load profile data only once on mount
+    // Load profile data and presets only once on mount
     useEffect(() => {
         getProfile();
+        fetchPresets();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Update form values when profile data is loaded
@@ -208,6 +207,19 @@ export const UserProfile: React.FC = () => {
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [preferences.safety, preferences.healthcare, preferences.education, preferences.shopping, preferences.transportation, preferences.environment, preferences.entertainment]);
+
+    // Debug useEffect to monitor preset selection
+    useEffect(() => {
+        console.log('=== Preset Selection Debug ===');
+        console.log('selectedPresetId:', selectedPresetId);
+        console.log('presets count:', presets.length);
+        console.log('presets IDs:', presets.map(p => p.id));
+        if (selectedPresetId) {
+            const matchingPreset = presets.find(p => p.id === selectedPresetId);
+            console.log('Matching preset found:', matchingPreset ? matchingPreset.name : 'NOT FOUND');
+        }
+        console.log('==============================');
+    }, [selectedPresetId, presets]);
 
     // Watch address value
     const addressValue = form.watch('address');
@@ -442,6 +454,7 @@ export const UserProfile: React.FC = () => {
                 fullName: profileData.fullName,
                 avatarUrl: avatarUrl,
                 liveAddress: profileData.address,
+                preferencePresetId: selectedPresetId ? Number(selectedPresetId) : null,
                 preferenceSafety: preferenceData.safety / 100,
                 preferenceHealthcare: preferenceData.healthcare / 100,
                 preferenceEducation: preferenceData.education / 100,
@@ -696,7 +709,7 @@ export const UserProfile: React.FC = () => {
                     Hãy cho chúng tôi biết điều gì là quan trọng nhất với bạn. Hệ thống sẽ sử dụng các ưu tiên này để tính toán và gợi ý các bất động sản phù hợp nhất với bạn.
                 </p>
 
-                {isLoadingProfile ? (
+                {isLoadingProfile || isLoadingPresets ? (
                     <div className="space-y-6">
                         {/* Skeleton for tabs */}
                         <Skeleton className="h-10 w-full" />
@@ -724,16 +737,26 @@ export const UserProfile: React.FC = () => {
                             </div>
 
                             {/* Preset Cards Grid */}
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                {presets.map((preset) => (
-                                    <PreferencePresetCard
-                                        key={preset.id}
-                                        preset={preset}
-                                        isSelected={selectedPresetId === preset.id}
-                                        onSelect={() => handlePresetSelect(preset.id)}
-                                    />
-                                ))}
-                            </div>
+                            {presets.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {presets.map((preset) => {
+                                        const isSelected = selectedPresetId === preset.id;
+                                        console.log('Comparing preset.id:', preset.id, 'with selectedPresetId:', selectedPresetId, 'Result:', isSelected);
+                                        return (
+                                            <PreferencePresetCard
+                                                key={preset.id}
+                                                preset={preset}
+                                                isSelected={isSelected}
+                                                onSelect={() => handlePresetSelect(preset.id)}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <p className="text-gray-500">Không có bộ ưu tiên nào được tìm thấy.</p>
+                                </div>
+                            )}
 
                             {/* Selected Indicator */}
                             {selectedPresetId && (

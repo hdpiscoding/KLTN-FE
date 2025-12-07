@@ -21,38 +21,14 @@ import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts
 import {NoneSellerView} from "@/components/none-seller-view.tsx";
 import {PendingSellerView} from "@/components/pending-seller-view.tsx";
 import {useUserStore} from "@/store/userStore.ts";
+import type {PropertyListing} from "@/types/property-listing";
 
-type DemandType = 'buy' | 'rent';
-
-type CreatePostFormData = {
-    demand: DemandType;
-    address: string;
-    houseNumber: string;
-    latitude: number | null;
-    longitude: number | null;
-    propertyType: string;
-    area: string;
-    price: string;
-    title: string;
-    description: string;
-    // Optional fields
-    legalDoc: string;
-    furniture: string;
-    bedrooms: string;
-    bathrooms: string;
-    floors: string;
-    houseDirection: string;
-    balconyDirection: string;
-    roadWidth: string;
-    frontWidth: string;
-    images: File[];
-};
+type DemandType = 'for_sale' | 'for_rent';
 
 export const CreatePost: React.FC = () => {
-    const [selectedDemand, setSelectedDemand] = useState<DemandType>('buy');
+    const [selectedDemand, setSelectedDemand] = useState<DemandType>('for_sale');
     const [mapLocation, setMapLocation] = useState<Location | null>(null);
     const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
-    const [uploadedImages, setUploadedImages] = useState<File[]>([]);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
 
     // Autocomplete states
@@ -65,36 +41,56 @@ export const CreatePost: React.FC = () => {
     const inputRef = useRef<HTMLInputElement>(null);
     const lastTrimmedAddressRef = useRef<string>('');
 
-    const form = useForm<CreatePostFormData>({
+    // Extend PropertyListing with UI-only fields for form management
+    type CreatePostForm = PropertyListing & {
+        addressInput: string;
+        images: File[];
+    };
+
+    const form = useForm<CreatePostForm>({
         defaultValues: {
-            demand: 'buy',
-            address: '',
-            latitude: null,
-            longitude: null,
-            propertyType: '',
-            area: '',
-            price: '',
-            title: '',
-            description: '',
-            legalDoc: '',
-            furniture: '',
-            bedrooms: '',
-            bathrooms: '',
-            floors: '',
-            houseDirection: '',
-            balconyDirection: '',
-            roadWidth: '',
-            frontWidth: '',
+            title: "",
+            description: "",
+            listingType: "for_sale",
+            price: undefined,
+            priceUnit: "VND",
+            area: undefined,
+            propertyType: undefined,
+            legalStatus: null,
+            numBedrooms: null,
+            numBathrooms: null,
+            numFloors: null,
+            facadeWidthM: null,
+            roadWidthM: null,
+            houseDirection: null,
+            balconyDirection: null,
+            furnitureStatus: null,
+            projectName:  null,
+            buildingBlock: null,
+            floorNumber: null,
+            addressStreet: null,
+            addressWard: "",
+            addressDistrict: "",
+            addressCity: "TPHCM",
+            location: {
+                type: "Point",
+                coordinates: [0, 0],
+            },
+            imageUrls: null,
+            features: null,
+            tagNames: null,
+            // UI-only fields
+            addressInput: "",
             images: [],
         },
         mode: 'onSubmit',
     });
 
-    // Watch address value
-    const addressValue = form.watch('address');
+    // Watch addressInput from form
+    const addressInput = form.watch('addressInput');
 
     // Debounce address value with 300ms delay
-    const [debouncedAddress] = useDebounce(addressValue, 300);
+    const [debouncedAddress] = useDebounce(addressInput, 300);
 
     // Close suggestions when clicking outside
     useEffect(() => {
@@ -152,8 +148,10 @@ export const CreatePost: React.FC = () => {
             // User is typing or changed the address manually, hide the map
             setMapLocation(null);
             setOriginalLocation(null);
-            form.setValue('latitude', null);
-            form.setValue('longitude', null);
+            form.setValue('location', {
+                type: "Point",
+                coordinates: [0, 0]
+            });
         }
     }, [addressSelected, mapLocation, form]);
 
@@ -167,12 +165,14 @@ export const CreatePost: React.FC = () => {
                 const location: Location = {
                     latitude: lat,
                     longitude: lng,
-                    address: form.getValues('address')
+                    address: data.result.formatted_address
                 };
                 setMapLocation(location);
                 setOriginalLocation(location);
-                form.setValue('latitude', lat);
-                form.setValue('longitude', lng);
+                form.setValue('location', {
+                    type: "Point",
+                    coordinates: [lng, lat]
+                });
                 return {lat, lng};
             }
         } catch (error) {
@@ -186,9 +186,21 @@ export const CreatePost: React.FC = () => {
 
     const handleSelectSuggestion = async (prediction: PlacePrediction) => {
         setAddressSelected(true); // Mark as selected from suggestion
-        form.setValue('address', prediction.description);
+        form.setValue('addressInput', prediction.description);
         setShowSuggestions(false);
         setSuggestions([]);
+
+        // Extract address parts from description
+        const parts = prediction.description.split(',').map(p => p.trim());
+        if (parts.length >= 3) {
+            const street = parts[0];
+            const ward = parts[1];
+            const district = parts[2];
+
+            form.setValue('addressStreet', street);
+            form.setValue('addressWard', ward);
+            form.setValue('addressDistrict', district);
+        }
 
         // Fetch place details to get coordinates
         await fetchPlaceDetail(prediction.place_id);
@@ -222,8 +234,10 @@ export const CreatePost: React.FC = () => {
 
     const handleLocationChange = (newLocation: Location) => {
         setMapLocation(newLocation);
-        form.setValue('latitude', newLocation.latitude);
-        form.setValue('longitude', newLocation.longitude);
+        form.setValue('location', {
+            type: "Point",
+            coordinates: [newLocation.longitude, newLocation.latitude]
+        });
     };
 
     // Calculate distance from original location
@@ -245,7 +259,7 @@ export const CreatePost: React.FC = () => {
         if (!files) return;
 
         const newFiles = Array.from(files);
-        const currentImages = uploadedImages.length;
+        const currentImages = form.getValues('images').length;
         const availableSlots = 10 - currentImages;
 
         if (availableSlots <= 0) {
@@ -271,8 +285,7 @@ export const CreatePost: React.FC = () => {
             return;
         }
 
-        const updatedImages = [...uploadedImages, ...filesToAdd];
-        setUploadedImages(updatedImages);
+        const updatedImages = [...form.getValues('images'), ...filesToAdd];
         form.setValue('images', updatedImages);
 
         // Create previews
@@ -289,16 +302,54 @@ export const CreatePost: React.FC = () => {
     };
 
     const handleRemoveImage = (index: number) => {
-        const updatedImages = uploadedImages.filter((_, i) => i !== index);
+        const updatedImages = form.getValues('images').filter((_, i) => i !== index);
         const updatedPreviews = imagePreviews.filter((_, i) => i !== index);
 
-        setUploadedImages(updatedImages);
-        setImagePreviews(updatedPreviews);
         form.setValue('images', updatedImages);
+        setImagePreviews(updatedPreviews);
     };
 
-    const onSubmit = async () => {
+    const onSubmit = async (data: CreatePostForm) => {
+        // Validate required fields
+        if (!data.addressInput.trim()) {
+            alert('Vui lòng nhập địa chỉ');
+            return;
+        }
 
+        if (!mapLocation || data.location.coordinates[0] === 0) {
+            alert('Vui lòng chọn vị trí trên bản đồ');
+            return;
+        }
+
+        if (!isLocationValid) {
+            alert('Vị trí không trùng khớp với địa chỉ ban đầu (> 100m)');
+            return;
+        }
+
+        if (data.images.length === 0) {
+            alert('Vui lòng tải lên ít nhất 1 ảnh');
+            return;
+        }
+
+        if (data.images.length > 10) {
+            alert('Chỉ được tải lên tối đa 10 ảnh');
+            return;
+        }
+
+        // Extract PropertyListing data (remove UI-only fields)
+        const { images, ...propertyData } = data;
+
+        console.log('Property data to submit:', propertyData);
+        console.log('Images to upload:', images);
+
+        // TODO: Implement API call to create property
+        // This will include:
+        // 1. Upload images to server
+        // 2. Create property with data and image URLs
+        // Example:
+        // const imageUrls = await uploadImages(images);
+        // const finalData: PropertyListing = { ...propertyData, imageUrls };
+        // await createProperty(finalData);
     };
 
     const becomeSellerApproveStatus = useUserStore((state) => state.becomeSellerApproveStatus);
@@ -336,13 +387,13 @@ export const CreatePost: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            setSelectedDemand('buy');
-                                            form.setValue('demand', 'buy');
+                                            setSelectedDemand('for_sale');
+                                            form.setValue('listingType', 'for_sale');
                                         }}
                                         className={cn(
                                             "p-6 rounded-lg border-2 transition-all duration-200 cursor-pointer",
                                             "hover:shadow-lg active:scale-[0.98]",
-                                            selectedDemand === 'buy'
+                                            selectedDemand === 'for_sale'
                                                 ? "border-[#008DDA] bg-[#008DDA]/5 shadow-md"
                                                 : "border-gray-200 hover:border-gray-300"
                                         )}
@@ -350,7 +401,7 @@ export const CreatePost: React.FC = () => {
                                         <div className="flex flex-col items-center gap-3">
                                             <div className={cn(
                                                 "w-16 h-16 rounded-full flex items-center justify-center transition-colors",
-                                                selectedDemand === 'buy'
+                                                selectedDemand === 'for_sale'
                                                     ? "bg-[#008DDA] text-white"
                                                     : "bg-gray-100 text-gray-600"
                                             )}>
@@ -359,7 +410,7 @@ export const CreatePost: React.FC = () => {
                                             <div className="text-center">
                                                 <h3 className={cn(
                                                     "text-lg font-semibold",
-                                                    selectedDemand === 'buy' ? "text-[#008DDA]" : "text-gray-700"
+                                                    selectedDemand === 'for_sale' ? "text-[#008DDA]" : "text-gray-700"
                                                 )}>
                                                     Mua
                                                 </h3>
@@ -374,13 +425,13 @@ export const CreatePost: React.FC = () => {
                                     <button
                                         type="button"
                                         onClick={() => {
-                                            setSelectedDemand('rent');
-                                            form.setValue('demand', 'rent');
+                                            setSelectedDemand('for_rent');
+                                            form.setValue('listingType', 'for_rent');
                                         }}
                                         className={cn(
                                             "p-6 rounded-lg border-2 transition-all duration-200 cursor-pointer",
                                             "hover:shadow-lg active:scale-[0.98]",
-                                            selectedDemand === 'rent'
+                                            selectedDemand === 'for_rent'
                                                 ? "border-[#008DDA] bg-[#008DDA]/5 shadow-md"
                                                 : "border-gray-200 hover:border-gray-300"
                                         )}
@@ -388,7 +439,7 @@ export const CreatePost: React.FC = () => {
                                         <div className="flex flex-col items-center gap-3">
                                             <div className={cn(
                                                 "w-16 h-16 rounded-full flex items-center justify-center transition-colors",
-                                                selectedDemand === 'rent'
+                                                selectedDemand === 'for_rent'
                                                     ? "bg-[#008DDA] text-white"
                                                     : "bg-gray-100 text-gray-600"
                                             )}>
@@ -397,7 +448,7 @@ export const CreatePost: React.FC = () => {
                                             <div className="text-center">
                                                 <h3 className={cn(
                                                     "text-lg font-semibold",
-                                                    selectedDemand === 'rent' ? "text-[#008DDA]" : "text-gray-700"
+                                                    selectedDemand === 'for_rent' ? "text-[#008DDA]" : "text-gray-700"
                                                 )}>
                                                     Cho thuê
                                                 </h3>
@@ -420,11 +471,17 @@ export const CreatePost: React.FC = () => {
                                 {/* Address Autocomplete Input */}
                                 <FormField
                                     control={form.control}
-                                    name="address"
+                                    name="addressInput"
                                     rules={{
-                                        required: "Địa chỉ không được để trống!",
+                                        required: 'Địa chỉ không được để trống',
+                                        validate: () => {
+                                            if (!addressSelected) {
+                                                return 'Vui lòng chọn địa chỉ từ gợi ý';
+                                            }
+                                            return true;
+                                        }
                                     }}
-                                    render={({field}) => (
+                                    render={({ field }) => (
                                         <FormItem className="mb-6">
                                             <FormLabel className="text-base">Địa chỉ bất động sản</FormLabel>
                                             <FormControl>
@@ -446,8 +503,10 @@ export const CreatePost: React.FC = () => {
                                                             if (mapLocation) {
                                                                 setMapLocation(null);
                                                                 setOriginalLocation(null);
-                                                                form.setValue('latitude', null);
-                                                                form.setValue('longitude', null);
+                                                                form.setValue('location', {
+                                                                    type: "Point",
+                                                                    coordinates: [0, 0]
+                                                                });
                                                             }
                                                         }}
                                                     />
@@ -492,7 +551,7 @@ export const CreatePost: React.FC = () => {
                                                     )}
                                                 </div>
                                             </FormControl>
-                                            <FormMessage/>
+                                            <FormMessage />
                                         </FormItem>
                                     )}
                                 />
@@ -507,51 +566,32 @@ export const CreatePost: React.FC = () => {
                                         </div>
 
                                         {/* Map */}
-                                        <FormField
-                                            control={form.control}
-                                            name="latitude"
-                                            rules={{
-                                                required: 'Vui lòng chọn vị trí trên bản đồ',
-                                                validate: (value) => {
-                                                    if (value === null) return 'Vui lòng chọn vị trí trên bản đồ';
-                                                    if (!isLocationValid) return 'Vị trí quá xa so với địa chỉ ban đầu (> 100m)';
-                                                    return true;
-                                                }
-                                            }}
-                                            render={() => (
-                                                <FormItem>
-                                                    <FormControl>
-                                                        <div className={cn(
-                                                            "rounded-lg overflow-hidden border-2",
-                                                            !isLocationValid ? "border-red-300" : "border-gray-300"
-                                                        )}>
-                                                            <DraggableMarkerMap
-                                                                location={mapLocation}
-                                                                onLocationChange={handleLocationChange}
-                                                                defaultZoom={16}
-                                                                height="500px"
-                                                                showNavigation={true}
-                                                            />
-                                                        </div>
-                                                    </FormControl>
-                                                    <FormMessage/>
-                                                    {/* Validation Messages */}
-                                                    {!isLocationValid && distanceFromOriginal > 0 && (
-                                                        <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4">
-                                                            <div className="flex items-start gap-3">
-                                                                <AlertCircle
-                                                                    className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"/>
-                                                                <div className="flex-1">
-                                                                    <h3 className="text-sm font-semibold text-red-800 mb-1">
-                                                                        Vị trí không trùng khớp với địa chỉ ban đầu
-                                                                    </h3>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </FormItem>
-                                            )}
-                                        />
+                                        <div className={cn(
+                                            "rounded-lg overflow-hidden border-2",
+                                            !isLocationValid ? "border-red-300" : "border-gray-300"
+                                        )}>
+                                            <DraggableMarkerMap
+                                                location={mapLocation}
+                                                onLocationChange={handleLocationChange}
+                                                defaultZoom={16}
+                                                height="500px"
+                                                showNavigation={true}
+                                            />
+                                        </div>
+                                        {/* Validation Messages */}
+                                        {!isLocationValid && distanceFromOriginal > 0 && (
+                                            <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 mt-4">
+                                                <div className="flex items-start gap-3">
+                                                    <AlertCircle
+                                                        className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5"/>
+                                                    <div className="flex-1">
+                                                        <h3 className="text-sm font-semibold text-red-800 mb-1">
+                                                            Vị trí không trùng khớp với địa chỉ ban đầu
+                                                        </h3>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 )}
                             </div>
@@ -621,7 +661,7 @@ export const CreatePost: React.FC = () => {
                                                                 value={field.value || ''}
                                                                 onChange={(e) => {
                                                                     const numericValue = e.target.value.replace(/\D/g, '');
-                                                                    field.onChange(numericValue);
+                                                                    field.onChange(numericValue ? Number(numericValue) : 0);
                                                                 }}
                                                             />
                                                         </FormControl>
@@ -658,7 +698,7 @@ export const CreatePost: React.FC = () => {
                                                                 value={field.value || ''}
                                                                 onChange={(e) => {
                                                                     const numericValue = e.target.value.replace(/\D/g, '');
-                                                                    field.onChange(numericValue);
+                                                                    field.onChange(numericValue ? Number(numericValue) : 0);
                                                                 }}
                                                                 onBlur={(e) => {
                                                                     // Format khi blur thay vì realtime
@@ -666,7 +706,7 @@ export const CreatePost: React.FC = () => {
                                                                 }}
                                                                 onFocus={(e) => {
                                                                     // Show raw number khi focus
-                                                                    e.target.value = field.value || '';
+                                                                    e.target.value = String(field.value || 0);
                                                                 }}
                                                             />
                                                         </FormControl>
@@ -761,12 +801,12 @@ export const CreatePost: React.FC = () => {
                                         {/* Legal Documents */}
                                         <FormField
                                             control={form.control}
-                                            name="legalDoc"
+                                            name="legalStatus"
                                             render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel>Giấy tờ pháp lý</FormLabel>
                                                     <Select
-                                                        value={field.value}
+                                                        value={field.value || "Không xác định"}
                                                         onValueChange={field.onChange}
                                                     >
                                                         <FormControl>
@@ -777,7 +817,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {LEGAL_DOCS.map((doc) => (
-                                                                <SelectItem key={doc.id} value={doc.id.toString()}>
+                                                                <SelectItem key={doc.id} value={doc.name}>
                                                                     {doc.name}
                                                                 </SelectItem>
                                                             ))}
@@ -791,12 +831,12 @@ export const CreatePost: React.FC = () => {
                                         {/* Furniture */}
                                         <FormField
                                             control={form.control}
-                                            name="furniture"
+                                            name="furnitureStatus"
                                             render={({field}) => (
                                                 <FormItem>
                                                     <FormLabel>Nội thất</FormLabel>
                                                     <Select
-                                                        value={field.value}
+                                                        value={field.value || "Không có"}
                                                         onValueChange={field.onChange}
                                                     >
                                                         <FormControl>
@@ -807,7 +847,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_FURNITURE.map((furniture) => (
-                                                                <SelectItem key={furniture.id} value={furniture.id.toString()}>
+                                                                <SelectItem key={furniture.id} value={furniture.name}>
                                                                     {furniture.name}
                                                                 </SelectItem>
                                                             ))}
@@ -823,7 +863,7 @@ export const CreatePost: React.FC = () => {
                                         {/* Bedrooms */}
                                         <FormField
                                             control={form.control}
-                                            name="bedrooms"
+                                            name="numBedrooms"
                                             rules={{
                                                 pattern: {
                                                     value: /^[0-9]*$/,
@@ -840,9 +880,9 @@ export const CreatePost: React.FC = () => {
                                                             className="focus-visible:ring-[#008DDA]"
                                                             onChange={(e) => {
                                                                 const value = e.target.value.replace(/[^0-9]/g, '');
-                                                                field.onChange(value);
+                                                                field.onChange(value ? Number(value) : null);
                                                             }}
-                                                            value={field.value}
+                                                            value={field.value ?? ''}
                                                         />
                                                     </FormControl>
                                                     <FormMessage/>
@@ -853,7 +893,7 @@ export const CreatePost: React.FC = () => {
                                         {/* Bathrooms */}
                                         <FormField
                                             control={form.control}
-                                            name="bathrooms"
+                                            name="numBathrooms"
                                             rules={{
                                                 pattern: {
                                                     value: /^[0-9]*$/,
@@ -870,9 +910,9 @@ export const CreatePost: React.FC = () => {
                                                             className="focus-visible:ring-[#008DDA]"
                                                             onChange={(e) => {
                                                                 const value = e.target.value.replace(/[^0-9]/g, '');
-                                                                field.onChange(value);
+                                                                field.onChange(value ? Number(value) : null);
                                                             }}
-                                                            value={field.value}
+                                                            value={field.value ?? ''}
                                                         />
                                                     </FormControl>
                                                     <FormMessage/>
@@ -883,7 +923,7 @@ export const CreatePost: React.FC = () => {
                                         {/* Floors */}
                                         <FormField
                                             control={form.control}
-                                            name="floors"
+                                            name="numFloors"
                                             rules={{
                                                 pattern: {
                                                     value: /^[0-9]*$/,
@@ -900,9 +940,9 @@ export const CreatePost: React.FC = () => {
                                                             className="focus-visible:ring-[#008DDA]"
                                                             onChange={(e) => {
                                                                 const value = e.target.value.replace(/[^0-9]/g, '');
-                                                                field.onChange(value);
+                                                                field.onChange(value ? Number(value) : null);
                                                             }}
-                                                            value={field.value}
+                                                            value={field.value ?? ''}
                                                         />
                                                     </FormControl>
                                                     <FormMessage/>
@@ -920,7 +960,7 @@ export const CreatePost: React.FC = () => {
                                                 <FormItem>
                                                     <FormLabel>Hướng nhà</FormLabel>
                                                     <Select
-                                                        value={field.value}
+                                                        value={field.value || "Không xác định"}
                                                         onValueChange={field.onChange}
                                                     >
                                                         <FormControl>
@@ -931,7 +971,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_DIRECTIONS.map((direction) => (
-                                                                <SelectItem key={direction.id} value={direction.id.toString()}>
+                                                                <SelectItem key={direction.id} value={direction.name}>
                                                                     {direction.name}
                                                                 </SelectItem>
                                                             ))}
@@ -950,7 +990,7 @@ export const CreatePost: React.FC = () => {
                                                 <FormItem>
                                                     <FormLabel>Hướng ban công</FormLabel>
                                                     <Select
-                                                        value={field.value}
+                                                        value={field.value || "Không xác định"}
                                                         onValueChange={field.onChange}
                                                     >
                                                         <FormControl>
@@ -961,7 +1001,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_DIRECTIONS.map((direction) => (
-                                                                <SelectItem key={direction.id} value={direction.id.toString()}>
+                                                                <SelectItem key={direction.id} value={direction.name}>
                                                                     {direction.name}
                                                                 </SelectItem>
                                                             ))}
@@ -977,7 +1017,7 @@ export const CreatePost: React.FC = () => {
                                         {/* Road Width */}
                                         <FormField
                                             control={form.control}
-                                            name="roadWidth"
+                                            name="roadWidthM"
                                             rules={{
                                                 pattern: {
                                                     value: /^[0-9]*\.?[0-9]*$/,
@@ -995,9 +1035,9 @@ export const CreatePost: React.FC = () => {
                                                                 className="focus-visible:ring-[#008DDA] pr-10"
                                                                 onChange={(e) => {
                                                                     const value = e.target.value.replace(/[^0-9.]/g, '');
-                                                                    field.onChange(value);
+                                                                    field.onChange(value ? Number(value) : null);
                                                                 }}
-                                                                value={field.value}
+                                                                value={field.value ?? ''}
                                                             />
                                                         </FormControl>
                                                         <div
@@ -1013,7 +1053,7 @@ export const CreatePost: React.FC = () => {
                                         {/* Front Width */}
                                         <FormField
                                             control={form.control}
-                                            name="frontWidth"
+                                            name="facadeWidthM"
                                             rules={{
                                                 pattern: {
                                                     value: /^[0-9]*\.?[0-9]*$/,
@@ -1031,9 +1071,9 @@ export const CreatePost: React.FC = () => {
                                                                 className="focus-visible:ring-[#008DDA] pr-10"
                                                                 onChange={(e) => {
                                                                     const value = e.target.value.replace(/[^0-9.]/g, '');
-                                                                    field.onChange(value);
+                                                                    field.onChange(value ? Number(value) : null);
                                                                 }}
-                                                                value={field.value}
+                                                                value={field.value ?? ''}
                                                             />
                                                         </FormControl>
                                                         <div
@@ -1062,8 +1102,9 @@ export const CreatePost: React.FC = () => {
                                     control={form.control}
                                     name="images"
                                     rules={{
+                                        required: 'Vui lòng tải lên ít nhất 1 ảnh',
                                         validate: (value) => {
-                                            if (!value || value.length === 0) {
+                                            if (value.length === 0) {
                                                 return 'Vui lòng tải lên ít nhất 1 ảnh';
                                             }
                                             if (value.length > 10) {
@@ -1072,7 +1113,7 @@ export const CreatePost: React.FC = () => {
                                             return true;
                                         }
                                     }}
-                                    render={() => (
+                                    render={({ field }) => (
                                         <FormItem>
                                             <FormControl>
                                                 <div className="space-y-4">
@@ -1107,7 +1148,7 @@ export const CreatePost: React.FC = () => {
                                                         ))}
 
                                                         {/* Upload Button */}
-                                                        {uploadedImages.length < 10 && (
+                                                        {field.value.length < 10 && (
                                                             <label
                                                                 className="aspect-square rounded-lg border-2 border-dashed border-gray-300 hover:border-[#008DDA] cursor-pointer transition-all duration-200 flex flex-col items-center justify-center gap-2 bg-gray-50 hover:bg-blue-50"
                                                             >
@@ -1127,7 +1168,7 @@ export const CreatePost: React.FC = () => {
                                                                         Tải ảnh lên
                                                                     </p>
                                                                     <p className="text-xs text-gray-500 mt-1">
-                                                                        {uploadedImages.length}/10
+                                                                        {field.value.length}/10
                                                                     </p>
                                                                 </div>
                                                             </label>
@@ -1154,15 +1195,15 @@ export const CreatePost: React.FC = () => {
                                                     <div className="flex items-center justify-between text-sm">
                                                 <span className="text-gray-600">
                                                     Đã tải: <span
-                                                    className="font-semibold text-[#008DDA]">{uploadedImages.length}</span> ảnh
+                                                    className="font-semibold text-[#008DDA]">{field.value.length}</span> ảnh
                                                 </span>
                                                         <span className="text-gray-500">
-                                                    Còn lại: {10 - uploadedImages.length} ảnh
+                                                    Còn lại: {10 - field.value.length} ảnh
                                                 </span>
                                                     </div>
                                                 </div>
                                             </FormControl>
-                                            <FormMessage/>
+                                            <FormMessage />
                                         </FormItem>
                                     )}
                                 />

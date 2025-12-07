@@ -2,39 +2,39 @@ import type {PropertyDirection} from "@/types/property-direction";
 
 export const PROPERTY_DIRECTIONS: PropertyDirection[] = [
     {
-        id: 0,
+        id: "undefined",
         name: "Không xác định"
     },
     {
-        id: 1,
+        id: "north",
         name: "Hướng Bắc"
     },
     {
-        id: 2,
+        id: "northeast",
         name: "Hướng Đông Bắc"
     },
     {
-        id: 3,
+        id: "east",
         name: "Hướng Đông"
     },
     {
-        id: 4,
+        id: "southeast",
         name: "Hướng Đông Nam"
     },
     {
-        id: 5,
+        id: "south",
         name: "Hướng Nam"
     },
     {
-        id: 6,
+        id: "southwest",
         name: "Hướng Tây Nam"
     },
     {
-        id: 7,
+        id: "west",
         name: "Hướng Tây"
     },
     {
-        id: 8,
+        id: "northwest",
         name: "Hướng Tây Bắc"
     },
 ];

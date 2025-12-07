@@ -1,4 +1,4 @@
 export interface PropertyDirection {
-    id: number;
+    id: string;
     name: string;
 }

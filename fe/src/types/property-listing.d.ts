@@ -4,11 +4,11 @@ interface GeoLocation {
 }
 
 export interface PropertyListing {
-    id: number;
-    createdAt: string;
-    updatedAt: string;
-    userId: number;
-    approvalStatus: string;
+    id?: number;
+    createdAt?: string;
+    updatedAt?: string;
+    userId?: number;
+    approvalStatus?: string;
     title: string;
     description: string;
     listingType: string;
@@ -29,11 +29,11 @@ export interface PropertyListing {
     buildingBlock: string | null;
     floorNumber: number | null;
     addressStreet: string | null;
-    addressWard: string | null;
-    addressDistrict: string | null;
-    addressCity: string | null;
+    addressWard: string;
+    addressDistrict: string;
+    addressCity: string;
     location: GeoLocation;
-    features: string[];
-    imageUrls: string[];
-    tagNames: string[];
+    features: string[] | null;
+    imageUrls: string[] | null ;
+    tagNames: string[] | null;
 }
