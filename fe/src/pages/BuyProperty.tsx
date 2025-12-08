@@ -526,8 +526,8 @@ export const BuyProperty: React.FC = () => {
                                         price={property.price}
                                         area={property.area}
                                         address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
-                                        imageUrl={property.imageUrls[0] || ""}
-                                        createdAt={property.createdAt}
+                                        imageUrl={property.imageUrls?.[0] || ""}
+                                        createdAt={property.createdAt || ""}
                                         onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
                                     />
                                 ))

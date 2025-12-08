@@ -28,6 +28,7 @@ import {PropertyDetail} from "@/pages/PropertyDetail.tsx";
 import {EditPost} from "@/pages/EditPost.tsx";
 import '@goongmaps/goong-js/dist/goong-js.css';
 import {RentProperty} from "@/pages/RentProperty.tsx";
+import {PrivateRoute} from "@/components/private-route.tsx";
 
 function App() {
 
@@ -63,7 +64,11 @@ function App() {
                       <Route path="/dinh-gia-nha/ket-qua" element={<EstimatePropertyPrice/>}/>
                   </Route>
 
-                  <Route path="/" element={<UserLayout/>}>
+                  <Route path="/" element={
+                      <PrivateRoute>
+                          <UserLayout/>
+                      </PrivateRoute>
+                  }>
                       <Route path="/tin-dang" element={<MyPosts/>}/>
                       <Route path="/dang-tin" element={<CreatePost/>}/>
                       <Route path="/bat-dong-san/:id/chinh-sua" element={<EditPost/>}/>
