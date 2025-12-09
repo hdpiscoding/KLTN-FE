@@ -10,12 +10,14 @@ import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Mus
 import { PreferencePresetCard } from '@/components/preference-preset-card';
 import type { PreferencePreset } from '@/types/preference-preset';
 import {getMyProfile, updateMyProfile} from "@/services/userServices.ts";
+import {uploadImage} from "@/services/mediaServices.ts";
 import {toast} from "react-toastify";
 import { useDebounce } from 'use-debounce';
 import { getAllPreferencePresets } from "@/services/preferencePresetServices.ts";
 import type { PlacePrediction } from '@/types/place-prediction';
 import { placeAutocomplete } from '@/services/goongAPIServices.ts';
 import { cn } from '@/lib/utils';
+import {useUserStore} from "@/store/userStore.ts";
 
 type UserProfileFormData = {
     fullName: string;
@@ -36,10 +38,8 @@ type PreferenceFormData = {
 
 export const UserProfile: React.FC = () => {
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars,@typescript-eslint/ban-ts-comment
-    // @ts-expect-error
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [avatarFile, setAvatarFile] = useState<File | null>(null);
     const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
     const [presets, setPresets] = useState<PreferencePreset[]>([]);
@@ -57,6 +57,7 @@ export const UserProfile: React.FC = () => {
         environment: 50,
         entertainment: 50,
     })
+    const setUserInfo = useUserStore(state => state.setUserInfo);
 
     // Autocomplete states for address
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
@@ -112,6 +113,7 @@ export const UserProfile: React.FC = () => {
             setPhoneNumber(response?.data.phoneNumber);
             setAddress(response?.data.liveAddress);
             setAvatarPreview(response?.data.avatarUrl);
+            setUserInfo(response?.data.userId, response?.data.avatarUrl, response?.data.becomeSellerApproveStatus)
 
             // Convert decimal values (0-1) from API to percentage values (0-100) for display
             setPreferences({
@@ -126,7 +128,6 @@ export const UserProfile: React.FC = () => {
 
             // Set selected preset if exists
             const presetIdFromAPI = response?.data.preferencePresetId;
-            console.log('PreferencePresetId from API:', presetIdFromAPI, 'Type:', typeof presetIdFromAPI);
 
             if (presetIdFromAPI !== null && presetIdFromAPI !== undefined) {
                 // Convert to string to match preset.id type (which is always string)
@@ -173,7 +174,6 @@ export const UserProfile: React.FC = () => {
     useEffect(() => {
         getProfile();
         fetchPresets();
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // Update form values when profile data is loaded
@@ -355,7 +355,13 @@ export const UserProfile: React.FC = () => {
             // Validate file type
             const validTypes = ['image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
             if (!validTypes.includes(file.type)) {
-                alert('Chỉ chấp nhận file .png, .jpg, .jpeg, .webp');
+                toast.error('Chỉ chấp nhận file .png, .jpg, .jpeg, .webp');
+                return;
+            }
+
+            // Validate file size (max 5MB)
+            if (file.size > 5 * 1024 * 1024) {
+                toast.error('Kích thước ảnh không được vượt quá 5MB');
                 return;
             }
 
@@ -407,33 +413,26 @@ export const UserProfile: React.FC = () => {
     // Combined submit handler for both profile and preferences
     const handleSaveAll = async () => {
         try {
+            setIsSubmitting(true);
+
             // Get values from both forms
             const profileData = form.getValues();
             const preferenceData = preferenceForm.getValues();
 
-            // Validate both forms
-            const profileValid = await form.trigger();
-            const preferenceValid = await preferenceForm.trigger();
+            let avatarUrl: string | undefined = avatarPreview || undefined;
+            if (avatarFile) {
 
-            if (!profileValid || !preferenceValid) {
-                toast.error('Vui lòng kiểm tra lại thông tin!');
-                return;
+                try {
+                    const uploadResponse = await uploadImage(avatarFile);
+                    avatarUrl = uploadResponse.data.mediaUrl;
+                } catch (uploadError) {
+                    console.error('Error uploading avatar:', uploadError);
+                    toast.error('Không thể tải ảnh lên. Vui lòng thử lại!');
+                    setIsSubmitting(false);
+                    return;
+                }
             }
 
-            // TODO: If avatarFile exists, upload it first to get avatarUrl
-            // For now, we'll use the existing avatarPreview if no new file is uploaded
-            const avatarUrl = avatarPreview || undefined;
-
-            // If user uploaded a new avatar file, you should upload it first
-            // Example:
-            // if (avatarFile) {
-            //     const uploadedUrl = await uploadAvatar(avatarFile);
-            //     avatarUrl = uploadedUrl;
-            // }
-            // Note: avatarFile is kept in state for future avatar upload implementation
-
-            // Call API to update profile
-            // Convert percentage values (0-100) to decimal values (0-1) for API
             await updateMyProfile({
                 fullName: profileData.fullName,
                 avatarUrl: avatarUrl,
@@ -452,9 +451,14 @@ export const UserProfile: React.FC = () => {
 
             // Reload profile data to sync with server
             await getProfile();
+            // Clear avatar file state after successful update
+            setAvatarFile(null);
         } catch (error) {
             console.error('Error updating profile:', error);
-            toast.error('Có lỗi xảy ra khi cập nhật thông tin!');
+            const errorMessage = (error as {response?: {data?: {error?: string}}})?.response?.data?.error || 'Có lỗi xảy ra khi cập nhật thông tin!';
+            toast.error(errorMessage);
+        } finally {
+            setIsSubmitting(false);
         }
     };
 
@@ -1042,9 +1046,17 @@ export const UserProfile: React.FC = () => {
                     <Button
                         type="button"
                         onClick={handleSaveAll}
-                        className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] text-base px-8 py-6"
+                        disabled={isSubmitting}
+                        className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] text-base px-8 py-6 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        Lưu thay đổi
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
+                                Đang lưu...
+                            </>
+                        ) : (
+                            'Lưu thay đổi'
+                        )}
                     </Button>
                 </div>
             )}
