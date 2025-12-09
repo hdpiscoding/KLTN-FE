@@ -22,6 +22,7 @@ import {toast} from "react-toastify";
 import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts";
 import type {PropertyListing} from "@/types/property-listing";
 import {getPropertyDetails as getPropertyDetailsAPI, updatePropertyListing} from "@/services/propertyServices.ts";
+import {uploadImage} from "@/services/mediaServices.ts";
 
 type DemandType = 'for_sale' | 'for_rent';
 
@@ -169,7 +170,7 @@ export const EditPost: React.FC = () => {
                 const location: Location = {
                     latitude: lat,
                     longitude: lng,
-                    address: addressInput
+                    address: data.result.formatted_address
                 };
                 setMapLocation(location);
                 setOriginalLocation(location);
@@ -332,7 +333,7 @@ export const EditPost: React.FC = () => {
         const availableSlots = 10 - totalImages;
 
         if (availableSlots <= 0) {
-            alert('Bạn chỉ có thể tải lên tối đa 10 ảnh');
+            toast.error('Bạn chỉ có thể tải lên tối đa 10 ảnh');
             return;
         }
 
@@ -343,14 +344,14 @@ export const EditPost: React.FC = () => {
         const invalidFiles = filesToAdd.filter(file => !validTypes.includes(file.type));
 
         if (invalidFiles.length > 0) {
-            alert('Chỉ chấp nhận file ảnh định dạng JPG, PNG, WEBP');
+            toast.error('Chỉ chấp nhận file ảnh định dạng JPG, PNG, WEBP');
             return;
         }
 
         // Validate file sizes (max 5MB per image)
         const oversizedFiles = filesToAdd.filter(file => file.size > 5 * 1024 * 1024);
         if (oversizedFiles.length > 0) {
-            alert('Kích thước mỗi ảnh không được vượt quá 5MB');
+            toast.error('Kích thước mỗi ảnh không được vượt quá 5MB');
             return;
         }
 
@@ -391,34 +392,14 @@ export const EditPost: React.FC = () => {
         try {
             setIsSubmitting(true);
 
-            const {addressInput: _addressInput, newImages, existingImageUrls, ...propertyData} = data;
+            const {newImages, existingImageUrls, ...propertyData} = data;
             let finalImageUrls = [...existingImageUrls];
 
             if (newImages.length > 0) {
-                // TODO: Replace with actual image upload API
-                // Example:
-                // const uploadImageToServer = async (file: File): Promise<string> => {
-                //     const formData = new FormData();
-                //     formData.append('image', file);
-                //     const response = await instance.post('/upload/image', formData, {
-                //         headers: { 'Content-Type': 'multipart/form-data' }
-                //     });
-                //     return response.data.imageUrl;
-                // };
-                // const uploadPromises = newImages.map(file => uploadImageToServer(file));
-                // const newUploadedUrls = await Promise.all(uploadPromises);
-                // finalImageUrls = [...existingImageUrls, ...newUploadedUrls];
-
-                // MOCK: Simulate new image uploads
-                console.log('New images to upload:', newImages);
-                await new Promise(resolve => setTimeout(resolve, 1000));
-
-                const mockNewUrls = [
-                    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-                    'https://images.unsplash.com/photo-1600607687644-c7171b42498b?w=800',
-                ].slice(0, newImages.length);
-
-                finalImageUrls = [...existingImageUrls, ...mockNewUrls];
+                const uploadPromises = newImages.map(file => uploadImage(file));
+                const uploadResponses = await Promise.all(uploadPromises);
+                const newUploadedUrls = uploadResponses.map(response => response.data.mediaUrl);
+                finalImageUrls = [...existingImageUrls, ...newUploadedUrls];
             }
 
             const finalData: PropertyListing = {
@@ -426,17 +407,13 @@ export const EditPost: React.FC = () => {
                 imageUrls: finalImageUrls,
             };
 
-            console.log('Property data to update:', finalData);
-
-            const response = await updatePropertyListing(Number(id), finalData);
-
-            console.log('API Response:', response);
+            await updatePropertyListing(Number(id), finalData);
 
             toast.success('Cập nhật tin đăng thành công!');
 
             setTimeout(() => {
                 navigate('/tin-dang');
-            }, 1000);
+            }, 500);
 
         } catch (error) {
             console.error('Error updating property:', error);
@@ -571,7 +548,7 @@ export const EditPost: React.FC = () => {
                             name="addressInput"
                             rules={{
                                 required: 'Địa chỉ không được để trống',
-                                validate: (_value) => {
+                                validate: () => {
                                     if (!addressSelected) {
                                         return 'Vui lòng chọn địa chỉ từ gợi ý';
                                     }

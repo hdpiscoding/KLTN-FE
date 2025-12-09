@@ -23,6 +23,7 @@ import {PendingSellerView} from "@/components/pending-seller-view.tsx";
 import {useUserStore} from "@/store/userStore.ts";
 import type {PropertyListing} from "@/types/property-listing";
 import {createPropertyListing} from "@/services/propertyServices.ts";
+import {uploadImage} from "@/services/mediaServices.ts";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
 
@@ -321,44 +322,22 @@ export const CreatePost: React.FC = () => {
             // Extract PropertyListing data (remove UI-only fields)
             const { images, ...propertyData } = data;
 
-            // ========================================
-            // STEP 1: Upload images to server
-            // ========================================
-            // TODO: Replace this with actual image upload API call
-            // Example implementation:
-            // const uploadImageToServer = async (file: File): Promise<string> => {
-            //     const formData = new FormData();
-            //     formData.append('image', file);
-            //     const response = await instance.post('/upload/image', formData, {
-            //         headers: { 'Content-Type': 'multipart/form-data' }
-            //     });
-            //     return response.data.imageUrl;
-            // };
-            //
-            // const uploadPromises = images.map(file => uploadImageToServer(file));
-            // const uploadedImageUrls = await Promise.all(uploadPromises);
+            const uploadPromises = images.map(file => uploadImage(file));
+            const uploadResponses = await Promise.all(uploadPromises);
 
-            // MOCK DATA: Temporary mock URLs for testing
-            // Replace this block with actual upload logic above
-            console.log('Files to upload:', images);
-            const mockImageUrls = [
-                'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=800',
-                'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-                'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800',
-            ].slice(0, images.length); // Use as many URLs as uploaded files
-
-            // Simulate upload delay
-            await new Promise(resolve => setTimeout(resolve, 1000));
+            // Extract image URLs from responses
+            const uploadedImageUrls = uploadResponses.map(response => response.data.mediaUrl);
             const finalData: PropertyListing = {
                 ...propertyData,
-                imageUrls: mockImageUrls, // TODO: Replace with uploadedImageUrls
+                imageUrls: uploadedImageUrls,
             };
+
             await createPropertyListing(finalData);
             toast.success('Đăng tin thành công!');
 
             setTimeout(() => {
                 navigate('/tin-dang');
-            }, 1000);
+            }, 500);
 
         } catch (error) {
             console.error('Error creating property:', error);
@@ -987,7 +966,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_DIRECTIONS.map((direction) => (
-                                                                <SelectItem key={direction.id} value={direction.name}>
+                                                                <SelectItem key={direction.id} value={direction.id.toString()}>
                                                                     {direction.name}
                                                                 </SelectItem>
                                                             ))}
@@ -1017,7 +996,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_DIRECTIONS.map((direction) => (
-                                                                <SelectItem key={direction.id} value={direction.name}>
+                                                                <SelectItem key={direction.id} value={direction.id.toString()}>
                                                                     {direction.name}
                                                                 </SelectItem>
                                                             ))}
