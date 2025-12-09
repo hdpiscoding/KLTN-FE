@@ -74,7 +74,12 @@ export const Home: React.FC = () => {
                         key: "listingType",
                         operator: "equal",
                         value: "for_sale"
-                    }
+                    },
+                    {
+                        key: 'approvalStatus',
+                        operator: 'equal',
+                        value: 'APPROVED'
+                    },
                 ],
                 sorts: [
                     {
@@ -102,7 +107,12 @@ export const Home: React.FC = () => {
                         key: "listingType",
                         operator: "equal",
                         value: "for_rent"
-                    }
+                    },
+                    {
+                        key: 'approvalStatus',
+                        operator: 'equal',
+                        value: 'APPROVED'
+                    },
                 ],
                 sorts: [
                     {
@@ -128,10 +138,10 @@ export const Home: React.FC = () => {
             const response = await searchProperties({
                 filters: [
                     {
-                        key: "listingType",
-                        operator: "equal",
-                        value: "for_sale"
-                    }
+                        key: 'approvalStatus',
+                        operator: 'equal',
+                        value: 'APPROVED'
+                    },
                 ],
                 sorts: [
                     {
@@ -282,8 +292,8 @@ export const Home: React.FC = () => {
                                     price={property.price}
                                     area={property.area}
                                     address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
-                                    imageUrl={property.imageUrls[0] || ""}
-                                    createdAt={property.createdAt}
+                                    imageUrl={property.imageUrls?.[0] || ""}
+                                    createdAt={property.createdAt || ""}
                                     onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
                                 />
                             ))}
@@ -393,8 +403,8 @@ export const Home: React.FC = () => {
                                                     price={property.price}
                                                     area={property.area}
                                                     address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
-                                                    imageUrl={property.imageUrls[0] || ""}
-                                                    createdAt={property.createdAt}
+                                                    imageUrl={property.imageUrls?.[0] || ""}
+                                                    createdAt={property.createdAt || ""}
                                                 />
                                             </div>
                                         </CarouselItem>
@@ -460,8 +470,8 @@ export const Home: React.FC = () => {
                                                     price={property.price}
                                                     area={property.area}
                                                     address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
-                                                    imageUrl={property.imageUrls[0] || ""}
-                                                    createdAt={property.createdAt}
+                                                    imageUrl={property.imageUrls?.[0] || ""}
+                                                    createdAt={property.createdAt || ""}
                                                 />
                                             </div>
                                         </CarouselItem>

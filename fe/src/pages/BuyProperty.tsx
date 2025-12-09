@@ -323,7 +323,12 @@ export const BuyProperty: React.FC = () => {
                         key: 'listingType',
                         operator: 'equal',
                         value: 'for_sale'
-                    }
+                    },
+                    {
+                        key: 'approvalStatus',
+                        operator: 'equal',
+                        value: 'APPROVED'
+                    },
                 ];
 
                 // Determine sorts based on sort criteria from URL

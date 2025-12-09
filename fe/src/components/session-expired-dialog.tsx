@@ -35,13 +35,13 @@ export function SessionExpiredDialog({ open, onLoginRedirect, onHomeRedirect }: 
                     <Button
                         onClick={onHomeRedirect}
                         variant="outline"
-                        className="w-full sm:w-auto cursor-pointer"
+                        className="w-full lg:min-w-[160px] sm:w-auto cursor-pointer"
                     >
                         Quay về trang chủ
                     </Button>
                     <Button 
                         onClick={onLoginRedirect}
-                        className="w-full sm:w-auto bg-[#008DDA] hover:bg-[#0077b6] cursor-pointer"
+                        className="w-full lg:min-w-[160px] sm:w-auto bg-[#008DDA] hover:bg-[#0077b6] cursor-pointer"
                     >
                         Đăng nhập
                     </Button>

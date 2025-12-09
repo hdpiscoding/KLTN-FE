@@ -356,15 +356,13 @@ export const CreatePost: React.FC = () => {
             await createPropertyListing(finalData);
             toast.success('Đăng tin thành công!');
 
-            // Navigate to property detail or my posts page
-            // You can use response.data.id to navigate to detail page
             setTimeout(() => {
-                navigate('/tin-dang'); // or navigate(`/property/${response.data.id}`)
-            }, 1500);
+                navigate('/tin-dang');
+            }, 1000);
 
         } catch (error) {
             console.error('Error creating property:', error);
-            toast.error('Có lỗi xảy ra khi đăng tin. Vui lòng thử lại!');
+            toast.error('Có lỗi xảy ra. Vui lòng thử lại!');
         } finally {
             setIsSubmitting(false);
         }
