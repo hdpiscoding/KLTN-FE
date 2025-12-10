@@ -46,3 +46,8 @@ export const updatePropertyListing = async (id: number, data: PropertyListing) =
     const response = await instance.put(`properties/${id}`, data);
     return response.data;
 }
+
+export const deletePropertyListing = async (id: number) => {
+    const response = await instance.delete(`properties/${id}`);
+    return response.data;
+}

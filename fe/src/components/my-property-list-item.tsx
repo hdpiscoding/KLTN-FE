@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
+import { Trash2 } from "lucide-react";
 import { formatPrice, formatArea, formatDateTime } from "@/utils/generalFormat.ts";
 import { cn } from "@/lib/utils";
 
@@ -14,7 +15,8 @@ interface MyPropertyListItemProps {
     imageUrl: string;
     createdAt: string;
     status: PropertyStatus;
-    code?: string; // mã bất động sản
+    code?: string;
+    onDelete?: (id: string) => void;
 }
 
 const getStatusStyles = (status: PropertyStatus) => {
@@ -42,38 +44,60 @@ export const MyPropertyListItem = ({
     createdAt,
     status,
     code,
+    onDelete,
 }: MyPropertyListItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
 
+    const handleDeleteClick = (e: React.MouseEvent) => {
+        e.preventDefault(); // Prevent navigation to edit page
+        e.stopPropagation();
+        if (onDelete) {
+            onDelete(id);
+        }
+    };
+
     return (
-        <Link
-            to={`/bat-dong-san/${id}/chinh-sua`}
-            className="group flex gap-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-3"
+        <div
+            className="group flex gap-4 bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow duration-200 p-3 relative"
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
         >
-            {/* Image Container - Left side */}
-            <div className="relative w-48 h-36 flex-shrink-0 overflow-hidden rounded-lg">
-                <img
-                    src={imageUrl}
-                    alt={title}
-                    className={`w-full h-full object-cover transition-transform duration-300 ${
-                        isHovered ? 'scale-110' : 'scale-100'
-                    }`}
-                />
-                {/* Status Tag on Image */}
-                <div className="absolute top-2 left-2">
-                    <span className={cn(
-                        "text-xs font-semibold px-2 py-1 rounded-md border",
-                        getStatusStyles(status)
-                    )}>
-                        {status}
-                    </span>
-                </div>
-            </div>
+            {/* Delete Button - Top Right */}
+            <button
+                onClick={handleDeleteClick}
+                className="cursor-pointer absolute top-3 right-3 z-10 p-2 rounded-full bg-white/90 hover:bg-red-500 text-gray-600 hover:text-white transition-all duration-200 shadow-md hover:shadow-lg group/delete"
+                title="Xóa tin đăng"
+            >
+                <Trash2 className="w-5 h-5" />
+            </button>
 
-            {/* Content Container - Right side */}
-            <div className="flex flex-col flex-1 min-w-0">
+            {/* Clickable Link Area */}
+            <Link
+                to={`/bat-dong-san/${id}/chinh-sua`}
+                className="flex gap-4 flex-1"
+            >
+                {/* Image Container - Left side */}
+                <div className="relative w-48 h-36 flex-shrink-0 overflow-hidden rounded-lg">
+                    <img
+                        src={imageUrl}
+                        alt={title}
+                        className={`w-full h-full object-cover transition-transform duration-300 ${
+                            isHovered ? 'scale-110' : 'scale-100'
+                        }`}
+                    />
+                    {/* Status Tag on Image */}
+                    <div className="absolute top-2 left-2">
+                        <span className={cn(
+                            "text-xs font-semibold px-2 py-1 rounded-md border",
+                            getStatusStyles(status)
+                        )}>
+                            {status}
+                        </span>
+                    </div>
+                </div>
+
+                {/* Content Container - Right side */}
+                <div className="flex flex-col flex-1 min-w-0">
                 {/* Code */}
                 {code && (
                     <div className="flex items-center justify-between mb-1">
@@ -101,6 +125,7 @@ export const MyPropertyListItem = ({
                     <span className="text-gray-500 text-xs">Ngày đăng: {formatDateTime(createdAt)}</span>
                 </div>
             </div>
-        </Link>
+            </Link>
+        </div>
     );
 };

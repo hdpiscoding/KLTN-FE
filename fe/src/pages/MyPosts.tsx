@@ -7,12 +7,23 @@ import { Input } from '@/components/ui/input';
 import { Search } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {useUserStore} from "@/store/userStore.ts";
-import {searchProperties} from "@/services/propertyServices.ts";
+import {searchProperties, deletePropertyListing} from "@/services/propertyServices.ts";
 import type {PropertyListing} from "@/types/property-listing";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSearchFilters } from '@/hooks/use-search-filters';
 import {NoneSellerView} from "@/components/none-seller-view.tsx";
 import {PendingSellerView} from "@/components/pending-seller-view.tsx";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {toast} from "react-toastify";
 
 type StatusFilter = 'all' | 'Đang hiển thị' | 'Chờ duyệt' | 'Không duyệt';
 
@@ -25,6 +36,11 @@ export const MyPosts: React.FC = () => {
     // filter states
     const [searchQuery, setSearchQuery] = React.useState('');
     const [statusFilter, setStatusFilter] = React.useState<StatusFilter>('all');
+
+    // delete dialog states
+    const [showDeleteDialog, setShowDeleteDialog] = React.useState(false);
+    const [propertyToDelete, setPropertyToDelete] = React.useState<string | null>(null);
+    const [isDeleting, setIsDeleting] = React.useState(false);
 
     const userId = useUserStore((state) => state.userId);
     const [myProperties, setMyProperties] = React.useState<PropertyListing[]>([]);
@@ -187,10 +203,9 @@ export const MyPosts: React.FC = () => {
         area: property.area,
         address: `${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`,
         imageUrl: property.imageUrls?.[0] || '',
-        createdAt: property.createdAt,
+        createdAt: property.createdAt || '',
         status: mapApprovalStatus(property.approvalStatus),
         code: `TN${String(property.id).padStart(4, '0')}`,
-        expirationDate: '' // TODO: Add expiresAt to PropertyListing type when available
     }));
 
     // No client-side filtering - API handles all filters (status and title)
@@ -211,6 +226,41 @@ export const MyPosts: React.FC = () => {
 
     // No client-side pagination - API handles pagination
     const paginatedItems = filteredProperties;
+
+    // Handle delete click - show confirmation dialog
+    const handleDelete = (id: string) => {
+        setPropertyToDelete(id);
+        setShowDeleteDialog(true);
+    };
+
+    // Handle confirm delete - call API
+    const handleConfirmDelete = async () => {
+        if (!propertyToDelete) return;
+
+        try {
+            setIsDeleting(true);
+            await deletePropertyListing(Number(propertyToDelete));
+            toast.success('Xóa tin đăng thành công!');
+
+            // Refresh the property list
+            await getMyProperties();
+
+            // Close dialog
+            setShowDeleteDialog(false);
+            setPropertyToDelete(null);
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            toast.error('Có lỗi xảy ra khi xóa tin đăng. Vui lòng thử lại!');
+        } finally {
+            setIsDeleting(false);
+        }
+    };
+
+    // Handle cancel delete
+    const handleCancelDelete = () => {
+        setShowDeleteDialog(false);
+        setPropertyToDelete(null);
+    };
 
     return (
         <>
@@ -314,6 +364,7 @@ export const MyPosts: React.FC = () => {
                                     createdAt={property.createdAt}
                                     status={property.status}
                                     code={property.code}
+                                    onDelete={handleDelete}
                                 />
                             ))
                         )}
@@ -351,6 +402,30 @@ export const MyPosts: React.FC = () => {
                     )}
                 </div>
             }
+
+            {/* Delete Confirmation Dialog */}
+            <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận xóa tin đăng</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Bạn có chắc chắn muốn xóa tin đăng này không? Hành động này không thể hoàn tác.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="cursor-pointer" onClick={handleCancelDelete} disabled={isDeleting}>
+                            Hủy
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmDelete}
+                            disabled={isDeleting}
+                            className="cursor-pointer bg-red-500 hover:bg-red-700"
+                        >
+                            {isDeleting ? 'Đang xóa...' : 'Xóa'}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </>
     );
 };
