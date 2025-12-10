@@ -966,7 +966,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_DIRECTIONS.map((direction) => (
-                                                                <SelectItem key={direction.id} value={direction.id.toString()}>
+                                                                <SelectItem key={direction.id} value={direction.name}>
                                                                     {direction.name}
                                                                 </SelectItem>
                                                             ))}
@@ -996,7 +996,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <SelectContent>
                                                             {PROPERTY_DIRECTIONS.map((direction) => (
-                                                                <SelectItem key={direction.id} value={direction.id.toString()}>
+                                                                <SelectItem key={direction.id} value={direction.name}>
                                                                     {direction.name}
                                                                 </SelectItem>
                                                             ))}
