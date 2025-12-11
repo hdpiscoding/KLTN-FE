@@ -58,7 +58,6 @@ export const MyPosts: React.FC = () => {
         createdAt: string;
         status: 'Đang hiển thị' | 'Chờ duyệt' | 'Không duyệt';
         code: string;
-        expirationDate: string;
     };
 
     const getMyProperties = React.useCallback(async () => {
@@ -204,7 +203,7 @@ export const MyPosts: React.FC = () => {
         address: `${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`,
         imageUrl: property.imageUrls?.[0] || '',
         createdAt: property.createdAt || '',
-        status: mapApprovalStatus(property.approvalStatus),
+        status: mapApprovalStatus(property.approvalStatus || ""),
         code: `TN${String(property.id).padStart(4, '0')}`,
     }));
 

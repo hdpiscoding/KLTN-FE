@@ -28,6 +28,7 @@ import { getPriceRangeValue, getPriceRangeId } from '@/utils/priceRangeHelper';
 import { getSortCriteriaValue } from '@/utils/sortCriteriaHelper';
 import { useSearchParams } from 'react-router-dom';
 import DemoMap from "@/components/demo-map.tsx";
+import { likeProperty, unlikeProperty, checkLikeProperty } from '@/services/userServices';
 
 interface MockProperty {
     id: string;
@@ -49,6 +50,7 @@ export const RentProperty: React.FC = () => {
     const [isMapOpen, setIsMapOpen] = useState(false);
     const [propertyList, setPropertyList] = useState<PropertyListing[]>([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [likedProperties, setLikedProperties] = useState<Set<string>>(new Set());
     const { filters, setFilter } = useSearchFilters();
     const [searchParams, setSearchParams] = useSearchParams();
 
@@ -447,6 +449,47 @@ export const RentProperty: React.FC = () => {
         setIsMapOpen(!isMapOpen);
     };
 
+    const handleFavoriteClick = async (id: string, currentLikedState: boolean) => {
+        try {
+            const propertyId = Number(id);
+            if (currentLikedState) {
+                await unlikeProperty(propertyId);
+                setLikedProperties(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(id);
+                    return newSet;
+                });
+            } else {
+                await likeProperty(propertyId);
+                setLikedProperties(prev => new Set(prev).add(id));
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    };
+
+    // Check liked status for all properties
+    const checkLikedStatus = async (properties: PropertyListing[]) => {
+        try {
+            const likedSet = new Set<string>();
+            await Promise.all(
+                properties.map(async (property) => {
+                    try {
+                        const response = await checkLikeProperty(Number(property.id));
+                        if (response.data) {
+                            likedSet.add(String(property.id));
+                        }
+                    } catch (error) {
+                        console.error(`Error checking liked status for property ${property.id}:`, error);
+                    }
+                })
+            );
+            setLikedProperties(likedSet);
+        } catch (error) {
+            console.error('Error checking liked properties:', error);
+        }
+    };
+
     // Handle district select change
     const handleDistrictChange = (value: string) => {
         setDistrict(value);
@@ -624,6 +667,13 @@ export const RentProperty: React.FC = () => {
         fetchProperties();
     }, [filters, currentPage, searchParams]);
 
+    // Check liked status for properties when they are loaded
+    useEffect(() => {
+        if (propertyList.length > 0) {
+            checkLikedStatus(propertyList);
+        }
+    }, [propertyList]);
+
     // Cleanup effect: Reset body overflow when component unmounts
     useEffect(() => {
         return () => {
@@ -791,7 +841,8 @@ export const RentProperty: React.FC = () => {
                                         address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
                                         imageUrl={property.imageUrls?.[0] || ""}
                                         createdAt={property.createdAt || ""}
-                                        onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                        isLiked={likedProperties.has(String(property.id))}
+                                        onFavoriteClick={handleFavoriteClick}
                                     />
                                 ))
                             ) : (

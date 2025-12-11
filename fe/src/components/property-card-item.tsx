@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { MapPin, Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import {formatPrice, formatRelativeTime, formatArea} from "@/utils/generalFormat.ts";
 import {useUserStore} from "@/store/userStore.ts";
+import {likeProperty, unlikeProperty, checkLikeProperty} from "@/services/userServices.ts";
+import {toast} from "react-toastify";
 
 interface PropertyCardItemProps {
     id: string;
@@ -29,11 +31,56 @@ export const PropertyCardItem = ({
 }: PropertyCardItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
     const [isFavorite, setIsFavorite] = useState(isFavorited);
+    const [isCheckingLike, setIsCheckingLike] = useState(false);
+    const [isTogglingLike, setIsTogglingLike] = useState(false);
     const isLoggedIn = useUserStore((state) => state.isLoggedIn);
-    const handleFavoriteClick = (e: React.MouseEvent) => {
-        e.preventDefault(); // Prevent card link click
-        setIsFavorite(!isFavorite);
-        onFavoriteClick?.(id);
+
+    useEffect(() => {
+        const checkIfLiked = async () => {
+            if (!isLoggedIn) return;
+
+            try {
+                setIsCheckingLike(true);
+                const response = await checkLikeProperty(Number(id));
+                setIsFavorite(response.data);
+            } catch (error) {
+                console.error('Error checking like status:', error);
+            } finally {
+                setIsCheckingLike(false);
+            }
+        };
+
+        checkIfLiked();
+    }, [id, isLoggedIn]);
+
+    const handleFavoriteClick = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!isLoggedIn) {
+            toast.error('Vui lòng đăng nhập để thêm vào yêu thích!');
+            return;
+        }
+
+        if (isTogglingLike) return;
+
+        try {
+            setIsTogglingLike(true);
+            const newFavoriteState = !isFavorite;
+
+            if (newFavoriteState) {
+                await likeProperty(Number(id));
+            } else {
+                await unlikeProperty(Number(id));
+            }
+
+            setIsFavorite(newFavoriteState);
+            onFavoriteClick?.(id);
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        } finally {
+            setIsTogglingLike(false);
+        }
     };
 
     return (
@@ -86,7 +133,8 @@ export const PropertyCardItem = ({
                         &&
                         <button
                             onClick={handleFavoriteClick}
-                            className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                            disabled={isCheckingLike || isTogglingLike}
+                            className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Heart
                                 className={`w-5 h-5 ${

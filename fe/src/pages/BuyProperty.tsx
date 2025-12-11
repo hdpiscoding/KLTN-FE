@@ -27,6 +27,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getPriceRangeValue, getPriceRangeId } from '@/utils/priceRangeHelper';
 import { getSortCriteriaValue } from '@/utils/sortCriteriaHelper';
 import { useSearchParams } from 'react-router-dom';
+import { likeProperty, unlikeProperty, checkLikeProperty } from '@/services/userServices';
 
 export const BuyProperty: React.FC = () => {
     const [searchValue, setSearchValue] = useState('');
@@ -41,6 +42,7 @@ export const BuyProperty: React.FC = () => {
     const [isLoading, setIsLoading] = useState(false);
     const { filters, setFilter } = useSearchFilters();
     const [searchParams, setSearchParams] = useSearchParams();
+    const [likedProperties, setLikedProperties] = useState<Set<string>>(new Set());
 
     // Sample data for properties
     const sampleProperties = [
@@ -189,7 +191,46 @@ export const BuyProperty: React.FC = () => {
         setIsMapOpen(!isMapOpen);
     };
 
-    // Handle district select change
+    const handleFavoriteClick = async (id: string, currentLikedState: boolean) => {
+        try {
+            const propertyId = Number(id);
+            if (currentLikedState) {
+                await unlikeProperty(propertyId);
+                setLikedProperties(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(id);
+                    return newSet;
+                });
+            } else {
+                await likeProperty(propertyId);
+                setLikedProperties(prev => new Set(prev).add(id));
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+        }
+    };
+
+    const checkLikedStatus = async (properties: PropertyListing[]) => {
+        try {
+            const likedSet = new Set<string>();
+            await Promise.all(
+                properties.map(async (property) => {
+                    try {
+                        const response = await checkLikeProperty(Number(property.id));
+                        if (response.data) {
+                            likedSet.add(String(property.id));
+                        }
+                    } catch (error) {
+                        console.error(`Error checking liked status for property ${property.id}:`, error);
+                    }
+                })
+            );
+            setLikedProperties(likedSet);
+        } catch (error) {
+            console.error('Error checking liked properties:', error);
+        }
+    };
+
     const handleDistrictChange = (value: string) => {
         setDistrict(value);
         if (value === 'all') {
@@ -202,7 +243,6 @@ export const BuyProperty: React.FC = () => {
         }
     };
 
-    // Handle property type select change
     const handlePropertyTypeChange = (value: string) => {
         setPropertyType(value);
         if (value === 'all') {
@@ -365,6 +405,13 @@ export const BuyProperty: React.FC = () => {
 
         fetchProperties();
     }, [filters, currentPage, searchParams]);
+
+    // Check liked status for properties when they are loaded
+    useEffect(() => {
+        if (propertyList.length > 0) {
+            checkLikedStatus(propertyList);
+        }
+    }, [propertyList]);
 
     // Cleanup effect: Reset body overflow when component unmounts
     useEffect(() => {
@@ -533,7 +580,8 @@ export const BuyProperty: React.FC = () => {
                                         address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
                                         imageUrl={property.imageUrls?.[0] || ""}
                                         createdAt={property.createdAt || ""}
-                                        onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                        isLiked={likedProperties.has(String(property.id))}
+                                        onFavoriteClick={handleFavoriteClick}
                                     />
                                 ))
                             ) : (

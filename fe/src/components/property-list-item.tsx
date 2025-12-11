@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Heart } from "lucide-react";
 import { Link } from "react-router-dom";
 import { formatPrice, formatRelativeTime, formatArea } from "@/utils/generalFormat.ts";
@@ -12,8 +12,8 @@ interface PropertyListItemProps {
     address: string;
     imageUrl: string;
     createdAt: string;
-    isFavorited?: boolean;
-    onFavoriteClick?: (id: string) => void;
+    isLiked?: boolean;
+    onFavoriteClick?: (id: string, currentLikedState: boolean) => Promise<void>;
 }
 
 export const PropertyListItem = ({
@@ -24,16 +24,31 @@ export const PropertyListItem = ({
     address,
     imageUrl,
     createdAt,
-    isFavorited = false,
+    isLiked = false,
     onFavoriteClick,
 }: PropertyListItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
-    const [isFavorite, setIsFavorite] = useState(isFavorited);
+    const [isFavorite, setIsFavorite] = useState(isLiked);
+    const [isLoading, setIsLoading] = useState(false);
     const isLoggedIn = useUserStore((state) => state.isLoggedIn);
-    const handleFavoriteClick = (e: React.MouseEvent) => {
+
+    useEffect(() => {
+        setIsFavorite(isLiked);
+    }, [isLiked]);
+
+    const handleFavoriteClick = async (e: React.MouseEvent) => {
         e.preventDefault(); // Prevent card link click
-        setIsFavorite(!isFavorite);
-        onFavoriteClick?.(id);
+        if (isLoading || !onFavoriteClick) return;
+
+        setIsLoading(true);
+        try {
+            await onFavoriteClick(id, isFavorite);
+            setIsFavorite(!isFavorite);
+        } catch (error) {
+            console.error("Error toggling favorite:", error);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -81,11 +96,11 @@ export const PropertyListItem = ({
                     <span className="text-gray-500 text-xs">
                         {formatRelativeTime(createdAt)}
                     </span>
-                    {isLoggedIn
-                        &&
+                    {isLoggedIn && (
                         <button
                             onClick={handleFavoriteClick}
-                            className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer"
+                            disabled={isLoading}
+                            className="text-gray-400 hover:text-red-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <Heart
                                 className={`w-5 h-5 ${
@@ -93,7 +108,7 @@ export const PropertyListItem = ({
                                 }`}
                             />
                         </button>
-                    }
+                    )}
                 </div>
             </div>
         </Link>
