@@ -33,6 +33,14 @@ export const updateMyProfile = async (data: {
     return response.data;
 }
 
+export const changePassword = async (data: {
+    oldPassword: string;
+    newPassword: string;
+}) => {
+    const response = await instance.put("user/change-password", data);
+    return response.data;
+}
+
 export const requestBecomeSeller = async () => {
     const response = await instance.post("user/request-seller-role");
     return response.data;

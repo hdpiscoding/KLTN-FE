@@ -14,3 +14,13 @@ export const verifyEmail = async (email: string, otp: string) => {
     const response = await axios.post("https://kltn-api-staging.sonata.io.vn/api/v1/user/register/verify-email", {email, otp});
     return response.data;
 }
+
+export const forgotPassword = async (email: string) => {
+    const response = await axios.post(`https://kltn-api-staging.sonata.io.vn/api/v1/user/forgot-password/${email}`);
+    return response.data;
+}
+
+export const resetPassword = async (data: {otp: string, newPassword: string, email: string}) => {
+    const response = await axios.post(`https://kltn-api-staging.sonata.io.vn/api/v1/user/forgot-password/verify`, data);
+    return response.data;
+}

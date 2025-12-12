@@ -1,19 +1,23 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { PasswordInput } from '@/components/ui/input-password';
 import { Button } from '@/components/ui/button';
+import { toast } from "react-toastify";
+import { changePassword } from '@/services/userServices';
 
 type ChangePasswordFormData = {
-    currentPassword: string;
+    oldPassword: string;
     newPassword: string;
     confirmPassword: string;
 };
 
 export const ChangePassword: React.FC = () => {
+    const [isLoading, setIsLoading] = useState(false);
+
     const form = useForm<ChangePasswordFormData>({
         defaultValues: {
-            currentPassword: '',
+            oldPassword: '',
             newPassword: '',
             confirmPassword: '',
         },
@@ -21,10 +25,34 @@ export const ChangePassword: React.FC = () => {
     });
 
     const onSubmit = async (data: ChangePasswordFormData) => {
-        console.log('Change password data:', data);
-        // TODO: Implement API call to change password
-        alert('Mật khẩu đã được thay đổi thành công!');
-        form.reset();
+        try {
+            setIsLoading(true);
+            await changePassword({
+                oldPassword: data.oldPassword,
+                newPassword: data.newPassword,
+            });
+            toast.success('Mật khẩu đã được thay đổi thành công!');
+            form.reset();
+        } catch (error: any) {
+            console.error('Change password error:', error);
+
+            // Extract error message from response
+            const errorCode = error?.response?.data?.error?.code;
+            const errorMessage = error?.response?.data?.error?.message;
+
+            // Translate specific error codes to Vietnamese
+            let displayMessage = 'Đổi mật khẩu thất bại. Vui lòng thử lại.';
+
+            if (errorCode === 'PASSWORD_INCORRECT') {
+                displayMessage = 'Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.';
+            } else if (errorMessage) {
+                displayMessage = errorMessage;
+            }
+
+            toast.error(displayMessage);
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -40,7 +68,7 @@ export const ChangePassword: React.FC = () => {
                         {/* Current Password */}
                         <FormField
                             control={form.control}
-                            name="currentPassword"
+                            name="oldPassword"
                             rules={{
                                 required: 'Mật khẩu hiện tại không được để trống',
                             }}
@@ -66,9 +94,18 @@ export const ChangePassword: React.FC = () => {
                             rules={{
                                 required: 'Mật khẩu mới không được để trống',
                                 minLength: {
-                                    value: 6,
-                                    message: 'Mật khẩu mới phải có ít nhất 6 ký tự',
+                                    value: 8,
+                                    message: 'Mật khẩu phải có ít nhất 8 ký tự',
                                 },
+                                maxLength: {
+                                    value: 30,
+                                    message: 'Mật khẩu tối đa 30 ký tự',
+                                },
+                                validate: {
+                                    hasDigit: (value) => /\d/.test(value) || 'Mật khẩu phải chứa ít nhất 1 chữ số',
+                                    hasUppercase: (value) => /[A-Z]/.test(value) || 'Mật khẩu phải chứa ít nhất 1 chữ in hoa',
+                                    noNewline: (value) => !/[\n\r]/.test(value) || 'Mật khẩu không được chứa ký tự xuống dòng',
+                                }
                             }}
                             render={({ field }) => (
                                 <FormItem>
@@ -115,9 +152,10 @@ export const ChangePassword: React.FC = () => {
                         <div className="pt-4">
                             <Button
                                 type="submit"
-                                className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                                disabled={isLoading}
+                                className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] disabled:opacity-50 disabled:cursor-not-allowed"
                             >
-                                Lưu thay đổi
+                                {isLoading ? 'Đang xử lý...' : 'Lưu thay đổi'}
                             </Button>
                         </div>
                     </form>
