@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -35,20 +36,14 @@ export const ChangePassword: React.FC = () => {
             form.reset();
         } catch (error: any) {
             console.error('Change password error:', error);
-
-            // Extract error message from response
             const errorCode = error?.response?.data?.error?.code;
             const errorMessage = error?.response?.data?.error?.message;
-
-            // Translate specific error codes to Vietnamese
             let displayMessage = 'Đổi mật khẩu thất bại. Vui lòng thử lại.';
-
             if (errorCode === 'PASSWORD_INCORRECT') {
                 displayMessage = 'Mật khẩu hiện tại không đúng. Vui lòng kiểm tra lại.';
             } else if (errorMessage) {
                 displayMessage = errorMessage;
             }
-
             toast.error(displayMessage);
         } finally {
             setIsLoading(false);

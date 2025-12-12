@@ -7,6 +7,7 @@ interface AuthState {
     fullName: string | null;
     password: string | null;
     register: (email: string, phoneNumber: string, fullName: string, password: string) => void;
+    forgotPassword: (email: string, password: string) => void;
     clear: () => void;
 }
 
@@ -20,6 +21,9 @@ export const useAuthStore = create<AuthState>()(
 
             register: (email, phoneNumber, fullName, password) =>
                 set({ email, phoneNumber, fullName, password }),
+
+            forgotPassword: (email, password) =>
+                set({ email, password }),
 
             clear: () =>
                 set({ email: null, phoneNumber: null, fullName: null, password: null }),

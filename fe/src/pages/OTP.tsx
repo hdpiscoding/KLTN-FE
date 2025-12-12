@@ -1,10 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {Spinner} from "@/components/ui/spinner.tsx";
-import {verifyEmail, register} from "@/services/authServices.ts";
+import {verifyEmail, register, resetPassword, forgotPassword} from "@/services/authServices.ts";
 import {useAuthStore} from "@/store/authStore.ts";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
@@ -40,11 +41,22 @@ export const OTP = ({from}: {from:string}) => {
     const handleResendOTP = async () => {
         setIsResending(true);
         try {
-            const {email, phoneNumber, fullName, password} = useAuthStore.getState();
-            const response = await register(email ?? "", password ?? "", phoneNumber ?? "", fullName ?? "");
-            if (response.status === "200") {
-                toast.success("Đã gửi lại mã OTP!");
-                setCountdown(120);
+            if (from === "register") {
+                // Resend OTP for registration
+                const {email, phoneNumber, fullName, password} = useAuthStore.getState();
+                const response = await register(email ?? "", password ?? "", fullName ?? "", phoneNumber ?? "");
+                if (response.status === "200") {
+                    toast.success("Đã gửi lại mã OTP!");
+                    setCountdown(120);
+                }
+            } else if (from === "forgot") {
+                // Resend OTP for forgot password
+                const {email} = useAuthStore.getState();
+                const response = await forgotPassword(email ?? "");
+                if (response.status === "200") {
+                    toast.success("Đã gửi lại mã OTP!");
+                    setCountdown(120);
+                }
             }
         } catch (error) {
             console.log(error);
@@ -58,17 +70,49 @@ export const OTP = ({from}: {from:string}) => {
         setIsLoading(true);
 
         try {
-            console.log("data: ", data.otp, " email: ", email ?? "");
-            const response = await verifyEmail(email ?? "", data.otp);
-            if (response.status === "200") {
-                toast.success("Đăng ký thành công!");
-                navigate("/dang-nhap");
-                clear();
+            if (from === "register") {
+                // Handle registration OTP verification
+                console.log("data: ", data.otp, " email: ", email ?? "");
+                const response = await verifyEmail(email ?? "", data.otp);
+                if (response.status === "200") {
+                    toast.success("Đăng ký thành công!");
+                    navigate("/dang-nhap");
+                    clear();
+                }
+            } else if (from === "forgot") {
+                // Handle forgot password OTP verification and reset password
+                const {email, password} = useAuthStore.getState();
+                console.log("Reset password - email:", email, "otp:", data.otp);
+
+                const response = await resetPassword({
+                    otp: data.otp,
+                    newPassword: password ?? "",
+                    email: email ?? ""
+                });
+
+                if (response.status === "200") {
+                    toast.success("Đặt lại mật khẩu thành công!");
+                    navigate("/dang-nhap");
+                    clear();
+                }
             }
         }
-        catch (error) {
+        catch (error: any) {
             console.log(error);
-            toast.error("OTP đã hết hạn hoặc không chính xác!");
+
+            // Extract error message from response
+            const errorCode = error?.response?.data?.error?.code;
+            const errorMessage = error?.response?.data?.error?.message;
+
+            let displayMessage = "OTP đã hết hạn hoặc không chính xác!";
+
+            if (errorCode === "USER_VERIFY_EMAIL_InvalidOtp" || errorCode === "USER_FORGOT_PASSWORD_InvalidOtp") {
+                displayMessage = "OTP đã hết hạn hoặc không chính xác!";
+            } else if (errorMessage) {
+                displayMessage = errorMessage;
+            }
+
+            toast.error(displayMessage);
         }
         finally {
             setIsLoading(false);
