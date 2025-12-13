@@ -71,3 +71,19 @@ export const predictPropertyPrice = async (data: {
     const response = await instance.post("recommendation/prediction/property/price", data);
     return response.data;
 }
+
+export const getRecommendedProperties = async (lat: number, lng: number, limit: number = 8, radius_km: number = 20, user_id?: number) => {
+    let response;
+    if (user_id) {
+        response = await instance.get(`recommendation/home?lat=${lat}&lng=${lng}&limit=${limit}&radius_km=${radius_km}&user_id=${user_id}`);
+    }
+    else {
+        response = await instance.get(`recommendation/home?lat=${lat}&lng=${lng}&limit=${limit}&radius_km=${radius_km}`);
+    };
+    return response.data;
+}
+
+export const getLivabilityScore = async (data: {propertyIds: number[]}) => {
+    const response = await instance.post("recommendation/livability/scores/batch", data);
+    return response.data;
+}

@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Button } from "@/components/ui/button.tsx";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { formatPrice } from "@/utils/generalFormat.ts";
 import { useEstimationStore } from "@/store/estimationStore.ts";
 import { predictPropertyPrice } from "@/services/propertyServices.ts";
 import { CircularProgress } from "@/components/ui/circular-progress.tsx";
@@ -136,10 +135,7 @@ export const EstimatePropertyPrice: React.FC = () => {
                                 </p>
                             </div>
                             <p className="text-4xl sm:text-5xl font-bold text-[#008DDA] mb-2">
-                                {formatPrice(predictionData.predicted_price)}
-                            </p>
-                            <p className="text-sm text-gray-500">
-                                ≈ {predictionData.predicted_price_billions.toFixed(2)} tỷ VNĐ
+                                {predictionData.predicted_price_billions.toFixed(2)} tỷ VNĐ
                             </p>
                         </div>
 

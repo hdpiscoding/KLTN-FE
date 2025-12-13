@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useCallback} from 'react';
 import { Search, MapIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -19,16 +19,31 @@ import { PropertyDistrictFilter } from '@/components/property-district-filter';
 import {ControlledPagination} from "@/components/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
 import {PropertyCardItem} from "@/components/property-card-item.tsx";
-import MultipleMarkerMap, { type PropertyMarker } from '@/components/multiple-marker-map';
+// import MultipleMarkerMap, { type PropertyMarker } from '@/components/multiple-marker-map';
 import type {PropertyListing} from "@/types/property-listing";
 import { useSearchFilters } from '@/hooks/use-search-filters';
-import { searchProperties } from '@/services/propertyServices';
+import {getRecommendedProperties, searchProperties} from '@/services/propertyServices';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPriceRangeValue, getPriceRangeId } from '@/utils/priceRangeHelper';
 import { getSortCriteriaValue } from '@/utils/sortCriteriaHelper';
 import { useSearchParams } from 'react-router-dom';
 import DemoMap from "@/components/demo-map.tsx";
 import { likeProperty, unlikeProperty, checkLikeProperty } from '@/services/userServices';
+import {useUserStore} from "@/store/userStore.ts";
+
+interface RecommendedPropertyItem {
+    id: number;
+    title: string;
+    price: number;
+    price_unit: string;
+    area: number;
+    address: string;
+    num_bedrooms: number;
+    num_bathrooms: number;
+    thumbnail_url: string | null;
+    distance_km: number;
+    recommendation_type: string;
+}
 
 interface MockProperty {
     id: string;
@@ -301,132 +316,38 @@ export const RentProperty: React.FC = () => {
         }
     ];
 
+    // Location and recommended properties states
+    const userId = useUserStore((state) => state.userId);
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
+    const [recommendedProperties, setRecommendedProperties] = useState<PropertyListing[]>([]);
+    const [isLoadingRecommended, setIsLoadingRecommended] = useState(false);
 
-    // Sample data for properties
-    const sampleProperties = [
-        {
-            id: "1",
-            title: "Căn hộ cao cấp tại trung tâm quận 1, view sông Sài Gòn tuyệt đẹp",
-            price: 2500000000,
-            area: 85,
-            address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-05T09:00:00.000Z",
-            location: {
-                latitude: 10.8231,
-                longitude: 106.6297,
-                address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM"
-            }
-        },
-        {
-            id: "2",
-            title: "Nhà phố liền kề khu compound an ninh 24/7",
-            price: 4200000000,
-            area: 120,
-            address: "Palm City, Quận 9, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-06T15:30:00.000Z",
-            location: {
-                latitude: 10.8545,
-                longitude: 106.6296,
-                address: "Palm City, Quận 9, TP.HCM"
-            }
-        },
-        {
-            id: "3",
-            title: "Căn hộ 2 phòng ngủ full nội thất cao cấp",
-            price: 1800000000,
-            area: 65,
-            address: "Masteri Thảo Điền, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=2084&auto=format&fit=crop",
-            createdAt: "2025-11-07T08:15:00.000Z",
-            location: {
-                latitude: 10.7970,
-                longitude: 106.7215,
-                address: "Masteri Thảo Điền, Quận 2, TP.HCM"
-            }
-        },
-        {
-            id: "4",
-            title: "Biệt thự sân vườn phong cách hiện đại",
-            price: 8500000000,
-            area: 300,
-            address: "Thảo Điền, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop",
-            createdAt: "2025-11-07T10:45:00.000Z",
-            location: {
-                latitude: 10.8050,
-                longitude: 106.7350,
-                address: "Thảo Điền, Quận 2, TP.HCM"
-            }
-        },
-        {
-            id: "5",
-            title: "Căn hộ Duplex view công viên",
-            price: 3200000000,
-            area: 110,
-            address: "Lumière Riverside, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1512916194211-3f2b7f5f7de3?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-06T11:20:00.000Z",
-            location: {
-                latitude: 10.7820,
-                longitude: 106.7020,
-                address: "Lumière Riverside, Quận 2, TP.HCM"
-            }
-        },
-        {
-            id: "6",
-            title: "Nhà phố thương mại mặt tiền đường lớn",
-            price: 12000000000,
-            area: 160,
-            address: "Phú Mỹ Hưng, Quận 7, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
-            createdAt: "2025-11-05T14:10:00.000Z",
-            location: {
-                latitude: 10.7350,
-                longitude: 106.7123,
-                address: "Phú Mỹ Hưng, Quận 7, TP.HCM"
-            }
-        },
-        {
-            id: "7",
-            title: "Căn hộ Studio hiện đại, đầy đủ tiện nghi",
-            price: 1200000000,
-            area: 35,
-            address: "The Gold View, Quận 4, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-08T09:00:00.000Z",
-            location: {
-                latitude: 10.7626,
-                longitude: 106.7040,
-                address: "The Gold View, Quận 4, TP.HCM"
-            }
-        },
-        {
-            id: "8",
-            title: "Penthouse Duplex view toàn cảnh thành phố",
-            price: 15000000000,
-            area: 250,
-            address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-08T09:00:00.000Z",
-            location: {
-                latitude: 10.7900,
-                longitude: 106.7150,
-                address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM"
-            }
-        },
-    ];
+    // Request user location
+    const requestUserLocation = useCallback(() => {
+        if (!navigator.geolocation) {
+            console.error('Geolocation is not supported by this browser');
+            setLocationPermission('denied');
+            return;
+        }
 
-    // Convert sampleProperties to PropertyMarker format for map
-    const propertyMarkers: PropertyMarker[] = sampleProperties.map(property => ({
-        id: property.id,
-        location: property.location,
-        title: property.title,
-        image: property.imageUrl,
-        price: property.price,
-        area: property.area
-    }));
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const location = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                };
+                setUserLocation(location);
+                setLocationPermission('granted');
+                console.log('User location obtained:', position.coords.latitude, position.coords.longitude);
+            },
+            (error) => {
+                console.error('Error getting location:', error);
+                setLocationPermission('denied');
+            }
+        );
+    }, []);
+
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -502,6 +423,76 @@ export const RentProperty: React.FC = () => {
             }
         }
     };
+
+    const getRecommendedPropertiesData = useCallback(async () => {
+        try {
+            setIsLoadingRecommended(true);
+
+            // Only fetch if user has granted location permission and we have coordinates
+            if (locationPermission === 'granted' && userLocation) {
+                let response;
+                if (userId) {
+                    response = await getRecommendedProperties(
+                        userLocation.lat,
+                        userLocation.lng,
+                        8,
+                        20,
+                        userId
+                    );
+                }
+                else {
+                    response = await getRecommendedProperties(
+                        userLocation.lat,
+                        userLocation.lng,
+                        8,
+                        20,
+                    );
+                }
+
+                if (response.status === "200" && response.data?.items) {
+                    // Map response from getRecommendedProperties format to PropertyListing format
+                    const mappedProperties: PropertyListing[] = response.data.items.map((item: RecommendedPropertyItem) => ({
+                        id: item.id,
+                        title: item.title,
+                        price: item.price,
+                        priceUnit: item.price_unit,
+                        area: item.area,
+                        // Parse address string to get district
+                        addressDistrict: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Quận') || s.includes('Huyện')) || '',
+                        // Use full address as street for display
+                        addressStreet: item.address.split(',')[0]?.trim() || '',
+                        addressWard: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Phường') || s.includes('Xã')) || '',
+                        addressCity: 'TPHCM',
+                        numBedrooms: item.num_bedrooms,
+                        numBathrooms: item.num_bathrooms,
+                        imageUrls: item.thumbnail_url ? [item.thumbnail_url] : [],
+                        // Set other required fields with defaults
+                        listingType: 'for_sale',
+                        propertyType: 'house',
+                        approvalStatus: 'APPROVED',
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString(),
+                        userId: 0,
+                        location: { type: 'Point', coordinates: [0, 0] },
+                    }));
+
+                    setRecommendedProperties(mappedProperties);
+                } else {
+                    // Clear recommendations if API fails
+                    setRecommendedProperties([]);
+                }
+            } else {
+                // No location permission - clear properties
+                setRecommendedProperties([]);
+            }
+        } catch (error) {
+            console.error('Error fetching recommended properties:', error);
+            setRecommendedProperties([]);
+        } finally {
+            setIsLoadingRecommended(false);
+        }
+    }, [locationPermission, userLocation, userId]);
+
 
     // Handle property type select change
     const handlePropertyTypeChange = (value: string) => {
@@ -666,6 +657,18 @@ export const RentProperty: React.FC = () => {
 
         fetchProperties();
     }, [filters, currentPage, searchParams]);
+
+    // Fetch recommended properties when component mounts or location changes
+    useEffect(() => {
+        getRecommendedPropertiesData();
+    }, [getRecommendedPropertiesData]);
+
+    // Request user location on mount if not already obtained
+    useEffect(() => {
+        if (locationPermission === null) {
+            requestUserLocation();
+        }
+    }, [locationPermission, requestUserLocation]);
 
     // Check liked status for properties when they are loaded
     useEffect(() => {
@@ -864,36 +867,64 @@ export const RentProperty: React.FC = () => {
                         )}
 
 
-                        {/* Suggested Properties - Always show */}
-                        <section className={isMapOpen ? "py-8" : "py-12 px-4 max-w-7xl mx-auto"}>
-                            <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-8">
-                                Bất động sản gợi ý
-                            </h2>
+                        {/* Suggested Properties - Show only if location is granted */}
+                        {locationPermission === 'granted' && userLocation && (
+                            <section className={isMapOpen ? "py-8" : "py-12 px-4 max-w-7xl mx-auto"}>
+                                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-8">
+                                    Bất động sản gợi ý
+                                </h2>
 
-                            <Carousel
-                                opts={{
-                                    align: "start",
-                                    loop: true,
-                                }}
-                                className="w-full"
-                            >
-                                <div className="relative">
-                                    <CarouselContent className="-ml-2 md:-ml-4">
-                                        {sampleProperties.map((property) => (
-                                            <CarouselItem key={property.id} className={`pl-2 md:pl-4 ${isMapOpen ? 'basis-full md:basis-1/2 lg:basis-1/2' : 'sm:basis-1/2 md:basis-1/2 lg:basis-1/3'}`}>
-                                                <div className="h-[420px]"> {/* Fixed height wrapper */}
-                                                    <PropertyCardItem {...property} />
+                                {isLoadingRecommended ? (
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                                        {[...Array(4)].map((_, index) => (
+                                            <div key={index} className="space-y-3">
+                                                <Skeleton className="h-48 w-full rounded-lg" />
+                                                <Skeleton className="h-4 w-3/4" />
+                                                <Skeleton className="h-4 w-full" />
+                                                <div className="flex justify-between">
+                                                    <Skeleton className="h-4 w-1/3" />
+                                                    <Skeleton className="h-4 w-1/3" />
                                                 </div>
-                                            </CarouselItem>
+                                                <Skeleton className="h-4 w-1/2" />
+                                            </div>
                                         ))}
-                                    </CarouselContent>
-                                    <div className="hidden sm:block">
-                                        <CarouselPrevious className="-left-4 sm:-left-5 lg:-left-6 cursor-pointer" />
-                                        <CarouselNext className="-right-4 sm:-right-5 lg:-right-6 cursor-pointer" />
                                     </div>
-                                </div>
-                            </Carousel>
-                        </section>
+                                ) : recommendedProperties.length > 0 ? (
+                                    <Carousel
+                                        opts={{
+                                            align: "start",
+                                            loop: true,
+                                        }}
+                                        className="w-full"
+                                    >
+                                        <div className="relative">
+                                            <CarouselContent className="-ml-2 md:-ml-4">
+                                                {recommendedProperties.map((property) => (
+                                                    <CarouselItem key={property.id} className={`pl-2 md:pl-4 ${isMapOpen ? 'basis-full md:basis-1/2 lg:basis-1/2' : 'sm:basis-1/2 md:basis-1/2 lg:basis-1/3'}`}>
+                                                        <div className="h-[420px]">
+                                                            <PropertyCardItem
+                                                                id={String(property.id)}
+                                                                title={property.title}
+                                                                price={property.price}
+                                                                area={property.area}
+                                                                address={`${property.addressStreet} ${property.addressWard} ${property.addressDistrict} ${property.addressCity}`}
+                                                                imageUrl={property.imageUrls?.[0] || ""}
+                                                                createdAt={property.createdAt || ""}
+                                                                onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                                            />
+                                                        </div>
+                                                    </CarouselItem>
+                                                ))}
+                                            </CarouselContent>
+                                            <div className="hidden sm:block">
+                                                <CarouselPrevious className="-left-4 sm:-left-5 lg:-left-6 cursor-pointer" />
+                                                <CarouselNext className="-right-4 sm:-right-5 lg:-right-6 cursor-pointer" />
+                                            </div>
+                                        </div>
+                                    </Carousel>
+                                ) : null}
+                            </section>
+                        )}
                     </div>
 
                     {/* Right Sidebar - Conditional: Map (60%) or Quick Filters (25%) */}

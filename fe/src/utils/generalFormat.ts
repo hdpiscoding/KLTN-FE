@@ -27,6 +27,7 @@ export const formatPrice = (price: number) => {
 };
 
 export const formatRelativeTime = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);

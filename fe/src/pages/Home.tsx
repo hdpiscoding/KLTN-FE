@@ -1,9 +1,10 @@
-import React, {useEffect, useState} from 'react';
+import React, {useEffect, useState, useCallback} from 'react';
 import { PropertyCardItem } from "@/components/property-card-item.tsx";
 import { DistrictCardItem } from "@/components/district-card-item.tsx";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import homeBackground from "@/assets/timnha-home-background.png";
-import { Search } from "lucide-react";
+import { Search, MapPin } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -16,15 +17,36 @@ import {
 } from "@/components/ui/carousel";
 import {useNavigate} from "react-router-dom";
 import type {PropertyListing} from "@/types/property-listing";
-import {searchProperties} from "@/services/propertyServices.ts";
+import {searchProperties, getRecommendedProperties} from "@/services/propertyServices.ts";
+import {useUserStore} from "@/store/userStore.ts";
+
+interface RecommendedPropertyItem {
+    id: number;
+    title: string;
+    price: number;
+    price_unit: string;
+    area: number;
+    address: string;
+    num_bedrooms: number;
+    num_bathrooms: number;
+    thumbnail_url: string | null;
+    distance_km: number;
+    recommendation_type: string;
+}
 
 export const Home: React.FC = () => {
     const [searchType, setSearchType] = useState<'for_sale' | 'for_rent'>('for_sale');
     const [searchValue, setSearchValue] = useState('');
     const navigate = useNavigate();
+    const userId = useUserStore((state) => state.userId);
     const [saleProperties, setSaleProperties] = useState<PropertyListing[]>([]);
     const [rentProperties, setRentProperties] = useState<PropertyListing[]>([]);
     const [recommendedProperties, setRecommendedProperties] = useState<PropertyListing[]>([]);
+
+    // Location states
+    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+    const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
+    const [showLocationNote, setShowLocationNote] = useState(false);
 
     // Loading states
     const [isLoadingRecommended, setIsLoadingRecommended] = useState(true);
@@ -64,6 +86,34 @@ export const Home: React.FC = () => {
             imageUrl: "https://maisonoffice.vn/wp-content/uploads/2024/04/1-gioi-thieu-tong-quan-ve-quan-11-tphcm.jpg",
         },
     ];
+
+    // Request user location
+    const requestUserLocation = () => {
+        if (!navigator.geolocation) {
+            console.error('Geolocation is not supported by this browser');
+            setLocationPermission('denied');
+            setShowLocationNote(true);
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setUserLocation({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude,
+                });
+                setLocationPermission('granted');
+                setShowLocationNote(false);
+                // Will call getRecommendedProperties with location later
+                console.log('User location:', position.coords.latitude, position.coords.longitude);
+            },
+            (error) => {
+                console.error('Error getting location:', error);
+                setLocationPermission('denied');
+                setShowLocationNote(true);
+            }
+        );
+    };
 
     const getSaleProperties = async () => {
         try {
@@ -131,44 +181,96 @@ export const Home: React.FC = () => {
         }
     }
 
-    const getRecommendedProperties = async () => {
+    const getRecommendedPropertiesData = useCallback(async () => {
         try {
             setIsLoadingRecommended(true);
-            // This is sample logic because there's no endpoint for this yet.
-            const response = await searchProperties({
-                filters: [
-                    {
-                        key: 'approvalStatus',
-                        operator: 'equal',
-                        value: 'APPROVED'
-                    },
-                ],
-                sorts: [
-                    {
-                        key: "createdAt",
-                        type: "DESC"
-                    }
-                ],
-                rpp: 8,
-                page: 1
-            })
-            setRecommendedProperties(response.data.items);
+
+            // Only fetch if user has granted location permission and we have coordinates
+            if (locationPermission === 'granted' && userLocation) {
+                let response;
+                if (userId) {
+                    response = await getRecommendedProperties(
+                        userLocation.lat,
+                        userLocation.lng,
+                        8,
+                        20,
+                        userId
+                    );
+                }
+                else {
+                    response = await getRecommendedProperties(
+                        userLocation.lat,
+                        userLocation.lng,
+                        8,
+                        20,
+                    );
+                }
+
+                if (response.status === "200" && response.data?.items) {
+                    // Map response from getRecommendedProperties format to PropertyListing format
+                    const mappedProperties: PropertyListing[] = response.data.items.map((item: RecommendedPropertyItem) => ({
+                        id: item.id,
+                        title: item.title,
+                        price: item.price,
+                        priceUnit: item.price_unit,
+                        area: item.area,
+                        // Parse address string to get district
+                        addressDistrict: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Quận') || s.includes('Huyện')) || '',
+                        // Use full address as street for display
+                        addressStreet: item.address.split(',')[0]?.trim() || '',
+                        addressWard: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Phường') || s.includes('Xã')) || '',
+                        addressCity: 'TPHCM',
+                        numBedrooms: item.num_bedrooms,
+                        numBathrooms: item.num_bathrooms,
+                        imageUrls: item.thumbnail_url ? [item.thumbnail_url] : [],
+                        // Set other required fields with defaults
+                        listingType: 'for_sale',
+                        propertyType: 'house',
+                        approvalStatus: 'APPROVED',
+                        createdAt: "",
+                        updatedAt: new Date().toISOString(),
+                        userId: 0,
+                        location: { type: 'Point', coordinates: [0, 0] },
+                    }));
+
+                    console.log('Mapped recommended properties:', mappedProperties);
+
+                    setRecommendedProperties(mappedProperties);
+                    setShowLocationNote(false);
+                } else {
+                    // Clear recommendations if API fails
+                    setRecommendedProperties([]);
+                }
+            } else {
+                // No location permission - clear properties and show note
+                setRecommendedProperties([]);
+                setShowLocationNote(true);
+            }
         } catch (error) {
             console.error('Error fetching recommended properties:', error);
+            setRecommendedProperties([]);
         } finally {
             setIsLoadingRecommended(false);
         }
-    }
+    }, [locationPermission, userLocation, userId]);
 
     const handleDistrictClick = (districtId: string) => {
         navigate(`/mua-nha?addressDistrict_eq=${encodeURIComponent(districtId)}`)
     }
 
     useEffect(() => {
-        getRecommendedProperties();
+        // Request user location on mount
+        requestUserLocation();
         getSaleProperties();
         getRentProperties();
-    }, [])
+    }, []);
+
+    // Refetch recommendations when location permission changes
+    useEffect(() => {
+        if (locationPermission !== null) {
+            getRecommendedPropertiesData();
+        }
+    }, [locationPermission, userLocation, getRecommendedPropertiesData]);
 
     const executeSearch = () => {
         const trimmedValue = searchValue.trim();
@@ -266,6 +368,37 @@ export const Home: React.FC = () => {
                     Bất động sản dành cho bạn
                 </h2>
 
+                {/* Location Permission Note */}
+                {showLocationNote && locationPermission !== 'granted' && (
+                    <Alert className="mb-6 border-[#008DDA] bg-blue-50">
+                        <AlertDescription className="ml-2">
+                            <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                    <p className="font-medium text-gray-900 mb-1">
+                                        Chia sẻ vị trí để nhận gợi ý tốt hơn
+                                    </p>
+                                    <p className="text-sm text-gray-600">
+                                        Cho phép truy cập vị trí của bạn để chúng tôi có thể gợi ý những bất động sản phù hợp
+                                        gần khu vực bạn đang quan tâm.
+                                    </p>
+                                    <button
+                                        onClick={requestUserLocation}
+                                        className="mt-3 px-4 py-2 bg-[#008DDA] text-white text-sm rounded-md hover:bg-[#0072b0] transition-colors cursor-pointer"
+                                    >
+                                        Chia sẻ vị trí
+                                    </button>
+                                </div>
+                                {/*<button*/}
+                                {/*    onClick={() => setShowLocationNote(false)}*/}
+                                {/*    className="text-gray-400 hover:text-gray-600 cursor-pointer"*/}
+                                {/*>*/}
+                                {/*    <X className="h-5 w-5" />*/}
+                                {/*</button>*/}
+                            </div>
+                        </AlertDescription>
+                    </Alert>
+                )}
+
                 {isLoadingRecommended ? (
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                         {[...Array(8)].map((_, index) => (
@@ -283,30 +416,44 @@ export const Home: React.FC = () => {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                            {recommendedProperties.map((property) => (
-                                <PropertyCardItem
-                                    key={property.id}
-                                    id={String(property.id)}
-                                    title={property.title}
-                                    price={property.price}
-                                    area={property.area}
-                                    address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
-                                    imageUrl={property.imageUrls?.[0] || ""}
-                                    createdAt={property.createdAt || ""}
-                                    onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
-                                />
-                            ))}
-                        </div>
+                        {recommendedProperties.length > 0 ? (
+                            <>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                                    {recommendedProperties.map((property) => (
+                                        <PropertyCardItem
+                                            key={property.id}
+                                            id={String(property.id)}
+                                            title={property.title}
+                                            price={property.price}
+                                            area={property.area}
+                                            address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
+                                            imageUrl={property.imageUrls?.[0] || ""}
+                                            createdAt={property.createdAt || ""}
+                                            onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                        />
+                                    ))}
+                                </div>
 
-                        <div className="text-center">
-                            <button
-                                onClick={() => handleLoadMore()}
-                                className="px-6 py-3 bg-white text-[#008DDA] border-2 border-[#008DDA] rounded-lg font-medium hover:bg-[#008DDA] hover:text-white transition-colors duration-200 cursor-pointer"
-                            >
-                                Xem thêm
-                            </button>
-                        </div>
+                                <div className="text-center">
+                                    <button
+                                        onClick={() => handleLoadMore()}
+                                        className="px-6 py-3 bg-white text-[#008DDA] border-2 border-[#008DDA] rounded-lg font-medium hover:bg-[#008DDA] hover:text-white transition-colors duration-200 cursor-pointer"
+                                    >
+                                        Xem thêm
+                                    </button>
+                                </div>
+                            </>
+                        ) : (
+                            <div className="text-center py-16">
+                                <MapPin className="w-16 h-16 mx-auto text-gray-300 mb-4" />
+                                <p className="text-gray-500 text-lg mb-2">
+                                    Chưa có gợi ý bất động sản
+                                </p>
+                                <p className="text-gray-400 text-sm">
+                                    Vui lòng chia sẻ vị trí của bạn để nhận được những gợi ý phù hợp nhất
+                                </p>
+                            </div>
+                        )}
                     </>
                 )}
             </section>
