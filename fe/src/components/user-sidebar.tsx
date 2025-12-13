@@ -11,6 +11,7 @@ import {
 import { cn } from '@/lib/utils';
 import {useUserStore} from "@/store/userStore.ts";
 import {toast} from "react-toastify";
+import {useEstimationStore} from "@/store/estimationStore.ts";
 
 interface SidebarItemProps {
     icon: React.ReactNode;
@@ -116,10 +117,12 @@ export const UserSidebar: React.FC = () => {
     const location = useLocation();
     const logout = useUserStore((state) => state.logout);
     const clearUserInfo = useUserStore((state) => state.clearUserInfo);
+    const {clearEstimationData} = useEstimationStore();
 
     const handleLogout = () => {
         logout();
         clearUserInfo();
+        clearEstimationData();
         navigate('/');
         toast.success("Đăng xuất thành công!");
         console.log('Logging out...');

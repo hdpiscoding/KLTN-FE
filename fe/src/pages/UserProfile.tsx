@@ -58,6 +58,7 @@ export const UserProfile: React.FC = () => {
         entertainment: 50,
     })
     const setUserInfo = useUserStore(state => state.setUserInfo);
+    const userId = useUserStore(state => state.userId);
 
     // Autocomplete states for address
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
@@ -113,7 +114,7 @@ export const UserProfile: React.FC = () => {
             setPhoneNumber(response?.data.phoneNumber);
             setAddress(response?.data.liveAddress);
             setAvatarPreview(response?.data.avatarUrl);
-            setUserInfo(response?.data.userId, response?.data.avatarUrl, response?.data.becomeSellerApproveStatus)
+            setUserInfo(userId, response?.data.avatarUrl, response?.data.becomeSellerApproveStatus)
 
             // Convert decimal values (0-1) from API to percentage values (0-100) for display
             setPreferences({

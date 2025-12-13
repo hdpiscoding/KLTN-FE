@@ -23,6 +23,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import {useUserStore} from "@/store/userStore.ts";
 import {toast} from "react-toastify";
+import { useEstimationStore } from "@/store/estimationStore.ts";
+
 
 export const Header = () => {
     const navigate = useNavigate();
@@ -30,22 +32,26 @@ export const Header = () => {
     const logout = useUserStore((state) => state.logout);
     const avatarUrl = useUserStore((state) => state.avatarUrl);
     const clearUserInfo = useUserStore((state) => state.clearUserInfo);
-
+    const {clearEstimationData} = useEstimationStore();
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
         { label: "Thuê nhà", path: "/thue-nha", icon: <Key className="w-4 h-4" /> },
         { label: "Giá nhà đất", path: "/gia-nha-dat", icon: <TrendingUp className="w-4 h-4" /> },
-        { label: "Định giá nhà", path: "/dinh-gia-nha/dia-chi", icon: <Calculator className="w-4 h-4" /> },
     ];
 
-    // Add "Đăng tin" when logged in
+    // Add "Định giá nhà" and "Đăng tin" when logged in
     const navItems = isLoggedIn
-        ? [...baseNavItems, { label: "Đăng tin", path: "/dang-tin", icon: <PenSquare className="w-4 h-4" /> }]
+        ? [
+            ...baseNavItems,
+            { label: "Định giá nhà", path: "/dinh-gia-nha/dia-chi", icon: <Calculator className="w-4 h-4" /> },
+            { label: "Đăng tin", path: "/dang-tin", icon: <PenSquare className="w-4 h-4" /> }
+          ]
         : baseNavItems;
 
     const handleLogout = () => {
         logout();
         clearUserInfo();
+        clearEstimationData();
         navigate('/');
         toast.success("Đăng xuất thành công!");
     };

@@ -6,10 +6,12 @@ import type { Location } from "@/types/location.d.ts";
 import { AlertCircle } from 'lucide-react';
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {calculateDistance} from "@/utils/calculateDistance.ts";
+import {useEstimationStore} from "@/store/estimationStore.ts";
 
 export const EstimatePropertyMap: React.FC = () => {
     const navigate = useNavigate();
     const [params] = useSearchParams();
+    const { setEstimationData } = useEstimationStore();
 
     const originalLocation = useMemo(() => ({
         latitude: parseFloat(params.get("lat") ?? ""),
@@ -43,7 +45,8 @@ export const EstimatePropertyMap: React.FC = () => {
 
     const handleConfirmLocation = () => {
         console.log('Location confirmed:', currentLocation);
-        navigate("/dinh-gia-nha/ket-qua");
+        setEstimationData({latitude: currentLocation.latitude, longitude: currentLocation.longitude});
+        navigate(`/dinh-gia-nha/ket-qua?lat=${currentLocation.latitude}&lon=${currentLocation.longitude}&address=${currentLocation.address}`);
     };
 
     return (

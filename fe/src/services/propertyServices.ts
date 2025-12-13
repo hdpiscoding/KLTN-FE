@@ -51,3 +51,23 @@ export const deletePropertyListing = async (id: number) => {
     const response = await instance.delete(`properties/${id}`);
     return response.data;
 }
+
+export const predictPropertyPrice = async (data: {
+    latitude: number,
+    longitude: number,
+    address_district: string,
+    area: number,
+    property_type: string,
+    num_bedrooms?: number,
+    num_bathrooms?: number,
+    num_floors?: number,
+    facade_width_m?: number,
+    road_width_m?: number,
+    legal_status?: string,
+    house_direction?: string,
+    balcony_direction?: string,
+    furniture_status?: string,
+})=> {
+    const response = await instance.post("recommendation/prediction/property/price", data);
+    return response.data;
+}
