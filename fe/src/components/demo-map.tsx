@@ -192,10 +192,6 @@ const MultipleMarkerMap = ({
     const [isHovering] = useState(false);
     const cursor = isDragging ? 'grabbing' : isHovering ? 'pointer' : 'default';
 
-    // Check if currently showing markers
-    const isShowingMarkers = viewport.zoom >= minZoomToShow;
-    // const zoomNeeded = Math.max(0, minZoomToShow - viewport.zoom);
-
     return (
         <div className="relative" style={{ width, height }}>
             <ReactMapGL
@@ -373,33 +369,6 @@ const MultipleMarkerMap = ({
                     </Popup>
                 )}
             </ReactMapGL>
-
-            {/* Info Badge - Dynamic based on zoom */}
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200 max-w-xs">
-                <p className="text-sm font-semibold text-gray-800">
-                    {properties?.length || 0} bất động sản
-                </p>
-
-                {!isShowingMarkers ? (
-                    <div className="mt-1">
-                        <p className="text-xs text-amber-600 font-medium">
-                            📍 Zoom vào để xem bất động sản
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                            Zoom hiện tại: {viewport.zoom.toFixed(1)} (cần ≥ {minZoomToShow})
-                        </p>
-                    </div>
-                ) : (
-                    <div className="mt-1">
-                        <p className="text-xs text-green-600 font-medium">
-                            ✓ Hiển thị {clusters.length} điểm
-                        </p>
-                        <p className="text-xs text-gray-500 mt-0.5">
-                            Click vào marker để xem chi tiết
-                        </p>
-                    </div>
-                )}
-            </div>
         </div>
     );
 };

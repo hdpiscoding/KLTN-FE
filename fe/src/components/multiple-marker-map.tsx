@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
-import ReactMapGL, { Marker, Popup, NavigationControl } from '@goongmaps/goong-map-react';
+import React, { useState, useMemo, useRef } from 'react';
+import ReactMapGL, { Marker, Popup, NavigationControl, type MapRef } from '@goongmaps/goong-map-react';
+import Supercluster from 'supercluster';
 import { PropertyPopupCard } from '@/components/property-popup-card';
 import type { Location } from '@/types/location.d.ts';
 
@@ -21,6 +22,7 @@ export interface MultipleMarkerMapProps {
     showNavigation?: boolean;
     centerLat?: number;
     centerLng?: number;
+    minZoomToShow?: number; // Zoom tối thiểu để hiển thị markers
 }
 
 const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
@@ -32,6 +34,7 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     showNavigation = true,
     centerLat,
     centerLng,
+    minZoomToShow = 10, // Default: hiển thị khi zoom >= 10
 }) => {
     // Calculate center from properties if not provided
     const calculateCenter = () => {
@@ -56,6 +59,7 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
 
     const center = calculateCenter();
+    const mapRef = useRef<MapRef>(null);
 
     const [viewport, setViewport] = useState({
         latitude: center.latitude,
@@ -66,14 +70,96 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     });
 
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
+    const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
+
+    // Initialize Supercluster
+    const supercluster = useMemo(() => {
+        if (!properties || properties.length === 0) return null;
+
+        const cluster = new Supercluster({
+            radius: 30,
+            maxZoom: 16,
+            minZoom: 0,
+            minPoints: 2,
+        });
+
+        // Convert properties to GeoJSON features
+        const points = properties.map(property => ({
+            type: 'Feature' as const,
+            properties: {
+                cluster: false,
+                propertyId: property.id,
+                property: property,
+            },
+            geometry: {
+                type: 'Point' as const,
+                coordinates: [property.location.longitude, property.location.latitude],
+            },
+        }));
+
+        cluster.load(points);
+        return cluster;
+    }, [properties]);
+
+    // Get clusters based on current viewport
+    const clusters = useMemo(() => {
+        if (!supercluster || !bounds || !properties) return [];
+
+        // Ẩn tất cả markers khi zoom quá xa
+        if (viewport.zoom < minZoomToShow) {
+            console.log(`Zoom ${viewport.zoom} < ${minZoomToShow} - Hiding all markers`);
+            return [];
+        }
+
+        const clustersData = supercluster.getClusters(bounds, Math.floor(viewport.zoom));
+
+        // Debug log
+        console.log('Zoom:', viewport.zoom.toFixed(2), 'Clusters:', clustersData.length, 'Total properties:', properties.length);
+
+        return clustersData;
+    }, [supercluster, bounds, viewport.zoom, properties, minZoomToShow]);
 
     const handleMarkerClick = (propertyId: string) => {
         setSelectedPropertyId(propertyId);
     };
 
+    const handleClusterClick = (clusterId: number, longitude: number, latitude: number) => {
+        if (!supercluster) return;
+
+        const expansionZoom = Math.min(
+            supercluster.getClusterExpansionZoom(clusterId),
+            20
+        );
+
+        setViewport({
+            ...viewport,
+            longitude,
+            latitude,
+            zoom: expansionZoom,
+        });
+    };
+
     const handleClosePopup = () => {
         console.log('close popup');
         setSelectedPropertyId(null);
+    };
+
+    // Update bounds when viewport changes
+    const handleViewportChange = (newViewport: typeof viewport) => {
+        setViewport(newViewport);
+
+        // Calculate bounds from viewport
+        if (mapRef.current) {
+            const map = mapRef.current.getMap();
+            const mapBounds = map.getBounds();
+
+            setBounds([
+                mapBounds.getWest(),
+                mapBounds.getSouth(),
+                mapBounds.getEast(),
+                mapBounds.getNorth(),
+            ]);
+        }
     };
 
     const selectedProperty = properties.find(p => p.id === selectedPropertyId);
@@ -85,15 +171,29 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     return (
         <div className="relative" style={{ width, height }}>
             <ReactMapGL
+                ref={mapRef}
                 {...viewport}
                 width="100%"
                 height="100%"
                 mapStyle={mapStyle}
-                onViewportChange={setViewport}
+                onViewportChange={handleViewportChange}
                 goongApiAccessToken={GOONG_API_KEY}
                 onResize={() => {}}
                 touchAction="pan-y"
                 getCursor={() => cursor}
+                onLoad={() => {
+                    // Initialize bounds on load
+                    if (mapRef.current) {
+                        const map = mapRef.current.getMap();
+                        const mapBounds = map.getBounds();
+                        setBounds([
+                            mapBounds.getWest(),
+                            mapBounds.getSouth(),
+                            mapBounds.getEast(),
+                            mapBounds.getNorth(),
+                        ]);
+                    }
+                }}
             >
                 {/* Navigation Controls */}
                 {showNavigation && (
@@ -102,59 +202,113 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
                     </div>
                 )}
 
-                {/* Property Markers - Dot Style */}
-                {properties.map((property) => {
+                {/* Render Clusters and Markers */}
+                {clusters.map((cluster) => {
+                    const [longitude, latitude] = cluster.geometry.coordinates;
+                    const { cluster: isCluster, point_count: pointCount } = cluster.properties;
+
+                    if (isCluster) {
+                        // Render Cluster Marker - Smaller and more compact
+                        const size = 24 + (pointCount / (properties?.length || 1)) * 32;
+
+                        return (
+                            <Marker
+                                key={`cluster-${cluster.id}`}
+                                latitude={latitude}
+                                longitude={longitude}
+                                offsetLeft={-size / 2}
+                                offsetTop={-size / 2}
+                            >
+                                <div
+                                    onClick={() => handleClusterClick(cluster.id as number, longitude, latitude)}
+                                    className="cursor-pointer flex items-center justify-center relative"
+                                    style={{
+                                        width: `${size}px`,
+                                        height: `${size}px`,
+                                    }}
+                                >
+                                    {/* Outer ring */}
+                                    <div
+                                        className="absolute rounded-full bg-blue-400 opacity-20"
+                                        style={{
+                                            width: `${size + 20}px`,
+                                            height: `${size + 20}px`,
+                                        }}
+                                    />
+
+                                    {/* Cluster circle */}
+                                    <div
+                                        className="absolute rounded-full bg-blue-500 border-4 border-white shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
+                                        style={{
+                                            width: `${size}px`,
+                                            height: `${size}px`,
+                                        }}
+                                    >
+                                        <span className="text-white font-bold text-sm">
+                                            {pointCount}
+                                        </span>
+                                    </div>
+                                </div>
+                            </Marker>
+                        );
+                    }
+
+                    // Render Individual Property Marker
+                    const property = cluster.properties.property;
                     const isSelected = selectedPropertyId === property.id;
 
                     return (
                         <Marker
-                            key={property.id}
-                            latitude={property.location.latitude}
-                            longitude={property.location.longitude}
-                            offsetLeft={-12}
-                            offsetTop={-12}
+                            key={`property-${property.id}`}
+                            latitude={latitude}
+                            longitude={longitude}
+                            offsetLeft={-8}
+                            offsetTop={-8}
                         >
                             <div
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     handleMarkerClick(property.id);
                                 }}
-                                className="cursor-pointer"
+                                className="cursor-pointer relative"
                             >
                                 {/* Outer ring - pulse effect when selected */}
                                 <div
                                     className={`absolute inset-0 rounded-full transition-all duration-300 ${
                                         isSelected
-                                            ? 'bg-[#008DDA] opacity-30 animate-ping'
+                                            ? 'bg-[#008DDA] opacity-35 animate-ping'
                                             : 'bg-transparent'
                                     }`}
                                     style={{
-                                        width: '24px',
-                                        height: '24px',
+                                        width: '16px',
+                                        height: '16px',
                                         transform: 'translate(-50%, -50%)',
-                                        top: '12px',
-                                        left: '12px',
+                                        top: '8px',
+                                        left: '8px',
                                     }}
                                 />
 
-                                {/* Dot Marker */}
+                                {/* Dot Marker - Theme colors with thin border */}
                                 <div
-                                    className={`relative rounded-full border-2 transition-all duration-200 shadow-lg hover:scale-125 ${
+                                    className={`relative rounded-full border-0 transition-all duration-200 hover:scale-150 ${
                                         isSelected
-                                            ? 'bg-[#008DDA] border-white scale-125 shadow-xl'
-                                            : 'bg-red-500 border-white hover:bg-red-600'
+                                            ? 'bg-[#E53935] border-white scale-150'
+                                            : 'bg-[#E53935] border-white hover:bg-[#B71C1C]'
                                     }`}
                                     style={{
-                                        width: '24px',
-                                        height: '24px',
+                                        width: '16px',
+                                        height: '16px',
+                                        boxShadow: isSelected
+                                            ? '0 0 0 2px rgba(0,141,218,0.3), 0 4px 14px rgba(0,141,218,0.5)'
+                                            : '0 0 0 2px rgba(255,255,255,0.9), 0 4px 12px rgba(0,141,218,0.3)',
                                     }}
                                 >
-                                    {/* Inner white dot */}
+                                    {/* Inner white dot - smaller */}
                                     <div
                                         className="absolute bg-white rounded-full"
                                         style={{
-                                            width: '8px',
-                                            height: '8px',
+                                            width: '5px',
+                                            height: '5px',
                                             top: '50%',
                                             left: '50%',
                                             transform: 'translate(-50%, -50%)',
