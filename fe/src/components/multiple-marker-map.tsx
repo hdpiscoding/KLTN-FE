@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import ReactMapGL, { Marker, Popup, NavigationControl, type MapRef } from '@goongmaps/goong-map-react';
 import Supercluster from 'supercluster';
 import { PropertyPopupCard } from '@/components/property-popup-card';
@@ -23,11 +23,12 @@ export interface MultipleMarkerMapProps {
     centerLat?: number;
     centerLng?: number;
     minZoomToShow?: number; // Zoom tối thiểu để hiển thị markers
+    onMapInteraction?: (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number }, eventType: 'zoom' | 'dragEnd') => void;
 }
 
 const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     properties,
-    defaultZoom = 13,
+    defaultZoom = 9,
     height = '100%',
     width = '100%',
     mapStyle = 'https://tiles.goong.io/assets/goong_map_web.json',
@@ -35,24 +36,17 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     centerLat,
     centerLng,
     minZoomToShow = 10, // Default: hiển thị khi zoom >= 10
+    onMapInteraction,
 }) => {
-    // Calculate center from properties if not provided
+    // Calculate center - Always default to Ho Chi Minh City unless explicitly provided
     const calculateCenter = () => {
+        // If explicit coordinates are provided, use them
         if (centerLat !== undefined && centerLng !== undefined) {
             return { latitude: centerLat, longitude: centerLng };
         }
 
-        if (properties.length === 0) {
-            return { latitude: 10.8231, longitude: 106.6297 }; // Default: Ho Chi Minh City
-        }
-
-        const sumLat = properties.reduce((sum, p) => sum + p.location.latitude, 0);
-        const sumLng = properties.reduce((sum, p) => sum + p.location.longitude, 0);
-
-        return {
-            latitude: sumLat / properties.length,
-            longitude: sumLng / properties.length,
-        };
+        // Always default to Ho Chi Minh City center for initial view
+        return { latitude: 10.8231, longitude: 106.6297 }; // Ho Chi Minh City center
     };
 
     // Goong API Key
@@ -71,6 +65,20 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
 
     const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
     const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
+
+    // Track interaction type to determine zoom vs drag
+    const interactionTypeRef = useRef<'zoom' | 'drag' | null>(null);
+    const previousZoomRef = useRef<number>(9);
+
+    useEffect(() => {
+        setViewport(prev => ({
+            ...prev,
+            latitude: center.latitude,
+            longitude: center.longitude,
+            zoom: defaultZoom,
+        }));
+        previousZoomRef.current = defaultZoom;
+    }, [defaultZoom, center.latitude, center.longitude]);
 
     // Initialize Supercluster
     const supercluster = useMemo(() => {
@@ -144,11 +152,10 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
         setSelectedPropertyId(null);
     };
 
-    // Update bounds when viewport changes
+    // Update viewport - NO API calls here
     const handleViewportChange = (newViewport: typeof viewport) => {
         setViewport(newViewport);
 
-        // Calculate bounds from viewport
         if (mapRef.current) {
             const map = mapRef.current.getMap();
             const mapBounds = map.getBounds();
@@ -160,6 +167,47 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
                 mapBounds.getNorth(),
             ]);
         }
+    };
+
+    // Track interaction type
+    const handleInteractionStateChange = (state: { isZooming?: boolean; isDragging?: boolean; isPanning?: boolean }) => {
+        if (state.isZooming) {
+            interactionTypeRef.current = 'zoom';
+        } else if (state.isDragging || state.isPanning) {
+            interactionTypeRef.current = 'drag';
+        }
+    };
+
+    // Called when animation completes - THIS is where we call API (only once per interaction)
+    const handleTransitionEnd = () => {
+        if (!mapRef.current || !onMapInteraction) return;
+
+        const map = mapRef.current.getMap();
+        const mapBounds = map.getBounds();
+        const currentZoom = viewport.zoom;
+
+        const boundsData = {
+            minLat: mapBounds.getSouth(),
+            minLng: mapBounds.getWest(),
+            maxLat: mapBounds.getNorth(),
+            maxLng: mapBounds.getEast(),
+            zoom: currentZoom,
+        };
+
+        const interactionType = interactionTypeRef.current;
+
+        if (interactionType === 'zoom') {
+            if (Math.abs(currentZoom - previousZoomRef.current) > 0.01) {
+                console.log('Zoom ended at:', currentZoom.toFixed(2));
+                onMapInteraction(boundsData, 'zoom');
+                previousZoomRef.current = currentZoom;
+            }
+        } else if (interactionType === 'drag') {
+            console.log('Drag ended');
+            onMapInteraction(boundsData, 'dragEnd');
+        }
+
+        interactionTypeRef.current = null;
     };
 
     const selectedProperty = properties.find(p => p.id === selectedPropertyId);
@@ -177,6 +225,10 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
                 height="100%"
                 mapStyle={mapStyle}
                 onViewportChange={handleViewportChange}
+                onTransitionStart={() => {}}
+                onTransitionEnd={handleTransitionEnd}
+                onTransitionInterrupt={() => {}}
+                onInteractionStateChange={handleInteractionStateChange}
                 goongApiAccessToken={GOONG_API_KEY}
                 onResize={() => {}}
                 touchAction="pan-y"
@@ -361,4 +413,3 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
 };
 
 export default MultipleMarkerMap;
-

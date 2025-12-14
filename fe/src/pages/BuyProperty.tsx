@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Search, MapIcon } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import React, {useState, useEffect, useCallback} from 'react';
+import {Search, MapIcon} from 'lucide-react';
+import {Input} from '@/components/ui/input';
+import {Button} from '@/components/ui/button';
 import {
     Select,
     SelectContent,
@@ -9,26 +9,26 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { DISTRICTS } from '@/constants/districts';
-import { PROPERTY_TYPES } from "@/constants/propertyTypes.ts";
-import { PRICE_RANGES} from "@/constants/priceRanges.ts";
-import { PROPERTY_SORT_CRITERIAS } from "@/constants/propertySortCriterias.ts";
-import { PropertyListItem } from '@/components/property-list-item';
-import { PropertyTypeFilter } from '@/components/property-type-filter';
-import { PropertyDistrictFilter } from '@/components/property-district-filter';
+import {DISTRICTS} from '@/constants/districts';
+import {PROPERTY_TYPES} from "@/constants/propertyTypes.ts";
+import {PRICE_RANGES} from "@/constants/priceRanges.ts";
+import {PROPERTY_SORT_CRITERIAS} from "@/constants/propertySortCriterias.ts";
+import {PropertyListItem} from '@/components/property-list-item';
+import {PropertyTypeFilter} from '@/components/property-type-filter';
+import {PropertyDistrictFilter} from '@/components/property-district-filter';
 import {ControlledPagination} from "@/components/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
 import {PropertyCardItem} from "@/components/property-card-item.tsx";
-import MultipleMarkerMap, { type PropertyMarker } from '@/components/multiple-marker-map';
+import MultipleMarkerMap, {type PropertyMarker} from '@/components/multiple-marker-map';
 import type {PropertyListing} from "@/types/property-listing";
-import { useSearchFilters } from '@/hooks/use-search-filters';
-import { searchProperties, getRecommendedProperties } from '@/services/propertyServices';
-import { Skeleton } from '@/components/ui/skeleton';
-import { getPriceRangeValue, getPriceRangeId } from '@/utils/priceRangeHelper';
-import { getSortCriteriaValue } from '@/utils/sortCriteriaHelper';
-import { useSearchParams } from 'react-router-dom';
-import { likeProperty, unlikeProperty, checkLikeProperty } from '@/services/userServices';
-import { useUserStore } from '@/store/userStore';
+import {useSearchFilters} from '@/hooks/use-search-filters';
+import {searchProperties, getRecommendedProperties, getPropertiesWithinViewPort} from '@/services/propertyServices';
+import {Skeleton} from '@/components/ui/skeleton';
+import {getPriceRangeValue, getPriceRangeId} from '@/utils/priceRangeHelper';
+import {getSortCriteriaValue} from '@/utils/sortCriteriaHelper';
+import {useSearchParams} from 'react-router-dom';
+import {likeProperty, unlikeProperty, checkLikeProperty} from '@/services/userServices';
+import {useUserStore} from '@/store/userStore';
 
 interface RecommendedPropertyItem {
     id: number;
@@ -55,12 +55,12 @@ export const BuyProperty: React.FC = () => {
     const [isMapOpen, setIsMapOpen] = useState(false);
     const [propertyList, setPropertyList] = useState<PropertyListing[]>([]);
     const [isLoading, setIsLoading] = useState(false);
-    const { filters, setFilter } = useSearchFilters();
+    const {filters, setFilter} = useSearchFilters();
     const [searchParams, setSearchParams] = useSearchParams();
     const [likedProperties, setLikedProperties] = useState<Set<string>>(new Set());
 
     // Location and recommended properties states
-    const userId = useUserStore((state) => state.userId);
+    const {userId, isLoggedIn} = useUserStore();
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
     const [recommendedProperties, setRecommendedProperties] = useState<PropertyListing[]>([]);
@@ -91,131 +91,21 @@ export const BuyProperty: React.FC = () => {
         );
     }, []);
 
-    // Sample data for properties
-    const sampleProperties = [
-        {
-            id: "1",
-            title: "Căn hộ cao cấp tại trung tâm quận 1, view sông Sài Gòn tuyệt đẹp",
-            price: 2500000000,
-            area: 85,
-            address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-05T09:00:00.000Z",
+    // Convert propertyList to propertyMarkers for map display
+    const propertyMarkers: PropertyMarker[] = propertyList
+        .filter(property => property.location?.coordinates) // Only include properties with valid location
+        .map(property => ({
+            id: String(property.id),
             location: {
-                latitude: 10.8231,
-                longitude: 106.6297,
-                address: "Vinhomes Central Park, 208 Nguyễn Hữu Cảnh, Quận 1, TP.HCM"
-            }
-        },
-        {
-            id: "2",
-            title: "Nhà phố liền kề khu compound an ninh 24/7",
-            price: 4200000000,
-            area: 120,
-            address: "Palm City, Quận 9, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-06T15:30:00.000Z",
-            location: {
-                latitude: 10.8545,
-                longitude: 106.6296,
-                address: "Palm City, Quận 9, TP.HCM"
-            }
-        },
-        {
-            id: "3",
-            title: "Căn hộ 2 phòng ngủ full nội thất cao cấp",
-            price: 1800000000,
-            area: 65,
-            address: "Masteri Thảo Điền, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1574362848149-11496d93a7c7?q=80&w=2084&auto=format&fit=crop",
-            createdAt: "2025-11-07T08:15:00.000Z",
-            location: {
-                latitude: 10.7970,
-                longitude: 106.7215,
-                address: "Masteri Thảo Điền, Quận 2, TP.HCM"
-            }
-        },
-        {
-            id: "4",
-            title: "Biệt thự sân vườn phong cách hiện đại",
-            price: 8500000000,
-            area: 300,
-            address: "Thảo Điền, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=2071&auto=format&fit=crop",
-            createdAt: "2025-11-07T10:45:00.000Z",
-            location: {
-                latitude: 10.8050,
-                longitude: 106.7350,
-                address: "Thảo Điền, Quận 2, TP.HCM"
-            }
-        },
-        {
-            id: "5",
-            title: "Căn hộ Duplex view công viên",
-            price: 3200000000,
-            area: 110,
-            address: "Lumière Riverside, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1512916194211-3f2b7f5f7de3?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-06T11:20:00.000Z",
-            location: {
-                latitude: 10.7820,
-                longitude: 106.7020,
-                address: "Lumière Riverside, Quận 2, TP.HCM"
-            }
-        },
-        {
-            id: "6",
-            title: "Nhà phố thương mại mặt tiền đường lớn",
-            price: 12000000000,
-            area: 160,
-            address: "Phú Mỹ Hưng, Quận 7, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?q=80&w=2074&auto=format&fit=crop",
-            createdAt: "2025-11-05T14:10:00.000Z",
-            location: {
-                latitude: 10.7350,
-                longitude: 106.7123,
-                address: "Phú Mỹ Hưng, Quận 7, TP.HCM"
-            }
-        },
-        {
-            id: "7",
-            title: "Căn hộ Studio hiện đại, đầy đủ tiện nghi",
-            price: 1200000000,
-            area: 35,
-            address: "The Gold View, Quận 4, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-08T09:00:00.000Z",
-            location: {
-                latitude: 10.7626,
-                longitude: 106.7040,
-                address: "The Gold View, Quận 4, TP.HCM"
-            }
-        },
-        {
-            id: "8",
-            title: "Penthouse Duplex view toàn cảnh thành phố",
-            price: 15000000000,
-            area: 250,
-            address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM",
-            imageUrl: "https://images.unsplash.com/photo-1512918728675-ed5a9ecdebfd?q=80&w=2070&auto=format&fit=crop",
-            createdAt: "2025-11-08T09:00:00.000Z",
-            location: {
-                latitude: 10.7900,
-                longitude: 106.7150,
-                address: "Empire City, Mai Chí Thọ, Quận 2, TP.HCM"
-            }
-        },
-    ];
-
-    // Convert sampleProperties to PropertyMarker format for map
-    const propertyMarkers: PropertyMarker[] = sampleProperties.map(property => ({
-        id: property.id,
-        location: property.location,
-        title: property.title,
-        image: property.imageUrl,
-        price: property.price,
-        area: property.area
-    }));
+                latitude: property.location.coordinates[1],
+                longitude: property.location.coordinates[0],
+                address: `${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`
+            },
+            title: property.title,
+            image: property.imageUrls?.[0] || '',
+            price: property.price,
+            area: property.area
+        }));
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -234,9 +124,129 @@ export const BuyProperty: React.FC = () => {
         }
     };
 
+    const checkLikedStatus = useCallback(async (properties: PropertyListing[]) => {
+        if (!userId || !isLoggedIn) {
+            return;
+        }
+        try {
+            const likedSet = new Set<string>();
+            await Promise.all(
+                properties.map(async (property) => {
+                    try {
+                        const response = await checkLikeProperty(Number(property.id));
+                        if (response.data) {
+                            likedSet.add(String(property.id));
+                        }
+                    } catch (error) {
+                        console.error(`Error checking liked status for property ${property.id}:`, error);
+                    }
+                })
+            );
+            setLikedProperties(likedSet);
+        } catch (error) {
+            console.error('Error checking liked properties:', error);
+        }
+    }, []);
+
     const handleToggleMap = () => {
         setIsMapOpen(!isMapOpen);
     };
+
+    // Handle map interaction (zoom or drag end) - call API to get properties within bounds
+    const handleMapInteraction = useCallback(async (
+        bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number },
+        eventType: 'zoom' | 'dragEnd'
+    ) => {
+        // Only call API if zoom is high enough to show markers
+        if (bounds.zoom < 10) {
+            console.log(`Zoom ${bounds.zoom} < 10 - Skipping API call`);
+            return;
+        }
+
+        try {
+            console.log(`Map ${eventType} - Fetching properties within viewport:`, bounds);
+            const response = await getPropertiesWithinViewPort(
+                bounds.minLat,
+                bounds.minLng,
+                bounds.maxLat,
+                bounds.maxLng
+            );
+
+            if (response.status === "200" && response.data) {
+                // Map response to PropertyListing format
+                const mappedProperties: PropertyListing[] = response.data
+                    .filter((item: { listingType?: string; listing_type?: string; [key: string]: unknown }) => {
+                        // Only include properties with listingType = 'for_sale'
+                        const listingType = item.listingType || item.listing_type;
+                        return listingType === 'for_sale';
+                    })
+                    .map((item: {
+                    id: number;
+                    title: string;
+                    price: number;
+                    priceUnit?: string;
+                    price_unit?: string;
+                    listingType?: string;
+                    listing_type?: string;
+                    location: { type: string; coordinates: number[] };
+                    area: number;
+                    addressStreet?: string;
+                    address_street?: string;
+                    addressWard?: string;
+                    address_ward?: string;
+                    addressDistrict?: string;
+                    address_district?: string;
+                    addressCity?: string;
+                    address_city?: string;
+                    createdAt?: string;
+                    created_at?: string;
+                    thumbnailUrl?: string;
+                    [key: string]: any;
+                }) => ({
+                    id: item.id,
+                    userId: item.user_id || 0,
+                    approvalStatus: 'APPROVED',
+                    title: item.title,
+                    description: item.description || '',
+                    listingType: item.listingType || item.listing_type || 'for_sale',
+                    price: item.price,
+                    priceUnit: item.priceUnit || item.price_unit || 'VND',
+                    area: item.area,
+                    propertyType: item.propertyType || item.property_type || 'house',
+                    legalStatus: item.legalStatus || item.legal_status || null,
+                    numBedrooms: item.numBedrooms || item.num_bedrooms || null,
+                    numBathrooms: item.numBathrooms || item.num_bathrooms || null,
+                    numFloors: item.numFloors || item.num_floors || null,
+                    facadeWidthM: item.facadeWidthM || item.facade_width_m || null,
+                    roadWidthM: item.roadWidthM || item.road_width_m || null,
+                    houseDirection: item.houseDirection || item.house_direction || null,
+                    balconyDirection: item.balconyDirection || item.balcony_direction || null,
+                    furnitureStatus: item.furnitureStatus || item.furniture_status || null,
+                    addressStreet: item.addressStreet || item.address_street || '',
+                    addressWard: item.addressWard || item.address_ward || '',
+                    addressDistrict: item.addressDistrict || item.address_district || '',
+                    addressCity: item.addressCity || item.address_city || 'TPHCM',
+                    location: item.location,
+                    imageUrls: item.thumbnailUrl ? [item.thumbnailUrl] : (item.imageUrls || item.image_urls || []),
+                    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+                    updatedAt: item.updatedAt || item.updated_at || new Date().toISOString(),
+                }));
+
+                // Update property list with viewport data
+                setPropertyList(mappedProperties);
+                setTotalPages(1); // Viewport data doesn't use pagination
+
+                // Check liked status for new properties
+                if (userId) {
+                    checkLikedStatus(mappedProperties);
+                }
+
+                console.log(`Loaded ${mappedProperties.length} properties from viewport`);
+            }
+        } catch (error) {
+            console.error('Error fetching properties within viewport:', error);
+        }
+    }, [userId, checkLikedStatus]);
 
     const handleFavoriteClick = async (id: string, currentLikedState: boolean) => {
         try {
@@ -257,26 +267,6 @@ export const BuyProperty: React.FC = () => {
         }
     };
 
-    const checkLikedStatus = async (properties: PropertyListing[]) => {
-        try {
-            const likedSet = new Set<string>();
-            await Promise.all(
-                properties.map(async (property) => {
-                    try {
-                        const response = await checkLikeProperty(Number(property.id));
-                        if (response.data) {
-                            likedSet.add(String(property.id));
-                        }
-                    } catch (error) {
-                        console.error(`Error checking liked status for property ${property.id}:`, error);
-                    }
-                })
-            );
-            setLikedProperties(likedSet);
-        } catch (error) {
-            console.error('Error checking liked properties:', error);
-        }
-    };
 
     const handleDistrictChange = (value: string) => {
         setDistrict(value);
@@ -305,8 +295,7 @@ export const BuyProperty: React.FC = () => {
                         20,
                         userId
                     );
-                }
-                else {
+                } else {
                     response = await getRecommendedProperties(
                         userLocation.lat,
                         userLocation.lng,
@@ -339,7 +328,7 @@ export const BuyProperty: React.FC = () => {
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                         userId: 0,
-                        location: { type: 'Point', coordinates: [0, 0] },
+                        location: {type: 'Point', coordinates: [0, 0]},
                     }));
 
                     setRecommendedProperties(mappedProperties);
@@ -397,7 +386,7 @@ export const BuyProperty: React.FC = () => {
     const handlePageChange = (page: number) => {
         setCurrentPage(page);
         // Scroll to top when page changes
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     };
 
     // Sync district state with URL filters
@@ -463,12 +452,12 @@ export const BuyProperty: React.FC = () => {
                 const apiFilters = filters.map(filter => ({
                     key: filter.key,
                     operator: filter.operator === 'eq' ? 'equal' :
-                              filter.operator === 'gt' ? 'greater' :
-                              filter.operator === 'lt' ? 'less' :
-                              filter.operator === 'gte' ? 'greater_equal' :
-                              filter.operator === 'lte' ? 'less_equal' :
-                              filter.operator === 'lk' ? 'like' :
-                              filter.operator === 'rng' ? 'range' : 'equal',
+                        filter.operator === 'gt' ? 'greater' :
+                            filter.operator === 'lt' ? 'less' :
+                                filter.operator === 'gte' ? 'greater_equal' :
+                                    filter.operator === 'lte' ? 'less_equal' :
+                                        filter.operator === 'lk' ? 'like' :
+                                            filter.operator === 'rng' ? 'range' : 'equal',
                     value: filter.value
                 }));
 
@@ -568,7 +557,8 @@ export const BuyProperty: React.FC = () => {
             <div className={isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}>
                 <div className="flex flex-col lg:flex-row lg:gap-6">
                     {/* Main Content - Dynamic width based on map state */}
-                    <div className={isMapOpen ? "lg:w-[40%] overflow-y-auto px-4 py-6 h-screen" : "flex-1 lg:w-3/4"}>
+                    <div
+                        className={isMapOpen ? "lg:w-[40%] overflow-y-auto px-4 py-6 h-screen" : "flex-1 lg:w-3/4"}>
                         {/* Search and Map Button */}
                         <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
                             <div className="flex flex-col sm:flex-row gap-3 items-center">
@@ -586,7 +576,7 @@ export const BuyProperty: React.FC = () => {
                                         onClick={executeSearch}
                                         className="h-[48px] rounded-l-none px-3 bg-[#008DDA] hover:bg-[#0072b0] cursor-pointer"
                                     >
-                                        <Search className="w-4 h-4 text-white" />
+                                        <Search className="w-4 h-4 text-white"/>
                                     </Button>
                                 </div>
                                 <Button
@@ -594,7 +584,7 @@ export const BuyProperty: React.FC = () => {
                                     variant="outline"
                                     className="flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
                                 >
-                                    <MapIcon className="w-4 h-4" />
+                                    <MapIcon className="w-4 h-4"/>
                                     {isMapOpen ? 'Đóng bản đồ' : 'Mở bản đồ'}
                                 </Button>
                             </div>
@@ -605,13 +595,16 @@ export const BuyProperty: React.FC = () => {
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                                 {/* District Filter */}
                                 <Select value={district} onValueChange={handleDistrictChange}>
-                                    <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
-                                        <SelectValue placeholder="Khu vực" />
+                                    <SelectTrigger
+                                        className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                                        <SelectValue placeholder="Khu vực"/>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem className="cursor-pointer" value="all">Tất cả khu vực</SelectItem>
+                                        <SelectItem className="cursor-pointer" value="all">Tất cả khu
+                                            vực</SelectItem>
                                         {DISTRICTS.map((DISTRICT) => (
-                                            <SelectItem key={DISTRICT.id} value={DISTRICT.id} className="cursor-pointer">
+                                            <SelectItem key={DISTRICT.id} value={DISTRICT.id}
+                                                        className="cursor-pointer">
                                                 {DISTRICT.name}
                                             </SelectItem>
                                         ))}
@@ -620,13 +613,16 @@ export const BuyProperty: React.FC = () => {
 
                                 {/* Property Type Filter */}
                                 <Select value={propertyType} onValueChange={handlePropertyTypeChange}>
-                                    <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
-                                        <SelectValue placeholder="Loại bất động sản" />
+                                    <SelectTrigger
+                                        className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                                        <SelectValue placeholder="Loại bất động sản"/>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem className="cursor-pointer" value="all">Tất cả loại</SelectItem>
+                                        <SelectItem className="cursor-pointer" value="all">Tất cả
+                                            loại</SelectItem>
                                         {PROPERTY_TYPES.map((PROPERTY_TYPE) => (
-                                            <SelectItem key={PROPERTY_TYPE.id} value={PROPERTY_TYPE.id} className="cursor-pointer">
+                                            <SelectItem key={PROPERTY_TYPE.id} value={PROPERTY_TYPE.id}
+                                                        className="cursor-pointer">
                                                 {PROPERTY_TYPE.name}
                                             </SelectItem>
                                         ))}
@@ -635,13 +631,15 @@ export const BuyProperty: React.FC = () => {
 
                                 {/* Price Range Filter */}
                                 <Select value={priceRange} onValueChange={handlePriceRangeChange}>
-                                    <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
-                                        <SelectValue placeholder="Giá bán" />
+                                    <SelectTrigger
+                                        className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                                        <SelectValue placeholder="Giá bán"/>
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="all" className="cursor-pointer">Tất cả</SelectItem>
                                         {PRICE_RANGES.map((PRICE_RANGE) => (
-                                            <SelectItem key={PRICE_RANGE.id} value={PRICE_RANGE.id} className="cursor-pointer">
+                                            <SelectItem key={PRICE_RANGE.id} value={PRICE_RANGE.id}
+                                                        className="cursor-pointer">
                                                 {PRICE_RANGE.title}
                                             </SelectItem>
                                         ))}
@@ -661,13 +659,17 @@ export const BuyProperty: React.FC = () => {
 
                             <div className="flex items-center lg:w-1/3">
                                 <Select value={sortCriteria} onValueChange={handleSortChange}>
-                                    <SelectTrigger className="w-full bg-white focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
-                                        <SelectValue placeholder="Mặc định" />
+                                    <SelectTrigger
+                                        className="w-full bg-white focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                                        <SelectValue placeholder="Mặc định"/>
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="default" className="cursor-pointer">Mặc định</SelectItem>
+                                        <SelectItem value="default" className="cursor-pointer">Mặc
+                                            định</SelectItem>
                                         {PROPERTY_SORT_CRITERIAS.map((PROPERTY_SORT_CRITERIA) => (
-                                            <SelectItem key={PROPERTY_SORT_CRITERIA.id} value={PROPERTY_SORT_CRITERIA.id} className="cursor-pointer">
+                                            <SelectItem key={PROPERTY_SORT_CRITERIA.id}
+                                                        value={PROPERTY_SORT_CRITERIA.id}
+                                                        className="cursor-pointer">
                                                 {PROPERTY_SORT_CRITERIA.title}
                                             </SelectItem>
                                         ))}
@@ -682,16 +684,17 @@ export const BuyProperty: React.FC = () => {
                             {isLoading ? (
                                 <>
                                     {[...Array(5)].map((_, index) => (
-                                        <div key={index} className="bg-white rounded-lg shadow-sm p-4 flex gap-4">
-                                            <Skeleton className="w-64 h-48 rounded-lg flex-shrink-0" />
+                                        <div key={index}
+                                             className="bg-white rounded-lg shadow-sm p-4 flex gap-4">
+                                            <Skeleton className="w-64 h-48 rounded-lg flex-shrink-0"/>
                                             <div className="flex-1 space-y-3">
-                                                <Skeleton className="h-6 w-3/4" />
-                                                <Skeleton className="h-4 w-1/2" />
-                                                <Skeleton className="h-4 w-1/3" />
-                                                <Skeleton className="h-4 w-1/4" />
+                                                <Skeleton className="h-6 w-3/4"/>
+                                                <Skeleton className="h-4 w-1/2"/>
+                                                <Skeleton className="h-4 w-1/3"/>
+                                                <Skeleton className="h-4 w-1/4"/>
                                                 <div className="flex justify-between items-center mt-4">
-                                                    <Skeleton className="h-4 w-24" />
-                                                    <Skeleton className="h-8 w-8 rounded-full" />
+                                                    <Skeleton className="h-4 w-24"/>
+                                                    <Skeleton className="h-8 w-8 rounded-full"/>
                                                 </div>
                                             </div>
                                         </div>
@@ -742,14 +745,14 @@ export const BuyProperty: React.FC = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                                         {[...Array(4)].map((_, index) => (
                                             <div key={index} className="space-y-3">
-                                                <Skeleton className="h-48 w-full rounded-lg" />
-                                                <Skeleton className="h-4 w-3/4" />
-                                                <Skeleton className="h-4 w-full" />
+                                                <Skeleton className="h-48 w-full rounded-lg"/>
+                                                <Skeleton className="h-4 w-3/4"/>
+                                                <Skeleton className="h-4 w-full"/>
                                                 <div className="flex justify-between">
-                                                    <Skeleton className="h-4 w-1/3" />
-                                                    <Skeleton className="h-4 w-1/3" />
+                                                    <Skeleton className="h-4 w-1/3"/>
+                                                    <Skeleton className="h-4 w-1/3"/>
                                                 </div>
-                                                <Skeleton className="h-4 w-1/2" />
+                                                <Skeleton className="h-4 w-1/2"/>
                                             </div>
                                         ))}
                                     </div>
@@ -764,7 +767,8 @@ export const BuyProperty: React.FC = () => {
                                         <div className="relative">
                                             <CarouselContent className="-ml-2 md:-ml-4">
                                                 {recommendedProperties.map((property) => (
-                                                    <CarouselItem key={property.id} className={`pl-2 md:pl-4 ${isMapOpen ? 'basis-full md:basis-1/2 lg:basis-1/2' : 'sm:basis-1/2 md:basis-1/2 lg:basis-1/3'}`}>
+                                                    <CarouselItem key={property.id}
+                                                                  className={`pl-2 md:pl-4 ${isMapOpen ? 'basis-full md:basis-1/2 lg:basis-1/2' : 'sm:basis-1/2 md:basis-1/2 lg:basis-1/3'}`}>
                                                         <div className="h-[420px]">
                                                             <PropertyCardItem
                                                                 id={String(property.id)}
@@ -781,8 +785,10 @@ export const BuyProperty: React.FC = () => {
                                                 ))}
                                             </CarouselContent>
                                             <div className="hidden sm:block">
-                                                <CarouselPrevious className="-left-4 sm:-left-5 lg:-left-6 cursor-pointer" />
-                                                <CarouselNext className="-right-4 sm:-right-5 lg:-right-6 cursor-pointer" />
+                                                <CarouselPrevious
+                                                    className="-left-4 sm:-left-5 lg:-left-6 cursor-pointer"/>
+                                                <CarouselNext
+                                                    className="-right-4 sm:-right-5 lg:-right-6 cursor-pointer"/>
                                             </div>
                                         </div>
                                     </Carousel>
@@ -795,18 +801,19 @@ export const BuyProperty: React.FC = () => {
                     <aside className={isMapOpen ? "lg:w-[60%] hidden md:block" : "lg:w-1/4 hidden md:block"}>
                         {isMapOpen ? (
                             /* Map View - Fixed full height on right side */
-                            <div className="fixed top-0 right-0 h-screen" style={{ width: '60%' }}>
+                            <div className="fixed top-0 right-0 h-screen" style={{width: '60%'}}>
                                 <MultipleMarkerMap
                                     properties={propertyMarkers}
-                                    defaultZoom={12}
+                                    defaultZoom={9}
                                     showNavigation={true}
+                                    onMapInteraction={handleMapInteraction}
                                 />
                             </div>
                         ) : (
                             /* Quick Filter Sidebar */
                             <div className="space-y-4">
-                                <PropertyTypeFilter />
-                                <PropertyDistrictFilter />
+                                <PropertyTypeFilter/>
+                                <PropertyDistrictFilter/>
                             </div>
                         )}
                     </aside>
@@ -814,4 +821,4 @@ export const BuyProperty: React.FC = () => {
             </div>
         </div>
     );
-};
+}

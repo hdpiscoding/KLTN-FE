@@ -19,15 +19,14 @@ import { PropertyDistrictFilter } from '@/components/property-district-filter';
 import {ControlledPagination} from "@/components/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
 import {PropertyCardItem} from "@/components/property-card-item.tsx";
-// import MultipleMarkerMap, { type PropertyMarker } from '@/components/multiple-marker-map';
+import MultipleMarkerMap, {type PropertyMarker} from '@/components/multiple-marker-map';
 import type {PropertyListing} from "@/types/property-listing";
 import { useSearchFilters } from '@/hooks/use-search-filters';
-import {getRecommendedProperties, searchProperties} from '@/services/propertyServices';
+import {getRecommendedProperties, searchProperties, getPropertiesWithinViewPort} from '@/services/propertyServices';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getPriceRangeValue, getPriceRangeId } from '@/utils/priceRangeHelper';
 import { getSortCriteriaValue } from '@/utils/sortCriteriaHelper';
 import { useSearchParams } from 'react-router-dom';
-import DemoMap from "@/components/demo-map.tsx";
 import { likeProperty, unlikeProperty, checkLikeProperty } from '@/services/userServices';
 import {useUserStore} from "@/store/userStore.ts";
 
@@ -45,15 +44,6 @@ interface RecommendedPropertyItem {
     recommendation_type: string;
 }
 
-interface MockProperty {
-    id: string;
-    location: { latitude: number; longitude: number; address: string };
-    title: string;
-    image: string;
-    price: number;
-    area: number;
-}
-
 export const RentProperty: React.FC = () => {
     const [searchValue, setSearchValue] = useState('');
     const [district, setDistrict] = useState('all');
@@ -69,255 +59,8 @@ export const RentProperty: React.FC = () => {
     const { filters, setFilter } = useSearchFilters();
     const [searchParams, setSearchParams] = useSearchParams();
 
-    const mockProperties: MockProperty[] = [
-        {
-            id: '1',
-            location: { latitude: 10.8231, longitude: 106.6297, address: '123 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ cao cấp view sông',
-            image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=300',
-            price: 5000000000,
-            area: 80
-        },
-        {
-            id: '2',
-            location: { latitude: 10.8251, longitude: 106.6307, address: '456 Lê Lợi, Q1' },
-            title: 'Nhà phố 3 tầng',
-            image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=300',
-            price: 8000000000,
-            area: 120
-        },
-        {
-            id: '3',
-            location: { latitude: 10.8211, longitude: 106.6287, address: '789 Đồng Khởi, Q1' },
-            title: 'Biệt thự mini',
-            image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=300',
-            price: 12000000000,
-            area: 200
-        },
-        {
-            id: '4',
-            location: { latitude: 10.8271, longitude: 106.6327, address: '321 Pasteur, Q1' },
-            title: 'Căn hộ dịch vụ',
-            image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300',
-            price: 3500000000,
-            area: 60
-        },
-        {
-            id: '5',
-            location: { latitude: 10.8191, longitude: 106.6267, address: '654 Hai Bà Trưng, Q1' },
-            title: 'Officetel hiện đại',
-            image: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=300',
-            price: 2800000000,
-            area: 45
-        },
-
-        // ---- CLUSTER POINTS ----
-        {
-            id: '6',
-            location: { latitude: 10.8235, longitude: 106.6301, address: '111 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ studio',
-            image: 'https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?w=300',
-            price: 2000000000,
-            area: 35
-        },
-        {
-            id: '7',
-            location: { latitude: 10.8228, longitude: 106.6295, address: '222 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ 2PN',
-            image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=300',
-            price: 4500000000,
-            area: 70
-        },
-        {
-            id: '8',
-            location: { latitude: 10.8238, longitude: 106.6303, address: '333 Nguyễn Huệ, Q1' },
-            title: 'Penthouse sang trọng',
-            image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=300',
-            price: 15000000000,
-            area: 250
-        },
-
-        // ---- AUTO-GENERATED NEARBY MARKERS ----
-        {
-            id: '9',
-            location: { latitude: 10.82342, longitude: 106.62985, address: '12 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ mini',
-            image: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=300',
-            price: 2300000000,
-            area: 40
-        },
-        {
-            id: '10',
-            location: { latitude: 10.82378, longitude: 106.62990, address: '15 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ cao cấp',
-            image: 'https://images.unsplash.com/photo-1527030280862-64139fba04ca?w=300',
-            price: 4200000000,
-            area: 75
-        },
-        {
-            id: '11',
-            location: { latitude: 10.82360, longitude: 106.63025, address: '20 Nguyễn Huệ, Q1' },
-            title: 'Studio trung tâm',
-            image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=300',
-            price: 1800000000,
-            area: 32
-        },
-        {
-            id: '12',
-            location: { latitude: 10.82312, longitude: 106.62955, address: '25 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ 1PN thoáng mát',
-            image: 'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=300',
-            price: 2500000000,
-            area: 48
-        },
-        {
-            id: '13',
-            location: { latitude: 10.82295, longitude: 106.62992, address: '30 Nguyễn Huệ, Q1' },
-            title: 'Nhà phố mini',
-            image: 'https://images.unsplash.com/photo-1502005097973-6a7082348e28?w=300',
-            price: 5200000000,
-            area: 110
-        },
-        {
-            id: '14',
-            location: { latitude: 10.82328, longitude: 106.63014, address: '35 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ 2PN sáng sủa',
-            image: 'https://images.unsplash.com/photo-1599423300746-b62533397364?w=300',
-            price: 4600000000,
-            area: 72
-        },
-        {
-            id: '15',
-            location: { latitude: 10.82274, longitude: 106.62978, address: '40 Nguyễn Huệ, Q1' },
-            title: 'Nhà phố 2 tầng',
-            image: 'https://images.unsplash.com/photo-1572120360610-d971b9d7767c?w=300',
-            price: 6200000000,
-            area: 130
-        },
-        {
-            id: '16',
-            location: { latitude: 10.82351, longitude: 106.62960, address: '45 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ dịch vụ tiện nghi',
-            image: 'https://images.unsplash.com/photo-1560448075-bb485b067938?w=300',
-            price: 3000000000,
-            area: 55
-        },
-        {
-            id: '17',
-            location: { latitude: 10.82333, longitude: 106.63005, address: '50 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ view thành phố',
-            image: 'https://images.unsplash.com/photo-1527030280862-64139fba04ca?w=300',
-            price: 3800000000,
-            area: 68
-        },
-        {
-            id: '18',
-            location: { latitude: 10.82365, longitude: 106.62948, address: '55 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ studio giá rẻ',
-            image: 'https://images.unsplash.com/photo-1586105251261-72a756497a12?w=300',
-            price: 1600000000,
-            area: 30
-        },
-        {
-            id: '19',
-            location: { latitude: 10.82390, longitude: 106.63012, address: '60 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ góc 2 view',
-            image: 'https://images.unsplash.com/photo-1501183638710-841dd1904471?w=300',
-            price: 4800000000,
-            area: 90
-        },
-        {
-            id: '20',
-            location: { latitude: 10.82288, longitude: 106.63020, address: '65 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ mini Q1',
-            image: 'https://images.unsplash.com/photo-1600585154207-6e75511892d0?w=300',
-            price: 1900000000,
-            area: 33
-        },
-        {
-            id: '21',
-            location: { latitude: 10.82307, longitude: 106.63032, address: '70 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ 1PN trung tâm',
-            image: 'https://images.unsplash.com/photo-1508919801845-fc2ae1bc1d1d?w=300',
-            price: 2700000000,
-            area: 50
-        },
-        {
-            id: '22',
-            location: { latitude: 10.82344, longitude: 106.62933, address: '75 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ sang trọng',
-            image: 'https://images.unsplash.com/photo-1519974719765-e6559eac2575?w=300',
-            price: 5600000000,
-            area: 95
-        },
-        {
-            id: '23',
-            location: { latitude: 10.82318, longitude: 106.62920, address: '80 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ gần phố đi bộ',
-            image: 'https://images.unsplash.com/photo-1501188697070-7ca0c3ad1c00?w=300',
-            price: 3200000000,
-            area: 58
-        },
-        {
-            id: '24',
-            location: { latitude: 10.82272, longitude: 106.62932, address: '85 Nguyễn Huệ, Q1' },
-            title: 'Nhà phố mini Q1',
-            image: 'https://images.unsplash.com/photo-1507089947368-19c1da9775ae?w=300',
-            price: 6000000000,
-            area: 125
-        },
-        {
-            id: '25',
-            location: { latitude: 10.82355, longitude: 106.63040, address: '90 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ gần công viên',
-            image: 'https://images.unsplash.com/photo-1599423300746-b62533397364?w=300',
-            price: 3500000000,
-            area: 64
-        },
-        {
-            id: '26',
-            location: { latitude: 10.82330, longitude: 106.62988, address: '95 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ tiện nghi đầy đủ',
-            image: 'https://images.unsplash.com/photo-1600585154176-72d7b0c5f19c?w=300',
-            price: 2900000000,
-            area: 52
-        },
-        {
-            id: '27',
-            location: { latitude: 10.82365, longitude: 106.62967, address: '100 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ ban công thoáng',
-            image: 'https://images.unsplash.com/photo-1580587771525-78b9dba3b914?w=300',
-            price: 4400000000,
-            area: 77
-        },
-        {
-            id: '28',
-            location: { latitude: 10.82302, longitude: 106.62910, address: '105 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ giá tốt',
-            image: 'https://images.unsplash.com/photo-1502005097973-6a7082348e28?w=300',
-            price: 2100000000,
-            area: 38
-        },
-        {
-            id: '29',
-            location: { latitude: 10.82293, longitude: 106.62944, address: '110 Nguyễn Huệ, Q1' },
-            title: 'Nhà phố trung tâm',
-            image: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?w=300',
-            price: 7400000000,
-            area: 140
-        },
-        {
-            id: '30',
-            location: { latitude: 10.82321, longitude: 106.62972, address: '115 Nguyễn Huệ, Q1' },
-            title: 'Căn hộ sát phố đi bộ',
-            image: 'https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=300',
-            price: 4100000000,
-            area: 67
-        }
-    ];
-
     // Location and recommended properties states
-    const userId = useUserStore((state) => state.userId);
+    const {userId, isLoggedIn} = useUserStore();
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
     const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
     const [recommendedProperties, setRecommendedProperties] = useState<PropertyListing[]>([]);
@@ -348,6 +91,22 @@ export const RentProperty: React.FC = () => {
         );
     }, []);
 
+    // Convert propertyList to propertyMarkers for map display
+    const propertyMarkers: PropertyMarker[] = propertyList
+        .filter(property => property.location?.coordinates) // Only include properties with valid location
+        .map(property => ({
+            id: String(property.id),
+            location: {
+                latitude: property.location.coordinates[1],
+                longitude: property.location.coordinates[0],
+                address: `${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`
+            },
+            title: property.title,
+            image: property.imageUrls?.[0] || '',
+            price: property.price,
+            area: property.area
+        }));
+
 
     const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
@@ -370,27 +129,11 @@ export const RentProperty: React.FC = () => {
         setIsMapOpen(!isMapOpen);
     };
 
-    const handleFavoriteClick = async (id: string, currentLikedState: boolean) => {
-        try {
-            const propertyId = Number(id);
-            if (currentLikedState) {
-                await unlikeProperty(propertyId);
-                setLikedProperties(prev => {
-                    const newSet = new Set(prev);
-                    newSet.delete(id);
-                    return newSet;
-                });
-            } else {
-                await likeProperty(propertyId);
-                setLikedProperties(prev => new Set(prev).add(id));
-            }
-        } catch (error) {
-            console.error('Error toggling favorite:', error);
+    // Check liked status for all properties - defined early to be used in handleMapInteraction
+    const checkLikedStatus = useCallback(async (properties: PropertyListing[]) => {
+        if (!userId || !isLoggedIn) {
+            return;
         }
-    };
-
-    // Check liked status for all properties
-    const checkLikedStatus = async (properties: PropertyListing[]) => {
         try {
             const likedSet = new Set<string>();
             await Promise.all(
@@ -408,6 +151,121 @@ export const RentProperty: React.FC = () => {
             setLikedProperties(likedSet);
         } catch (error) {
             console.error('Error checking liked properties:', error);
+        }
+    }, [userId, isLoggedIn]);
+
+    // Handle map interaction (zoom or drag end) - call API to get properties within bounds
+    const handleMapInteraction = useCallback(async (
+        bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number },
+        eventType: 'zoom' | 'dragEnd'
+    ) => {
+        // Only call API if zoom is high enough to show markers
+        if (bounds.zoom < 10) {
+            console.log(`Zoom ${bounds.zoom} < 10 - Skipping API call`);
+            return;
+        }
+
+        try {
+            console.log(`Map ${eventType} - Fetching properties within viewport:`, bounds);
+            const response = await getPropertiesWithinViewPort(
+                bounds.minLat,
+                bounds.minLng,
+                bounds.maxLat,
+                bounds.maxLng
+            );
+
+            if (response.status === "200" && response.data) {
+                // Map response to PropertyListing format
+                const mappedProperties: PropertyListing[] = response.data
+                    .filter((item: { listingType?: string; listing_type?: string; [key: string]: unknown }) => {
+                        // Only include properties with listingType = 'for_rent'
+                        const listingType = item.listingType || item.listing_type;
+                        return listingType === 'for_rent';
+                    })
+                    .map((item: {
+                    id: number;
+                    title: string;
+                    price: number;
+                    priceUnit?: string;
+                    price_unit?: string;
+                    listingType?: string;
+                    listing_type?: string;
+                    location: { type: string; coordinates: number[] };
+                    area: number;
+                    addressStreet?: string;
+                    address_street?: string;
+                    addressWard?: string;
+                    address_ward?: string;
+                    addressDistrict?: string;
+                    address_district?: string;
+                    addressCity?: string;
+                    address_city?: string;
+                    createdAt?: string;
+                    created_at?: string;
+                    thumbnailUrl?: string;
+                    [key: string]: any;
+                }) => ({
+                    id: item.id,
+                    userId: item.user_id || 0,
+                    approvalStatus: 'APPROVED',
+                    title: item.title,
+                    description: item.description || '',
+                    listingType: item.listingType || item.listing_type || 'for_rent',
+                    price: item.price,
+                    priceUnit: item.priceUnit || item.price_unit || 'VND',
+                    area: item.area,
+                    propertyType: item.propertyType || item.property_type || 'house',
+                    legalStatus: item.legalStatus || item.legal_status || null,
+                    numBedrooms: item.numBedrooms || item.num_bedrooms || null,
+                    numBathrooms: item.numBathrooms || item.num_bathrooms || null,
+                    numFloors: item.numFloors || item.num_floors || null,
+                    facadeWidthM: item.facadeWidthM || item.facade_width_m || null,
+                    roadWidthM: item.roadWidthM || item.road_width_m || null,
+                    houseDirection: item.houseDirection || item.house_direction || null,
+                    balconyDirection: item.balconyDirection || item.balcony_direction || null,
+                    furnitureStatus: item.furnitureStatus || item.furniture_status || null,
+                    addressStreet: item.addressStreet || item.address_street || '',
+                    addressWard: item.addressWard || item.address_ward || '',
+                    addressDistrict: item.addressDistrict || item.address_district || '',
+                    addressCity: item.addressCity || item.address_city || 'TPHCM',
+                    location: item.location,
+                    imageUrls: item.thumbnailUrl ? [item.thumbnailUrl] : (item.imageUrls || item.image_urls || []),
+                    createdAt: item.createdAt || item.created_at || new Date().toISOString(),
+                    updatedAt: item.updatedAt || item.updated_at || new Date().toISOString(),
+                }));
+
+                // Update property list with viewport data
+                setPropertyList(mappedProperties);
+                setTotalPages(1); // Viewport data doesn't use pagination
+
+                // Check liked status for new properties
+                if (userId) {
+                    checkLikedStatus(mappedProperties);
+                }
+
+                console.log(`Loaded ${mappedProperties.length} properties from viewport`);
+            }
+        } catch (error) {
+            console.error('Error fetching properties within viewport:', error);
+        }
+    }, [userId, checkLikedStatus]);
+
+    const handleFavoriteClick = async (id: string, currentLikedState: boolean) => {
+        try {
+            const propertyId = Number(id);
+            if (currentLikedState) {
+                await unlikeProperty(propertyId);
+                setLikedProperties(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(id);
+                    return newSet;
+                });
+            } else {
+                await likeProperty(propertyId);
+                setLikedProperties(prev => new Set(prev).add(id));
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
         }
     };
 
@@ -675,7 +533,7 @@ export const RentProperty: React.FC = () => {
         if (propertyList.length > 0) {
             checkLikedStatus(propertyList);
         }
-    }, [propertyList]);
+    }, [propertyList, checkLikedStatus]);
 
     // Cleanup effect: Reset body overflow when component unmounts
     useEffect(() => {
@@ -932,12 +790,12 @@ export const RentProperty: React.FC = () => {
                         {isMapOpen ? (
                             /* Map View - Fixed full height on right side */
                             <div className="fixed top-0 right-0 h-screen" style={{ width: '60%' }}>
-                                {/*<MultipleMarkerMap*/}
-                                {/*    properties={propertyMarkers}*/}
-                                {/*    defaultZoom={12}*/}
-                                {/*    showNavigation={true}*/}
-                                {/*/>*/}
-                                <DemoMap properties={mockProperties} minZoomToShow={12}/>
+                                <MultipleMarkerMap
+                                    properties={propertyMarkers}
+                                    defaultZoom={9}
+                                    showNavigation={true}
+                                    onMapInteraction={handleMapInteraction}
+                                />
                             </div>
                         ) : (
                             /* Quick Filter Sidebar */
@@ -952,3 +810,9 @@ export const RentProperty: React.FC = () => {
         </div>
     );
 };
+
+
+
+
+
+
