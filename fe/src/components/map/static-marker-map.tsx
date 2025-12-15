@@ -70,7 +70,7 @@ const StaticMarkerMap: React.FC<GoongMapProps> = ({
             </ReactMapGL>
 
             {/* Info Card */}
-            <div className="absolute top-4 left-4 bg-white rounded-lg shadow-xl p-4 max-w-sm border border-gray-200">
+            <div className="absolute top-4 left-4 bg-white rounded-lg shadow-xl p-4 max-w-sm border border-gray-200 hidden md:block">
                 <div className="flex items-center gap-2 mb-2">
                     <div className="bg-red-500 rounded-full p-1.5">
                         <MapPin size={16} className="text-white" />

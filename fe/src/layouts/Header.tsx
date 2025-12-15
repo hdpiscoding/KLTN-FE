@@ -4,7 +4,6 @@ import {
     Menu,
     Home,
     Key,
-    TrendingUp,
     Calculator,
     PenSquare,
     FileText,
@@ -36,7 +35,6 @@ export const Header = () => {
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
         { label: "Thuê nhà", path: "/thue-nha", icon: <Key className="w-4 h-4" /> },
-        { label: "Giá nhà đất", path: "/gia-nha-dat", icon: <TrendingUp className="w-4 h-4" /> },
     ];
 
     // Add "Định giá nhà" and "Đăng tin" when logged in

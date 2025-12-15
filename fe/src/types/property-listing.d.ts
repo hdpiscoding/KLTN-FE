@@ -3,11 +3,21 @@ interface GeoLocation {
     coordinates: [number, number]; // [longitude, latitude]
 }
 
+interface SellerProfile {
+    fullName: string;
+    phoneNumber: string;
+    avatarUrl: string;
+    liveAddress: string;
+    verifiedPhone: boolean | null;
+    updateAt: string;
+}
+
 export interface PropertyListing {
     id?: number;
     createdAt?: string;
     updatedAt?: string;
     userId?: number;
+    sellerProfile?: SellerProfile;
     approvalStatus?: string;
     title: string;
     description: string;

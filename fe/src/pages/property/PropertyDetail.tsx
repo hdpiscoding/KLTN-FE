@@ -12,7 +12,7 @@ import {Button} from '@/components/ui/button.tsx';
 import {Skeleton} from '@/components/ui/skeleton.tsx';
 import {Heart, MapPin, Phone, User, Loader2, Shield, GraduationCap, ShoppingBag, Car, Leaf, Music} from 'lucide-react';
 import {cn} from '@/lib/utils.ts';
-import {formatPrice, formatArea} from '@/utils/generalFormat.ts';
+import {formatPrice, formatArea, formatPhoneNumber} from '@/utils/generalFormat.ts';
 import {formatDate} from "@/utils/generalFormat.ts";
 import {PropertyCardItem} from '@/components/card-item/property-card-item.tsx';
 import StaticMarkerMap from "@/components/map/static-marker-map.tsx";
@@ -20,9 +20,12 @@ import type {Location} from "@/types/location.d.ts";
 import type {PropertyListing} from "@/types/property-listing.d.ts";
 import {useUserStore} from "@/store/userStore.ts";
 import {getPropertyDetails, getLivabilityScore, getRecommendedProperties} from "@/services/propertyServices.ts";
+import {getPropertyInsight} from "@/services/chatbotServices.ts";
 import {PROPERTY_TYPES} from "@/constants/propertyTypes.ts";
 import {CircularProgress} from "@/components/ui/circular-progress.tsx";
 import {Progress} from "@/components/ui/progress.tsx";
+import {toast} from "react-toastify";
+import ReactMarkdown from "react-markdown";
 
 interface LivabilityData {
     id: number;
@@ -71,6 +74,10 @@ export const PropertyDetail: React.FC = () => {
     const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
     const [suggestedProperties, setSuggestedProperties] = useState<PropertyListing[]>([]);
     const [isLoadingSuggested, setIsLoadingSuggested] = useState(false);
+
+    // Property insight states
+    const [propertyInsight, setPropertyInsight] = useState<string>('');
+    const [isLoadingInsight, setIsLoadingInsight] = useState(false);
 
     // Request user location
     const requestUserLocation = useCallback(() => {
@@ -138,6 +145,44 @@ export const PropertyDetail: React.FC = () => {
         fetchLivabilityScore();
     }, [property?.id]);
 
+    // Fetch property insight
+    useEffect(() => {
+        const fetchPropertyInsight = async () => {
+            if (!property?.id) return;
+
+            try {
+                setIsLoadingInsight(true);
+                setPropertyInsight('');
+
+                let fullInsight = '';
+
+                await getPropertyInsight(
+                    property.id,
+                    (data) => {
+                        // Accumulate the streamed content but don't display yet
+                        if (data.type === 'content' && data.text) {
+                            fullInsight += data.text;
+                        }
+                    },
+                    () => {
+                        // Display the full insight when streaming is complete
+                        setPropertyInsight(fullInsight);
+                        setIsLoadingInsight(false);
+                    },
+                    (error) => {
+                        console.error('Error fetching property insight:', error);
+                        setIsLoadingInsight(false);
+                    }
+                );
+            } catch (error) {
+                console.error('Error fetching property insight:', error);
+                setIsLoadingInsight(false);
+            }
+        };
+
+        fetchPropertyInsight();
+    }, [property?.id]);
+
     // Build location object from property data
     const location: Location | null = property ? {
         latitude: property.location.coordinates[1], // GeoJSON format: [longitude, latitude]
@@ -145,10 +190,9 @@ export const PropertyDetail: React.FC = () => {
         address: `${property.addressStreet || ''}, ${property.addressWard || ''}, ${property.addressDistrict || ''}, ${property.addressCity || ''}`.trim(),
     } : null;
 
-    const handleCopyPhone = () => {
-        // TODO: Get phone from owner data when available
-        navigator.clipboard.writeText('0123456789');
-        alert('Đã copy số điện thoại!');
+    const handleCopyPhone = (phoneNumber: string) => {
+        navigator.clipboard.writeText(phoneNumber);
+        toast.success('Đã copy số điện thoại!');
     };
 
     // Component score labels - matching EstimatePropertyPrice
@@ -708,6 +752,35 @@ export const PropertyDetail: React.FC = () => {
                                     <p>Không có dữ liệu chỉ số sống cho bất động sản này</p>
                                 </div>
                             )}
+
+                            {/* AI Insight Section */}
+                            {isLoadingInsight ? (
+                                <div className="mt-6 pt-6 border-t">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                                        Phân tích từ AI
+                                    </h3>
+                                    <div className="flex items-center justify-center py-8">
+                                        <div className="flex flex-col items-center gap-3">
+                                            <Loader2 className="w-6 h-6 animate-spin text-[#008DDA]"/>
+                                            <p className="text-sm text-gray-500">Đang phân tích bất động sản...</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : propertyInsight ? (
+                                <div className="mt-6 pt-6 border-t">
+                                    <h3 className="text-lg font-semibold text-gray-900 mb-4">
+                                        Phân tích từ AI
+                                    </h3>
+                                    <div className="prose prose-sm max-w-none mb-4 text-gray-700">
+                                        <ReactMarkdown>{propertyInsight}</ReactMarkdown>
+                                    </div>
+                                    <Button
+                                        className="w-full sm:w-auto bg-[#008DDA] hover:bg-[#0064A6] cursor-pointer"
+                                    >
+                                        Tiếp tục trò chuyện
+                                    </Button>
+                                </div>
+                            ) : null}
                         </div>
 
                         {/* Suggested Properties Section */}
@@ -799,25 +872,31 @@ export const PropertyDetail: React.FC = () => {
                             {/* Owner Info - TODO: Fetch owner data from separate API */}
                             <div className="flex items-center gap-3 mb-6">
                                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
-                                    <div className="w-full h-full flex items-center justify-center bg-[#008DDA]">
-                                        <User className="w-8 h-8 text-white"/>
-                                    </div>
+                                    {property?.sellerProfile?.avatarUrl
+                                        ?
+                                        <img src={property.sellerProfile.avatarUrl} alt="avatar" className="w-full h-full object-cover"/>
+                                        :
+                                        <div className="w-full h-full flex items-center justify-center bg-[#008DDA]">
+                                            <User className="w-8 h-8 text-white"/>
+                                        </div>
+                                    }
+
                                 </div>
                                 <div className="flex-1 min-w-0">
                                     <p className="font-semibold text-gray-900 truncate">
-                                        Người đăng tin
+                                        {property?.sellerProfile?.fullName}
                                     </p>
-                                    <p className="text-sm text-gray-500">ID: {property.userId}</p>
+                                    <p className="text-sm text-gray-500">Người đăng tin</p>
                                 </div>
                             </div>
 
                             {/* Phone Button - TODO: Get phone from owner data */}
                             <Button
-                                onClick={handleCopyPhone}
+                                onClick={() => {handleCopyPhone(String(property?.sellerProfile?.phoneNumber))}}
                                 className="w-full bg-[#008DDA] hover:bg-[#0064A6] text-white font-semibold py-6 transition-colors duration-200 cursor-pointer"
                             >
                                 <Phone className="w-5 h-5 mr-2"/>
-                                Liên hệ
+                                {formatPhoneNumber(String(property?.sellerProfile?.phoneNumber))}
                             </Button>
 
                             <p className="text-xs text-gray-500 text-center mt-3">
