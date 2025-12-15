@@ -804,7 +804,7 @@ export const BuyProperty: React.FC = () => {
                             <div className="fixed top-0 right-0 h-screen" style={{width: '60%'}}>
                                 <MultipleMarkerMap
                                     properties={propertyMarkers}
-                                    defaultZoom={9}
+                                    defaultZoom={11}
                                     showNavigation={true}
                                     onMapInteraction={handleMapInteraction}
                                 />

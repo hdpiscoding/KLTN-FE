@@ -28,14 +28,14 @@ export interface MultipleMarkerMapProps {
 
 const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
     properties,
-    defaultZoom = 9,
+    defaultZoom = 11,
     height = '100%',
     width = '100%',
     mapStyle = 'https://tiles.goong.io/assets/goong_map_web.json',
     showNavigation = true,
     centerLat,
     centerLng,
-    minZoomToShow = 10, // Default: hiển thị khi zoom >= 10
+    minZoomToShow = 12,
     onMapInteraction,
 }) => {
     // Calculate center - Always default to Ho Chi Minh City unless explicitly provided
