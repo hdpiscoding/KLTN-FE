@@ -6,7 +6,7 @@ import {
     PaginationLink,
     PaginationPrevious,
     PaginationNext,
-} from '@/components/ui/pagination';
+} from '@/components/ui/pagination.tsx';
 
 interface PaginationControlsProps {
     currentPage: number;

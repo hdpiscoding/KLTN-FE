@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { PropertyListItem } from '@/components/property-list-item';
-import { ControlledPagination } from '@/components/controlled-pagination';
-import { searchFavoriteProperties, unlikeProperty } from '@/services/userServices';
+import { PropertyListItem } from '@/components/list-item/property-list-item.tsx';
+import { ControlledPagination } from '@/components/ui/controlled-pagination.tsx';
+import { searchFavoriteProperties, unlikeProperty } from '@/services/userServices.ts';
 import type { PropertyListing } from '@/types/property-listing';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 
 export const FavoritePosts: React.FC = () => {
     // State

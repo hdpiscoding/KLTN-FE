@@ -7,16 +7,16 @@ import {
     CarouselNext,
     CarouselPrevious,
     type CarouselApi
-} from '@/components/ui/carousel';
-import {Button} from '@/components/ui/button';
-import {Skeleton} from '@/components/ui/skeleton';
+} from '@/components/ui/carousel.tsx';
+import {Button} from '@/components/ui/button.tsx';
+import {Skeleton} from '@/components/ui/skeleton.tsx';
 import {Heart, MapPin, Phone, User, Loader2, Shield, GraduationCap, ShoppingBag, Car, Leaf, Music} from 'lucide-react';
-import {cn} from '@/lib/utils';
-import {formatPrice, formatArea} from '@/utils/generalFormat';
+import {cn} from '@/lib/utils.ts';
+import {formatPrice, formatArea} from '@/utils/generalFormat.ts';
 import {formatDate} from "@/utils/generalFormat.ts";
-import {PropertyCardItem} from '@/components/property-card-item';
-import StaticMarkerMap from "@/components/static-marker-map.tsx";
-import type {Location} from "@/types/location.ts";
+import {PropertyCardItem} from '@/components/card-item/property-card-item.tsx';
+import StaticMarkerMap from "@/components/map/static-marker-map.tsx";
+import type {Location} from "@/types/location.d.ts";
 import type {PropertyListing} from "@/types/property-listing.d.ts";
 import {useUserStore} from "@/store/userStore.ts";
 import {getPropertyDetails, getLivabilityScore, getRecommendedProperties} from "@/services/propertyServices.ts";

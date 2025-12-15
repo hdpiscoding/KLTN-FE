@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { Button } from "@/components/ui/button.tsx";
 import {useNavigate, useSearchParams} from "react-router-dom";
-import DraggableMarkerMap from "@/components/draggable-marker-map";
+import DraggableMarkerMap from "@/components/map/draggable-marker-map.tsx";
 import type { Location } from "@/types/location.d.ts";
 import { AlertCircle } from 'lucide-react';
 import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 import type {PreferencePreset} from "@/types/preference-preset";
 
 export interface PreferencePresetCardProps {

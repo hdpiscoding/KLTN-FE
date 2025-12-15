@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { Spinner } from "@/components/ui/spinner";
+import { Button } from "@/components/ui/button.tsx";
+import { Spinner } from "@/components/ui/spinner.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -8,9 +8,9 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { useUserStore } from "@/store/userStore";
-import { requestBecomeSeller } from "@/services/userServices";
+} from "@/components/ui/alert-dialog.tsx";
+import { useUserStore } from "@/store/userStore.ts";
+import { requestBecomeSeller } from "@/services/userServices.ts";
 import { AlertCircle, UserPlus } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-toastify";

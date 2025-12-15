@@ -1,6 +1,6 @@
 import React from 'react';
 import { MapPin, Maximize } from 'lucide-react';
-import { formatPrice, formatArea } from '@/utils/generalFormat';
+import { formatPrice, formatArea } from '@/utils/generalFormat.ts';
 
 export interface PropertyPopupCardProps {
     id: string;

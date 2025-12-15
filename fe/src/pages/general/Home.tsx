@@ -1,20 +1,20 @@
 import React, {useEffect, useState, useCallback} from 'react';
-import { PropertyCardItem } from "@/components/property-card-item.tsx";
-import { DistrictCardItem } from "@/components/district-card-item.tsx";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { PropertyCardItem } from "@/components/card-item/property-card-item.tsx";
+import { DistrictCardItem } from "@/components/card-item/district-card-item.tsx";
+import { Skeleton } from "@/components/ui/skeleton.tsx";
+import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import homeBackground from "@/assets/timnha-home-background.png";
 import { Search, MapPin } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils.ts";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import {
     Carousel,
     CarouselContent,
     CarouselItem,
     CarouselNext,
     CarouselPrevious,
-} from "@/components/ui/carousel";
+} from "@/components/ui/carousel.tsx";
 import {useNavigate} from "react-router-dom";
 import type {PropertyListing} from "@/types/property-listing";
 import {searchProperties, getRecommendedProperties} from "@/services/propertyServices.ts";

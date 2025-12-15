@@ -1,10 +1,10 @@
 //import React from "react";
 import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useNavigate } from "react-router-dom";
-import { PasswordInput } from "@/components/ui/input-password";
+import { PasswordInput } from "@/components/ui/input-password.tsx";
 import React from "react";
 import {Spinner} from "@/components/ui/spinner.tsx";
 import {register} from "@/services/authServices.ts";

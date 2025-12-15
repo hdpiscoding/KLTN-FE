@@ -1,18 +1,18 @@
 import React from 'react';
-import { MyPropertyListItem } from '@/components/my-property-list-item';
+import { MyPropertyListItem } from '@/components/list-item/my-property-list-item.tsx';
 // Cast to any due to stale TS mismatch on optional props
 const MyPropertyListItemAny = MyPropertyListItem as any;
-import { ControlledPagination } from '@/components/controlled-pagination';
-import { Input } from '@/components/ui/input';
+import { ControlledPagination } from '@/components/ui/controlled-pagination.tsx';
+import { Input } from '@/components/ui/input.tsx';
 import { Search } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 import {useUserStore} from "@/store/userStore.ts";
 import {searchProperties, deletePropertyListing} from "@/services/propertyServices.ts";
 import type {PropertyListing} from "@/types/property-listing";
-import { Skeleton } from '@/components/ui/skeleton';
-import { useSearchFilters } from '@/hooks/use-search-filters';
-import {NoneSellerView} from "@/components/none-seller-view.tsx";
-import {PendingSellerView} from "@/components/pending-seller-view.tsx";
+import { Skeleton } from '@/components/ui/skeleton.tsx';
+import { useSearchFilters } from '@/hooks/use-search-filters.ts';
+import {NoneSellerView} from "@/components/view/none-seller-view.tsx";
+import {PendingSellerView} from "@/components/view/pending-seller-view.tsx";
 import {
     AlertDialog,
     AlertDialogAction,
@@ -22,7 +22,7 @@ import {
     AlertDialogFooter,
     AlertDialogHeader,
     AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@/components/ui/alert-dialog.tsx";
 import {toast} from "react-toastify";
 
 type StatusFilter = 'all' | 'Đang hiển thị' | 'Chờ duyệt' | 'Không duyệt';

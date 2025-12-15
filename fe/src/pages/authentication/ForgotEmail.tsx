@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form.tsx";
+import { Input } from "@/components/ui/input.tsx";
+import { Button } from "@/components/ui/button.tsx";
 import { useNavigate } from "react-router-dom";
 import { PasswordInput } from "@/components/ui/input-password.tsx";
-import { forgotPassword } from "@/services/authServices";
-import { useAuthStore } from "@/store/authStore";
+import { forgotPassword } from "@/services/authServices.ts";
+import { useAuthStore } from "@/store/authStore.ts";
 import { toast } from "react-toastify";
 import {Spinner} from "@/components/ui/spinner.tsx";
 

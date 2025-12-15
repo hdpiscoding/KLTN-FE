@@ -1,21 +1,21 @@
 import React, {useState, useEffect, useRef, useCallback} from 'react';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form.tsx";
 import {useForm} from "react-hook-form";
 import {Input} from "@/components/ui/input.tsx";
 import {Button} from "@/components/ui/button.tsx";
 import {useNavigate} from "react-router-dom";
 import { MapPin, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 import { useDebounce } from 'use-debounce';
 import {toast} from "react-toastify";
 import type {PlacePrediction} from "@/types/place-prediction";
 import {getPlaceDetails, placeAutocomplete} from "@/services/goongAPIServices.ts";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { PROPERTY_TYPES } from "@/constants/propertyTypes";
-import { LEGAL_DOCS } from "@/constants/legalDocs";
-import { PROPERTY_DIRECTIONS } from "@/constants/propertyDirections";
-import { PROPERTY_FURNITURE } from "@/constants/propertyFurniture";
-import { useEstimationStore } from "@/store/estimationStore";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select.tsx";
+import { PROPERTY_TYPES } from "@/constants/propertyTypes.ts";
+import { LEGAL_DOCS } from "@/constants/legalDocs.ts";
+import { PROPERTY_DIRECTIONS } from "@/constants/propertyDirections.ts";
+import { PROPERTY_FURNITURE } from "@/constants/propertyFurniture.ts";
+import { useEstimationStore } from "@/store/estimationStore.ts";
 import {Spinner} from "@/components/ui/spinner.tsx";
 
 interface EstimateFormData {

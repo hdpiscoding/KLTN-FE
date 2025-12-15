@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Trash2 } from "lucide-react";
 import { formatPrice, formatArea, formatDateTime } from "@/utils/generalFormat.ts";
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/utils.ts";
 
 type PropertyStatus = "Đang hiển thị" | "Chờ duyệt" | "Đã gỡ" | "Không duyệt" | "Hết hạn";
 

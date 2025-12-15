@@ -1,7 +1,7 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import ReactMapGL, { Marker, Popup, NavigationControl, type MapRef } from '@goongmaps/goong-map-react';
 import Supercluster from 'supercluster';
-import { PropertyPopupCard } from '@/components/property-popup-card';
+import { PropertyPopupCard } from '@/components/card-item/property-popup-card.tsx';
 import type { Location } from '@/types/location.d.ts';
 
 export interface PropertyMarker {

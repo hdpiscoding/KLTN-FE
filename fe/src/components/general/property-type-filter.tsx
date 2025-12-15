@@ -1,6 +1,6 @@
 import React from 'react';
 import { ChevronRight } from 'lucide-react';
-import { PROPERTY_TYPES } from '@/constants/propertyTypes';
+import { PROPERTY_TYPES } from '@/constants/propertyTypes.ts';
 
 export const PropertyTypeFilter: React.FC = () => {
     return (

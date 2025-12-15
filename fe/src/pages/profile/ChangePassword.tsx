@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { PasswordInput } from '@/components/ui/input-password';
-import { Button } from '@/components/ui/button';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form.tsx';
+import { PasswordInput } from '@/components/ui/input-password.tsx';
+import { Button } from '@/components/ui/button.tsx';
 import { toast } from "react-toastify";
-import { changePassword } from '@/services/userServices';
+import { changePassword } from '@/services/userServices.ts';
 
 type ChangePasswordFormData = {
     oldPassword: string;

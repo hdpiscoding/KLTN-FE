@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form.tsx';
+import { Input } from '@/components/ui/input.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { Slider } from '@/components/ui/slider.tsx';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
+import { Skeleton } from '@/components/ui/skeleton.tsx';
 import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music, Loader2 } from 'lucide-react';
-import { PreferencePresetCard } from '@/components/preference-preset-card';
+import { PreferencePresetCard } from '@/components/card-item/preference-preset-card.tsx';
 import type { PreferencePreset } from '@/types/preference-preset';
 import {getMyProfile, updateMyProfile} from "@/services/userServices.ts";
 import {uploadImage} from "@/services/mediaServices.ts";
@@ -16,7 +16,7 @@ import { useDebounce } from 'use-debounce';
 import { getAllPreferencePresets } from "@/services/preferencePresetServices.ts";
 import type { PlacePrediction } from '@/types/place-prediction';
 import { placeAutocomplete } from '@/services/goongAPIServices.ts';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 import {useUserStore} from "@/store/userStore.ts";
 
 type UserProfileFormData = {

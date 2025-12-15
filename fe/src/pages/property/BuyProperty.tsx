@@ -1,34 +1,34 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {Search, MapIcon} from 'lucide-react';
-import {Input} from '@/components/ui/input';
-import {Button} from '@/components/ui/button';
+import {Input} from '@/components/ui/input.tsx';
+import {Button} from '@/components/ui/button.tsx';
 import {
     Select,
     SelectContent,
     SelectItem,
     SelectTrigger,
     SelectValue,
-} from '@/components/ui/select';
-import {DISTRICTS} from '@/constants/districts';
+} from '@/components/ui/select.tsx';
+import {DISTRICTS} from '@/constants/districts.ts';
 import {PROPERTY_TYPES} from "@/constants/propertyTypes.ts";
 import {PRICE_RANGES} from "@/constants/priceRanges.ts";
 import {PROPERTY_SORT_CRITERIAS} from "@/constants/propertySortCriterias.ts";
-import {PropertyListItem} from '@/components/property-list-item';
-import {PropertyTypeFilter} from '@/components/property-type-filter';
-import {PropertyDistrictFilter} from '@/components/property-district-filter';
-import {ControlledPagination} from "@/components/controlled-pagination.tsx";
+import {PropertyListItem} from '@/components/list-item/property-list-item.tsx';
+import {PropertyTypeFilter} from '@/components/general/property-type-filter.tsx';
+import {PropertyDistrictFilter} from '@/components/general/property-district-filter.tsx';
+import {ControlledPagination} from "@/components/ui/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
-import {PropertyCardItem} from "@/components/property-card-item.tsx";
-import MultipleMarkerMap, {type PropertyMarker} from '@/components/multiple-marker-map';
+import {PropertyCardItem} from "@/components/card-item/property-card-item.tsx";
+import MultipleMarkerMap, {type PropertyMarker} from '@/components/map/multiple-marker-map.tsx';
 import type {PropertyListing} from "@/types/property-listing";
-import {useSearchFilters} from '@/hooks/use-search-filters';
-import {searchProperties, getRecommendedProperties, getPropertiesWithinViewPort} from '@/services/propertyServices';
-import {Skeleton} from '@/components/ui/skeleton';
-import {getPriceRangeValue, getPriceRangeId} from '@/utils/priceRangeHelper';
-import {getSortCriteriaValue} from '@/utils/sortCriteriaHelper';
+import {useSearchFilters} from '@/hooks/use-search-filters.ts';
+import {searchProperties, getRecommendedProperties, getPropertiesWithinViewPort} from '@/services/propertyServices.ts';
+import {Skeleton} from '@/components/ui/skeleton.tsx';
+import {getPriceRangeValue, getPriceRangeId} from '@/utils/priceRangeHelper.ts';
+import {getSortCriteriaValue} from '@/utils/sortCriteriaHelper.ts';
 import {useSearchParams} from 'react-router-dom';
-import {likeProperty, unlikeProperty, checkLikeProperty} from '@/services/userServices';
-import {useUserStore} from '@/store/userStore';
+import {likeProperty, unlikeProperty, checkLikeProperty} from '@/services/userServices.ts';
+import {useUserStore} from '@/store/userStore.ts';
 
 interface RecommendedPropertyItem {
     id: number;

@@ -8,7 +8,7 @@ import {
     Lock,
     LogOut
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn } from '@/lib/utils.ts';
 import {useUserStore} from "@/store/userStore.ts";
 import {toast} from "react-toastify";
 import {useEstimationStore} from "@/store/estimationStore.ts";
