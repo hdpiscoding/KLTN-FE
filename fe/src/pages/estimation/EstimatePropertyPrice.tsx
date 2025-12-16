@@ -9,6 +9,7 @@ import { Loader2, TrendingUp, Shield, GraduationCap, ShoppingBag, Car, Leaf, Mus
 import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
 import type {PredictionData} from "@/types/prediction-data";
+import {formatPrice} from "@/utils/generalFormat.ts";
 
 export const EstimatePropertyPrice: React.FC = () => {
     const navigate = useNavigate();
@@ -137,6 +138,13 @@ export const EstimatePropertyPrice: React.FC = () => {
                             <p className="text-4xl sm:text-5xl font-bold text-[#008DDA] mb-2">
                                 {predictionData.predicted_price_billions.toFixed(2)} tỷ VNĐ
                             </p>
+                            {
+                                area
+                                &&
+                                <p className="text-sm text-gray-500">
+                                    ≈ {formatPrice(predictionData.predicted_price/area)}/m²
+                                </p>
+                            }
                         </div>
 
                         {/* Livability Score */}
@@ -199,6 +207,9 @@ export const EstimatePropertyPrice: React.FC = () => {
 
                 {/* Continue Button */}
                 <div className="bg-white rounded-lg shadow-lg p-6">
+                    <Button className="w-full h-11" variant="outline">
+                        Xem lịch sử định giá
+                    </Button>
                     <Button
                         onClick={handleContinue}
                         className="w-full h-11 transition-colors duration-200 bg-[#008DDA] cursor-pointer hover:bg-[#0064A6] text-base"

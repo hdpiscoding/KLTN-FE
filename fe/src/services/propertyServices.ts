@@ -72,6 +72,11 @@ export const predictPropertyPrice = async (data: {
     return response.data;
 }
 
+export const getPredictionHistory = async () => {
+    const response = await instance.get(`recommendation/prediction/history`);
+    return response.data;
+}
+
 export const getRecommendedProperties = async (lat: number, lng: number, limit: number = 8, radius_km: number = 20, user_id?: number) => {
     let response;
     if (user_id) {
@@ -79,7 +84,7 @@ export const getRecommendedProperties = async (lat: number, lng: number, limit: 
     }
     else {
         response = await instance.get(`recommendation/home?lat=${lat}&lng=${lng}&limit=${limit}&radius_km=${radius_km}`);
-    };
+    }
     return response.data;
 }
 

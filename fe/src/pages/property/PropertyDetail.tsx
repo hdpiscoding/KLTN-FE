@@ -10,7 +10,20 @@ import {
 } from '@/components/ui/carousel.tsx';
 import {Button} from '@/components/ui/button.tsx';
 import {Skeleton} from '@/components/ui/skeleton.tsx';
-import {Heart, MapPin, Phone, User, Loader2, Shield, GraduationCap, ShoppingBag, Car, Leaf, Music} from 'lucide-react';
+import {
+    Heart,
+    MapPin,
+    Phone,
+    User,
+    Loader2,
+    Shield,
+    GraduationCap,
+    ShoppingBag,
+    Car,
+    Leaf,
+    Music,
+    MessageCircle
+} from 'lucide-react';
 import {cn} from '@/lib/utils.ts';
 import {formatPrice, formatArea, formatPhoneNumber} from '@/utils/generalFormat.ts';
 import {formatDate} from "@/utils/generalFormat.ts";
@@ -228,8 +241,7 @@ export const PropertyDetail: React.FC = () => {
                         20,
                         userId
                     );
-                }
-                else {
+                } else {
                     response = await getRecommendedProperties(
                         userLocation.lat,
                         userLocation.lng,
@@ -262,7 +274,7 @@ export const PropertyDetail: React.FC = () => {
                         createdAt: new Date().toISOString(),
                         updatedAt: new Date().toISOString(),
                         userId: 0,
-                        location: { type: 'Point', coordinates: [0, 0] },
+                        location: {type: 'Point', coordinates: [0, 0]},
                     }));
 
                     setSuggestedProperties(mappedProperties);
@@ -774,11 +786,36 @@ export const PropertyDetail: React.FC = () => {
                                     <div className="prose prose-sm max-w-none mb-4 text-gray-700">
                                         <ReactMarkdown>{propertyInsight}</ReactMarkdown>
                                     </div>
-                                    <Button
-                                        className="w-full sm:w-auto bg-[#008DDA] hover:bg-[#0064A6] cursor-pointer"
-                                    >
-                                        Tiếp tục trò chuyện
-                                    </Button>
+                                    <div className="mt-6 pt-6 border-t border-gray-200">
+                                        <div className="relative">
+                                            {/* Gradient background effect */}
+                                            <div
+                                                className="absolute inset-0 bg-gradient-to-r from-[#008DDA] to-[#00B4D8] rounded-xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
+
+                                            <Button
+                                                onClick={() => {
+                                                    // TODO: Implement chat functionality
+                                                    console.log('Opening chat with AI...');
+                                                }}
+                                                className="relative w-full h-14 text-base font-semibold bg-gradient-to-r from-[#008DDA] to-[#00B4D8] hover:from-[#0064A6] hover:to-[#008DDA] text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
+                                            >
+                                                <div className="flex items-center justify-center gap-3">
+                                                    <div className="relative">
+                                                        <MessageCircle className="w-5 h-5 transition-transform group-hover:scale-110 duration-300"/>
+                                                    </div>
+                                                    <span className="bg-gradient-to-r from-white to-blue-50 bg-clip-text text-transparent font-bold">
+                                                        Tiếp tục trò chuyện với AI
+                                                    </span>
+                                                    <div className="ml-1 transition-transform group-hover:translate-x-1 duration-300">
+                                                        →
+                                                    </div>
+                                                </div>
+                                            </Button>
+                                        </div>
+                                        <p className="text-center text-xs text-gray-500 mt-3">
+                                            Đặt câu hỏi về bất động sản này và nhận tư vấn chi tiết từ AI
+                                        </p>
+                                    </div>
                                 </div>
                             ) : null}
                         </div>
@@ -795,14 +832,14 @@ export const PropertyDetail: React.FC = () => {
                                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                         {[...Array(6)].map((_, index) => (
                                             <div key={index} className="space-y-3">
-                                                <Skeleton className="h-48 w-full rounded-lg" />
-                                                <Skeleton className="h-4 w-3/4" />
-                                                <Skeleton className="h-4 w-full" />
+                                                <Skeleton className="h-48 w-full rounded-lg"/>
+                                                <Skeleton className="h-4 w-3/4"/>
+                                                <Skeleton className="h-4 w-full"/>
                                                 <div className="flex justify-between">
-                                                    <Skeleton className="h-4 w-1/3" />
-                                                    <Skeleton className="h-4 w-1/3" />
+                                                    <Skeleton className="h-4 w-1/3"/>
+                                                    <Skeleton className="h-4 w-1/3"/>
                                                 </div>
-                                                <Skeleton className="h-4 w-1/2" />
+                                                <Skeleton className="h-4 w-1/2"/>
                                             </div>
                                         ))}
                                     </div>
@@ -874,7 +911,8 @@ export const PropertyDetail: React.FC = () => {
                                 <div className="w-16 h-16 rounded-full overflow-hidden bg-gray-100 flex-shrink-0">
                                     {property?.sellerProfile?.avatarUrl
                                         ?
-                                        <img src={property.sellerProfile.avatarUrl} alt="avatar" className="w-full h-full object-cover"/>
+                                        <img src={property.sellerProfile.avatarUrl} alt="avatar"
+                                             className="w-full h-full object-cover"/>
                                         :
                                         <div className="w-full h-full flex items-center justify-center bg-[#008DDA]">
                                             <User className="w-8 h-8 text-white"/>
@@ -892,7 +930,9 @@ export const PropertyDetail: React.FC = () => {
 
                             {/* Phone Button - TODO: Get phone from owner data */}
                             <Button
-                                onClick={() => {handleCopyPhone(String(property?.sellerProfile?.phoneNumber))}}
+                                onClick={() => {
+                                    handleCopyPhone(String(property?.sellerProfile?.phoneNumber))
+                                }}
                                 className="w-full bg-[#008DDA] hover:bg-[#0064A6] text-white font-semibold py-6 transition-colors duration-200 cursor-pointer"
                             >
                                 <Phone className="w-5 h-5 mr-2"/>

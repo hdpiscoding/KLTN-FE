@@ -6,7 +6,8 @@ import {
     Heart,
     User,
     Lock,
-    LogOut
+    LogOut,
+    History
 } from 'lucide-react';
 import { cn } from '@/lib/utils.ts';
 import {useUserStore} from "@/store/userStore.ts";
@@ -145,6 +146,11 @@ export const UserSidebar: React.FC = () => {
             path: '/tin-yeu-thich',
         },
         {
+            icon: <History size={20} />,
+            label: 'Lịch sử định giá',
+            path: '/dinh-gia-nha/lich-su',
+        },
+        {
             icon: <User size={20} />,
             label: 'Thông tin cá nhân',
             path: '/thong-tin-ca-nhan',
@@ -153,16 +159,15 @@ export const UserSidebar: React.FC = () => {
             icon: <Lock size={20} />,
             label: 'Đổi mật khẩu',
             path: '/doi-mat-khau',
-        },
+        }
     ];
 
-    // Bottom nav items order: Tin đăng, Tin yêu thích, Đăng tin (center), Thông tin cá nhân, Đổi mật khẩu
     const bottomNavItems = [
         menuItems[0], // Tin đăng
         menuItems[2], // Tin yêu thích
         menuItems[1], // Đăng tin (center)
-        menuItems[3], // Thông tin cá nhân
-        menuItems[4], // Đổi mật khẩu
+        menuItems[3], // Lịch sử định giá
+        menuItems[4], // Thông tin cá nhân
     ];
 
     return (

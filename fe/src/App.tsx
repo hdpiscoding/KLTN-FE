@@ -18,6 +18,8 @@ import {BuyProperty} from "@/pages/property/BuyProperty.tsx";
 import {EstimatePropertyAddress} from "@/pages/estimation/EstimatePropertyAddress.tsx";
 import {EstimatePropertyMap} from "@/pages/estimation/EstimatePropertyMap.tsx";
 import {EstimatePropertyPrice} from "@/pages/estimation/EstimatePropertyPrice.tsx";
+import EstimationHistory from "@/pages/estimation/EstimationHistory.tsx";
+import EstimationDetail from "@/pages/estimation/EstimationDetail.tsx";
 import {UserLayout} from "@/layouts/UserLayout.tsx";
 import {MyPosts} from "@/pages/listing/MyPosts.tsx";
 import {CreatePost} from "@/pages/listing/CreatePost.tsx";
@@ -75,6 +77,8 @@ function App() {
                       <Route path="/tin-yeu-thich" element={<FavoritePosts/>}/>
                       <Route path="/thong-tin-ca-nhan" element={<UserProfile/>}/>
                       <Route path="/doi-mat-khau" element={<ChangePassword/>}/>
+                      <Route path="/dinh-gia-nha/lich-su" element={<EstimationHistory/>}/>
+                      <Route path="/dinh-gia-nha/ket-qua/:id" element={<EstimationDetail/>}/>
                   </Route>
 
               </Routes>

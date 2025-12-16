@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form.tsx';
 import { Input } from '@/components/ui/input.tsx';
@@ -37,6 +38,7 @@ type PreferenceFormData = {
 };
 
 export const UserProfile: React.FC = () => {
+    const navigate = useNavigate();
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -689,6 +691,23 @@ export const UserProfile: React.FC = () => {
                         </form>
                     </Form>
                 )}
+            </div>
+
+            {/* Section: Password (Mobile Only) */}
+            <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 sm:hidden">
+                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                    Mật khẩu
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                    Thay đổi mật khẩu để bảo mật tài khoản của bạn
+                </p>
+                <Button
+                    type="button"
+                    onClick={() => navigate('/doi-mat-khau')}
+                    className="cursor-pointer w-full transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                >
+                    Đổi mật khẩu
+                </Button>
             </div>
 
             {/* Section 2: Preference Settings */}

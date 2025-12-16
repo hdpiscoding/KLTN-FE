@@ -9,7 +9,7 @@ interface ChatLauncherProps {
 
 export function ChatLauncher({ isOpen, onClick }: ChatLauncherProps) {
   return (
-    <div className="fixed bottom-6 right-6 z-50">
+    <div className="fixed bottom-20 right-6 sm:bottom-6 z-50">
       {/* Pulse ring effect - only show when closed */}
       {!isOpen && (
         <div className="absolute inset-0 rounded-full bg-[#008DDA] animate-ping opacity-20"></div>

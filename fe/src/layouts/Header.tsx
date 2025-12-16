@@ -11,7 +11,8 @@ import {
     Lock,
     LogOut,
     Heart,
-    User
+    User,
+    History
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -125,6 +126,12 @@ export const Header = () => {
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link to="/dinh-gia-nha/lich-su" className="w-full flex items-center gap-2">
+                                                <History className="w-4 h-4" />
+                                                Lịch sử định giá
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild className="cursor-pointer">
                                             <Link to="/thong-tin-ca-nhan" className="w-full flex items-center gap-2">
                                                 <UserCircle className="w-4 h-4" />
                                                 Thông tin cá nhân
@@ -182,6 +189,12 @@ export const Header = () => {
                                             <Link to="/tin-yeu-thich" className="w-full flex items-center gap-2">
                                                 <Heart className="w-4 h-4" />
                                                 Tin yêu thích
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link to="/dinh-gia-nha/lich-su" className="w-full flex items-center gap-2">
+                                                <History className="w-4 h-4" />
+                                                Lịch sử định giá
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild className="cursor-pointer">
