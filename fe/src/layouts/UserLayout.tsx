@@ -7,7 +7,7 @@ import {SessionExpiredDialog} from "@/components/dialog/session-expired-dialog.t
 import {ChatBot} from "@/components/chat";
 
 export const UserLayout: React.FC = () => {
-    const { showExpiredDialog, handleLoginRedirect, handleHomeRedirect } = useAuthGuard();
+    const { showExpiredDialog, handleLoginRedirect, handleHomeRedirect, checkTokenExpired } = useAuthGuard();
 
     return (
         <>
@@ -28,7 +28,7 @@ export const UserLayout: React.FC = () => {
             </div>
 
             {/* ChatBot */}
-            <ChatBot />
+            <ChatBot checkTokenExpired={checkTokenExpired}/>
 
             {/* Session Expired Dialog */}
             <SessionExpiredDialog

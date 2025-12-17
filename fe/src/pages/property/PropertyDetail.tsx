@@ -39,6 +39,8 @@ import {CircularProgress} from "@/components/ui/circular-progress.tsx";
 import {Progress} from "@/components/ui/progress.tsx";
 import {toast} from "react-toastify";
 import ReactMarkdown from "react-markdown";
+import {useChatContext, useLoadChatHistory} from "@/hooks/chat";
+import {useChatStore} from "@/store/chatStore";
 
 interface LivabilityData {
     id: number;
@@ -80,6 +82,11 @@ export const PropertyDetail: React.FC = () => {
     const [livabilityData, setLivabilityData] = useState<LivabilityData | null>(null);
     const [isLoadingLivability, setIsLoadingLivability] = useState(false);
     const isLoggedIn = useUserStore((state) => state.isLoggedIn);
+
+    // Chat hooks
+    const { switchToInsight } = useChatContext();
+    const { loadHistory } = useLoadChatHistory();
+    const setIsOpen = useChatStore((state) => state.setIsOpen);
 
     // Location and recommended properties states
     const userId = useUserStore((state) => state.userId);
@@ -206,6 +213,24 @@ export const PropertyDetail: React.FC = () => {
     const handleCopyPhone = (phoneNumber: string) => {
         navigator.clipboard.writeText(phoneNumber);
         toast.success('Đã copy số điện thoại!');
+    };
+
+    const handleContinueChat = async () => {
+        if (!property?.id) return;
+
+        try {
+            // Switch to insight context with propertyId
+            switchToInsight(property.id);
+
+            // Load chat history for this property
+            await loadHistory("insight", { propertyId: property.id });
+
+            // Open chat window
+            setIsOpen(true);
+        } catch (error) {
+            console.error("Failed to open chat:", error);
+            toast.error("Không thể mở chat. Vui lòng thử lại.");
+        }
     };
 
     // Component score labels - matching EstimatePropertyPrice
@@ -793,10 +818,7 @@ export const PropertyDetail: React.FC = () => {
                                                 className="absolute inset-0 bg-gradient-to-r from-[#008DDA] to-[#00B4D8] rounded-xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
 
                                             <Button
-                                                onClick={() => {
-                                                    // TODO: Implement chat functionality
-                                                    console.log('Opening chat with AI...');
-                                                }}
+                                                onClick={handleContinueChat}
                                                 className="relative w-full h-14 text-base font-semibold bg-gradient-to-r from-[#008DDA] to-[#00B4D8] hover:from-[#0064A6] hover:to-[#008DDA] text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                                             >
                                                 <div className="flex items-center justify-center gap-3">

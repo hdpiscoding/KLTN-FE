@@ -1,5 +1,4 @@
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
 
 export interface ChatMessage {
   id: string;
@@ -8,109 +7,167 @@ export interface ChatMessage {
   timestamp: string;
 }
 
+export type ChatContext = "general" | "insight" | "prediction";
+
+interface ContextMetadata {
+  propertyId?: number;
+  predictionId?: string;
+}
+
 interface ChatState {
-  messages: ChatMessage[];
+  // UI State
   isOpen: boolean;
   isTyping: boolean;
-  sessionId: string | null;
+  streamingMessageId: string | null; // Track which message is streaming
 
-  // Actions
-  addMessage: (message: ChatMessage) => void;
-  clearMessages: () => void;
+  // Context State
+  currentContext: ChatContext;
+  contextMetadata: ContextMetadata;
+
+  // Messages per context
+  generalMessages: ChatMessage[];
+  insightMessages: ChatMessage[];
+  predictionMessages: ChatMessage[];
+
+  // Token checker function
+  checkTokenExpired: (() => boolean) | null;
+
+  // Actions - UI
   setIsOpen: (isOpen: boolean) => void;
   toggleChat: () => void;
   setIsTyping: (isTyping: boolean) => void;
-  setSessionId: (sessionId: string | null) => void;
-  sendMessage: (userMessage: string) => Promise<void>;
+  setStreamingMessageId: (messageId: string | null) => void;
+
+  // Actions - Token checker
+  setCheckTokenExpired: (checker: (() => boolean) | null) => void;
+
+  // Actions - Context Management
+  setContext: (context: ChatContext, metadata?: ContextMetadata) => void;
+
+  // Actions - Messages
+  addMessage: (message: ChatMessage, context?: ChatContext) => void;
+  setMessages: (messages: ChatMessage[], context?: ChatContext) => void;
+  clearMessages: (context?: ChatContext) => void;
+  getCurrentMessages: () => ChatMessage[];
+
+  // Actions - Reset
+  resetChat: () => void;
 }
 
-export const useChatStore = create<ChatState>()(
-  persist(
-    (set, get) => ({
-      messages: [],
-      isOpen: false,
-      isTyping: false,
-      sessionId: null,
+export const useChatStore = create<ChatState>((set, get) => ({
+  // Initial UI State
+  isOpen: false,
+  isTyping: false,
+  streamingMessageId: null,
 
-      addMessage: (message) =>
-        set((state) => ({
-          messages: [...state.messages, message],
-        })),
+  // Initial Context State
+  currentContext: "general",
+  contextMetadata: {},
 
-      clearMessages: () =>
-        set({
-          messages: [],
-          sessionId: null,
-        }),
+  // Initial Messages State
+  generalMessages: [],
+  insightMessages: [],
+  predictionMessages: [],
 
-      setIsOpen: (isOpen) => set({ isOpen }),
+  // Initial Token Checker
+  checkTokenExpired: null,
 
-      toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
+  // UI Actions
+  setIsOpen: (isOpen) => set({ isOpen }),
 
-      setIsTyping: (isTyping) => set({ isTyping }),
+  toggleChat: () => set((state) => ({ isOpen: !state.isOpen })),
 
-      setSessionId: (sessionId) => set({ sessionId }),
+  setIsTyping: (isTyping) => set({ isTyping }),
 
-      sendMessage: async (userMessage) => {
-        // Add user message
-        const userMsg: ChatMessage = {
-          id: Date.now().toString(),
-          message: userMessage,
-          isBot: false,
-          timestamp: new Date().toLocaleTimeString("vi-VN", {
-            hour: "2-digit",
-            minute: "2-digit",
-          }),
-        };
+  setStreamingMessageId: (messageId) => set({ streamingMessageId: messageId }),
 
-        get().addMessage(userMsg);
-        set({ isTyping: true });
+  // Token Checker Actions
+  setCheckTokenExpired: (checker) => set({ checkTokenExpired: checker }),
 
-        try {
-          // TODO: Replace with actual API call
-          // const response = await chatbotAPI.sendMessage(userMessage, get().sessionId);
-
-          // Simulate bot response for now
-          await new Promise((resolve) => setTimeout(resolve, 1500));
-
-          const botMsg: ChatMessage = {
-            id: (Date.now() + 1).toString(),
-            message: "Xin chào! Tôi là trợ lý AI. Tôi sẽ giúp bạn tìm kiếm và tư vấn về bất động sản.",
-            isBot: true,
-            timestamp: new Date().toLocaleTimeString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          };
-
-          get().addMessage(botMsg);
-        } catch (error) {
-          console.error("Error sending message:", error);
-
-          // Add error message
-          const errorMsg: ChatMessage = {
-            id: (Date.now() + 2).toString(),
-            message: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại sau.",
-            isBot: true,
-            timestamp: new Date().toLocaleTimeString("vi-VN", {
-              hour: "2-digit",
-              minute: "2-digit",
-            }),
-          };
-
-          get().addMessage(errorMsg);
-        } finally {
-          set({ isTyping: false });
-        }
-      },
+  // Context Management Actions
+  setContext: (context, metadata = {}) =>
+    set({
+      currentContext: context,
+      contextMetadata: metadata,
     }),
-    {
-      name: "chat-storage",
-      partialize: (state) => ({
-        messages: state.messages,
-        sessionId: state.sessionId,
-      }),
+
+  // Message Actions
+  addMessage: (message, context) => {
+    const targetContext = context || get().currentContext;
+
+    set((state) => {
+      switch (targetContext) {
+        case "general":
+          return { generalMessages: [...state.generalMessages, message] };
+        case "insight":
+          return { insightMessages: [...state.insightMessages, message] };
+        case "prediction":
+          return { predictionMessages: [...state.predictionMessages, message] };
+        default:
+          return state;
+      }
+    });
+  },
+
+  setMessages: (messages, context) => {
+    const targetContext = context || get().currentContext;
+
+    set((state) => {
+      switch (targetContext) {
+        case "general":
+          return { generalMessages: messages };
+        case "insight":
+          return { insightMessages: messages };
+        case "prediction":
+          return { predictionMessages: messages };
+        default:
+          return state;
+      }
+    });
+  },
+
+  clearMessages: (context) => {
+    const targetContext = context || get().currentContext;
+
+    set((state) => {
+      switch (targetContext) {
+        case "general":
+          return { generalMessages: [] };
+        case "insight":
+          return { insightMessages: [] };
+        case "prediction":
+          return { predictionMessages: [] };
+        default:
+          return state;
+      }
+    });
+  },
+
+  getCurrentMessages: () => {
+    const state = get();
+    switch (state.currentContext) {
+      case "general":
+        return state.generalMessages;
+      case "insight":
+        return state.insightMessages;
+      case "prediction":
+        return state.predictionMessages;
+      default:
+        return [];
     }
-  )
-);
+  },
+
+
+  // Reset Actions
+  resetChat: () =>
+    set({
+      currentContext: "general",
+      contextMetadata: {},
+      generalMessages: [],
+      insightMessages: [],
+      predictionMessages: [],
+      isTyping: false,
+      streamingMessageId: null,
+    }),
+}));
 

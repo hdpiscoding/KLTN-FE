@@ -1,6 +1,8 @@
 import { useEffect, useRef } from "react";
 import { ChatMessageItem } from "./chat-message-item";
 import { ChatTypingIndicator } from "./chat-typing-indicator";
+import { Loader2 } from "lucide-react";
+import { useChatStore } from "@/store/chatStore";
 
 interface Message {
   id: string;
@@ -12,22 +14,37 @@ interface Message {
 interface ChatMessageListProps {
   messages: Message[];
   isTyping?: boolean;
+  isLoading?: boolean;
 }
 
-export function ChatMessageList({ messages, isTyping }: ChatMessageListProps) {
+export function ChatMessageList({ messages, isTyping, isLoading }: ChatMessageListProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  const prevMessagesLengthRef = useRef(0);
+  const streamingMessageId = useChatStore((state) => state.streamingMessageId);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isTyping]);
+    // Only auto-scroll when new messages are added
+    if (messages.length > prevMessagesLengthRef.current || isTyping) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+    prevMessagesLengthRef.current = messages.length;
+  }, [messages.length, isTyping]);
+
+  // Scroll on initial load
+  useEffect(() => {
+    if (!isLoading && messages.length > 0) {
+      messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [isLoading]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2">
-      {messages.length === 0 ? (
+    <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 min-h-0">
+      {isLoading ? (
+        <div className="flex flex-col items-center justify-center h-full text-center px-4">
+          <Loader2 className="h-8 w-8 text-[#008DDA] animate-spin mb-4" />
+          <p className="text-sm text-gray-500">Đang tải lịch sử trò chuyện...</p>
+        </div>
+      ) : messages.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-full text-center px-4">
           <div className="h-16 w-16 rounded-full bg-[#008DDA]/10 flex items-center justify-center mb-4">
             <svg
@@ -59,12 +76,13 @@ export function ChatMessageList({ messages, isTyping }: ChatMessageListProps) {
               message={msg.message}
               isBot={msg.isBot}
               timestamp={msg.timestamp}
+              enableTypingEffect={msg.id === streamingMessageId}
             />
           ))}
           {isTyping && <ChatTypingIndicator />}
+          <div ref={messagesEndRef} />
         </>
       )}
-      <div ref={messagesEndRef} />
     </div>
   );
 }

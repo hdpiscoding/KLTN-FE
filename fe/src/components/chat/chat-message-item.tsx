@@ -1,15 +1,40 @@
 import { Bot, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUserStore } from "@/store/userStore";
+import { useTypingEffect } from "@/hooks/chat";
+import ReactMarkdown from "react-markdown";
+import { useRef, useEffect } from "react";
 
 interface ChatMessageItemProps {
   message: string;
   isBot: boolean;
   timestamp?: string;
+  enableTypingEffect?: boolean; // Enable typing effect for streaming messages
 }
 
-export function ChatMessageItem({ message, isBot, timestamp }: ChatMessageItemProps) {
+export function ChatMessageItem({ message, isBot, timestamp, enableTypingEffect = false }: ChatMessageItemProps) {
   const { isLoggedIn, avatarUrl } = useUserStore();
+  const wasTypingEnabledRef = useRef(false);
+
+  // Track if typing effect was ever enabled for this message
+  useEffect(() => {
+    if (enableTypingEffect) {
+      wasTypingEnabledRef.current = true;
+    }
+  }, [enableTypingEffect]);
+
+  // Apply typing effect when enabled or if it was enabled before
+  const shouldUseTypingEffect = isBot && (enableTypingEffect || wasTypingEnabledRef.current);
+
+  const { displayedText, isTyping } = useTypingEffect(
+    shouldUseTypingEffect ? message : "",
+    {
+      speed: 20, // 20ms per character for smooth typing
+    }
+  );
+
+  // Use typing effect text if it should be used and still typing, otherwise show full message
+  const displayMessage = shouldUseTypingEffect && (isTyping || displayedText) ? displayedText : message;
 
   return (
     <div className={cn("flex gap-3 mb-4", !isBot && "flex-row-reverse")}>
@@ -41,7 +66,30 @@ export function ChatMessageItem({ message, isBot, timestamp }: ChatMessageItemPr
           )}
           style={!isBot ? { backgroundColor: "#008DDA", wordBreak: "break-word" } : { wordBreak: "break-word" }}
         >
-          <p className="text-sm whitespace-pre-wrap">{message}</p>
+          {isBot ? (
+            <div className="text-sm prose prose-sm max-w-none prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-li:my-0.5">
+              <ReactMarkdown
+                components={{
+                  p: ({ children }) => <p className="mb-2 last:mb-0">{children}</p>,
+                  ul: ({ children }) => <ul className="list-disc list-inside mb-2 last:mb-0">{children}</ul>,
+                  ol: ({ children }) => <ol className="list-decimal list-inside mb-2 last:mb-0">{children}</ol>,
+                  li: ({ children }) => <li className="mb-1">{children}</li>,
+                  strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
+                  em: ({ children }) => <em className="italic">{children}</em>,
+                  code: ({ children }) => <code className="bg-gray-200 px-1 py-0.5 rounded text-xs">{children}</code>,
+                  a: ({ children, href }) => (
+                    <a href={href} className="text-[#008DDA] underline" target="_blank" rel="noopener noreferrer">
+                      {children}
+                    </a>
+                  ),
+                }}
+              >
+                {displayMessage}
+              </ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-sm whitespace-pre-wrap">{displayMessage}</p>
+          )}
         </div>
         {timestamp && (
           <span className="text-xs text-gray-400 px-2">{timestamp}</span>

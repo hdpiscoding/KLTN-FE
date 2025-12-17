@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { ChatHeader } from "./chat-header";
 import { ChatMessageList } from "./chat-message-list";
 import { ChatInput } from "./chat-input";
@@ -5,6 +6,7 @@ import { ChatAuthGate } from "./chat-auth-gate";
 import { cn } from "@/lib/utils";
 import { useChatStore } from "@/store/chatStore";
 import { useUserStore } from "@/store/userStore";
+import { useSendMessage, useLoadChatHistory } from "@/hooks/chat";
 
 interface ChatWindowProps {
   isOpen: boolean;
@@ -12,11 +14,33 @@ interface ChatWindowProps {
 }
 
 export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
-  const { messages, isTyping, sendMessage } = useChatStore();
+  const isTyping = useChatStore((state) => state.isTyping);
+  const getCurrentMessages = useChatStore((state) => state.getCurrentMessages);
+  const currentContext = useChatStore((state) => state.currentContext);
+  const contextMetadata = useChatStore((state) => state.contextMetadata);
   const { isLoggedIn } = useUserStore();
 
+  const { sendMessage, isSending } = useSendMessage();
+  const { loadHistory, isLoading } = useLoadChatHistory();
+
+  // Get current messages
+  const messages = getCurrentMessages();
+
+  // Load chat history when window opens and user is logged in
+  useEffect(() => {
+    if (isOpen && isLoggedIn) {
+      loadHistory(currentContext, contextMetadata).catch((error) => {
+        console.error("Failed to load chat history:", error);
+      });
+    }
+  }, [isOpen, isLoggedIn, currentContext, contextMetadata, loadHistory]);
+
   const handleSendMessage = async (message: string) => {
-    await sendMessage(message);
+    try {
+      await sendMessage(message);
+    } catch (error) {
+      console.error("Failed to send message:", error);
+    }
   };
 
   return (
@@ -49,7 +73,7 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
       {/* Content with fade in animation */}
       <div
         className={cn(
-          "flex-1 flex flex-col transition-all duration-500 ease-out",
+          "flex-1 flex flex-col transition-all duration-500 ease-out overflow-y-auto",
           isOpen ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
         style={{
@@ -60,8 +84,8 @@ export function ChatWindow({ isOpen, onClose }: ChatWindowProps) {
           <ChatAuthGate />
         ) : (
           <>
-            <ChatMessageList messages={messages} isTyping={isTyping} />
-            <ChatInput onSendMessage={handleSendMessage} disabled={isTyping} />
+            <ChatMessageList messages={messages} isTyping={isTyping} isLoading={isLoading} />
+            <ChatInput onSendMessage={handleSendMessage} disabled={isTyping || isSending} />
           </>
         )}
       </div>

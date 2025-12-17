@@ -10,6 +10,9 @@ import { PROPERTY_TYPES } from "@/constants/propertyTypes.ts";
 import { LEGAL_DOCS } from "@/constants/legalDocs.ts";
 import { PROPERTY_DIRECTIONS } from "@/constants/propertyDirections.ts";
 import { PROPERTY_FURNITURE } from "@/constants/propertyFurniture.ts";
+import { useChatContext, useLoadChatHistory } from "@/hooks/chat";
+import { useChatStore } from "@/store/chatStore";
+import { toast } from "react-toastify";
 
 // Mock data for testing
 const mockPredictionData = {
@@ -49,6 +52,11 @@ export default function EstimationDetail() {
     const [isLoading, setIsLoading] = useState(true);
     const [predictionData, setPredictionData] = useState<typeof mockPredictionData | null>(null);
 
+    // Chat hooks
+    const { switchToPrediction } = useChatContext();
+    const { loadHistory } = useLoadChatHistory();
+    const setIsOpen = useChatStore((state) => state.setIsOpen);
+
     useEffect(() => {
         // Simulate API call
         const fetchPredictionDetail = async () => {
@@ -85,6 +93,24 @@ export default function EstimationDetail() {
 
     const getFurnitureName = (furniture: string) => {
         return PROPERTY_FURNITURE.find((f) => f.id === furniture)?.name || furniture;
+    };
+
+    const handleContinueChat = async () => {
+        if (!id) return;
+
+        try {
+            // Switch to prediction context with predictionId
+            switchToPrediction(id);
+
+            // Load chat history for this prediction
+            await loadHistory("prediction", { predictionId: id });
+
+            // Open chat window
+            setIsOpen(true);
+        } catch (error) {
+            console.error("Failed to open chat:", error);
+            toast.error("Không thể mở chat. Vui lòng thử lại.");
+        }
     };
 
     const componentScoreLabels = [
@@ -320,10 +346,7 @@ export default function EstimationDetail() {
                             <div className="absolute inset-0 bg-gradient-to-r from-[#008DDA] to-[#00B4D8] rounded-xl blur opacity-20 group-hover:opacity-30 transition-opacity"></div>
 
                             <Button
-                                onClick={() => {
-                                    // TODO: Implement chat functionality
-                                    console.log('Opening chat with AI...');
-                                }}
+                                onClick={handleContinueChat}
                                 className="relative w-full h-14 text-base font-semibold bg-gradient-to-r from-[#008DDA] to-[#00B4D8] hover:from-[#0064A6] hover:to-[#008DDA] text-white shadow-lg hover:shadow-xl transition-all duration-300 cursor-pointer group"
                             >
                                 <div className="flex items-center justify-center gap-3">
