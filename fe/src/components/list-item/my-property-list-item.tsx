@@ -15,7 +15,6 @@ interface MyPropertyListItemProps {
     imageUrl: string;
     createdAt: string;
     status: PropertyStatus;
-    code?: string;
     onDelete?: (id: string) => void;
 }
 
@@ -43,7 +42,6 @@ export const MyPropertyListItem = ({
     imageUrl,
     createdAt,
     status,
-    code,
     onDelete,
 }: MyPropertyListItemProps) => {
     const [isHovered, setIsHovered] = useState(false);
@@ -99,11 +97,9 @@ export const MyPropertyListItem = ({
                 {/* Content Container - Right side */}
                 <div className="flex flex-col flex-1 min-w-0">
                 {/* Code */}
-                {code && (
-                    <div className="flex items-center justify-between mb-1">
-                        <span className="text-[11px] font-mono tracking-wide px-2 py-1 rounded bg-gray-100 text-gray-600 border border-gray-200">Mã: {code}</span>
-                    </div>
-                )}
+                <div className="flex items-center justify-between mb-1">
+                    <span className="text-[11px] font-mono tracking-wide px-2 py-1 rounded bg-gray-100 text-gray-600 border border-gray-200">Mã tin: #TN-{id}</span>
+                </div>
                 {/* Title */}
                 <h3 className="text-gray-900 font-semibold text-lg line-clamp-2 break-words leading-tight mb-2">
                     {title}

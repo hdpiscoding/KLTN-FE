@@ -34,6 +34,7 @@ import type {PropertyListing} from "@/types/property-listing.d.ts";
 import {useUserStore} from "@/store/userStore.ts";
 import {getPropertyDetails, getLivabilityScore, getRecommendedProperties} from "@/services/propertyServices.ts";
 import {getPropertyInsight} from "@/services/chatbotServices.ts";
+import {likeProperty, unlikeProperty, checkLikeProperty} from "@/services/userServices.ts";
 import {PROPERTY_TYPES} from "@/constants/propertyTypes.ts";
 import {CircularProgress} from "@/components/ui/circular-progress.tsx";
 import {Progress} from "@/components/ui/progress.tsx";
@@ -75,6 +76,8 @@ interface RecommendedPropertyItem {
 export const PropertyDetail: React.FC = () => {
     const {id} = useParams();
     const [isFavorited, setIsFavorited] = useState(false);
+    const [isCheckingFavorite, setIsCheckingFavorite] = useState(false);
+    const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
     const [currentSlide, setCurrentSlide] = useState(1);
     const [carouselApi, setCarouselApi] = useState<CarouselApi>();
     const [property, setProperty] = useState<PropertyListing | null>(null);
@@ -142,6 +145,28 @@ export const PropertyDetail: React.FC = () => {
 
         fetchPropertyDetails();
     }, [id]);
+
+    // Check if property is liked (only if user is logged in)
+    useEffect(() => {
+        const checkIfLiked = async () => {
+            if (!isLoggedIn || !property?.id) return;
+
+            try {
+                setIsCheckingFavorite(true);
+                const response = await checkLikeProperty(property.id);
+
+                if (response.status === "200" && response.data !== undefined) {
+                    setIsFavorited(response.data);
+                }
+            } catch (error) {
+                console.error('Error checking if property is liked:', error);
+            } finally {
+                setIsCheckingFavorite(false);
+            }
+        };
+
+        checkIfLiked();
+    }, [isLoggedIn, property?.id]);
 
     // Fetch livability score after property is loaded
     useEffect(() => {
@@ -213,6 +238,40 @@ export const PropertyDetail: React.FC = () => {
     const handleCopyPhone = (phoneNumber: string) => {
         navigator.clipboard.writeText(phoneNumber);
         toast.success('Đã copy số điện thoại!');
+    };
+
+    const handleToggleFavorite = async () => {
+        if (!property?.id) return;
+
+        // Prevent multiple clicks while processing
+        if (isTogglingFavorite) return;
+
+        try {
+            setIsTogglingFavorite(true);
+
+            if (isFavorited) {
+                // Unlike property
+                const response = await unlikeProperty(property.id);
+
+                if (response.status === "200") {
+                    setIsFavorited(false);
+                    toast.success('Đã bỏ yêu thích!');
+                }
+            } else {
+                // Like property
+                const response = await likeProperty(property.id);
+
+                if (response.status === "200") {
+                    setIsFavorited(true);
+                    toast.success('Đã thêm vào yêu thích!');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            toast.error('Có lỗi xảy ra. Vui lòng thử lại!');
+        } finally {
+            setIsTogglingFavorite(false);
+        }
     };
 
     const handleContinueChat = async () => {
@@ -486,22 +545,27 @@ export const PropertyDetail: React.FC = () => {
                                 </div>
 
                                 {/* Favorite Button */}
-                                {isLoggedIn
-                                    &&
+                                {isLoggedIn && (
                                     <button
-                                        onClick={() => setIsFavorited(!isFavorited)}
+                                        onClick={handleToggleFavorite}
+                                        disabled={isCheckingFavorite || isTogglingFavorite}
                                         className={cn(
                                             'cursor-pointer p-3 rounded-full transition-all duration-200 bg-white',
+                                            'disabled:opacity-50 disabled:cursor-not-allowed',
                                             isFavorited
                                                 ? 'text-red-500'
                                                 : 'text-gray-400 hover:text-red-500'
                                         )}
                                     >
-                                        <Heart
-                                            className={cn('w-6 h-6', isFavorited && 'fill-current')}
-                                        />
+                                        {isTogglingFavorite ? (
+                                            <Loader2 className="w-6 h-6 animate-spin" />
+                                        ) : (
+                                            <Heart
+                                                className={cn('w-6 h-6', isFavorited && 'fill-current')}
+                                            />
+                                        )}
                                     </button>
-                                }
+                                )}
 
                             </div>
 
@@ -510,7 +574,7 @@ export const PropertyDetail: React.FC = () => {
                                 <div>
                                     <p className="text-sm text-gray-500 mb-1">Mã tin</p>
                                     <p className="text-sm font-semibold text-gray-900 font-mono">
-                                        #{property.id}
+                                        #TN-{property.id}
                                     </p>
                                 </div>
                                 <div className="h-8 w-px bg-gray-200"></div>

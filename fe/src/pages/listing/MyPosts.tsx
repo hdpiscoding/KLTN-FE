@@ -57,7 +57,6 @@ export const MyPosts: React.FC = () => {
         imageUrl: string;
         createdAt: string;
         status: 'Đang hiển thị' | 'Chờ duyệt' | 'Không duyệt';
-        code: string;
     };
 
     const getMyProperties = React.useCallback(async () => {
@@ -204,7 +203,6 @@ export const MyPosts: React.FC = () => {
         imageUrl: property.imageUrls?.[0] || '',
         createdAt: property.createdAt || '',
         status: mapApprovalStatus(property.approvalStatus || ""),
-        code: `TN${String(property.id).padStart(4, '0')}`,
     }));
 
     // No client-side filtering - API handles all filters (status and title)
@@ -362,7 +360,6 @@ export const MyPosts: React.FC = () => {
                                     imageUrl={property.imageUrl}
                                     createdAt={property.createdAt}
                                     status={property.status}
-                                    code={property.code}
                                     onDelete={handleDelete}
                                 />
                             ))
