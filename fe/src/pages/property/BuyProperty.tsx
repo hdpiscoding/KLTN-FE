@@ -1,4 +1,5 @@
-import React, {useState, useEffect, useCallback} from 'react';
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import React, {useState, useEffect, useCallback, useRef} from 'react';
 import {Search, MapIcon} from 'lucide-react';
 import {Input} from '@/components/ui/input.tsx';
 import {Button} from '@/components/ui/button.tsx';
@@ -19,7 +20,7 @@ import {PropertyDistrictFilter} from '@/components/general/property-district-fil
 import {ControlledPagination} from "@/components/ui/controlled-pagination.tsx";
 import {Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious} from "@/components/ui/carousel.tsx";
 import {PropertyCardItem} from "@/components/card-item/property-card-item.tsx";
-import MultipleMarkerMap, {type PropertyMarker} from '@/components/map/multiple-marker-map.tsx';
+import MultipleMarkerMap from '@/components/map/multiple-marker-map';
 import type {PropertyListing} from "@/types/property-listing";
 import {useSearchFilters} from '@/hooks/use-search-filters.ts';
 import {searchProperties, getRecommendedProperties, getPropertiesWithinViewPort} from '@/services/propertyServices.ts';
@@ -29,6 +30,8 @@ import {getSortCriteriaValue} from '@/utils/sortCriteriaHelper.ts';
 import {useSearchParams} from 'react-router-dom';
 import {likeProperty, unlikeProperty, checkLikeProperty} from '@/services/userServices.ts';
 import {useUserStore} from '@/store/userStore.ts';
+import {useDebounce} from 'use-debounce';
+import type {PropertyMarker} from "@/types/property-marker";
 
 interface RecommendedPropertyItem {
     id: number;
@@ -146,25 +149,36 @@ export const BuyProperty: React.FC = () => {
         } catch (error) {
             console.error('Error checking liked properties:', error);
         }
-    }, []);
+    }, [userId, isLoggedIn]);
 
     const handleToggleMap = () => {
         setIsMapOpen(!isMapOpen);
     };
 
-    // Handle map interaction (zoom or drag end) - call API to get properties within bounds
-    const handleMapInteraction = useCallback(async (
+    // Refs for optimization
+    const lastApiCallRef = useRef<string>('');
+    const isApiCallingRef = useRef<boolean>(false);
+
+    // Handle map interaction (zoom or drag end) - OPTIMIZED
+    const handleMapInteractionCore = useCallback(async (
         bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number },
-        eventType: 'zoom' | 'dragEnd'
     ) => {
-        // Only call API if zoom is high enough to show markers
+        // Only call API if zoom is high enough
         if (bounds.zoom < 10) {
-            console.log(`Zoom ${bounds.zoom} < 10 - Skipping API call`);
+            return;
+        }
+
+        // Create unique key to prevent duplicate calls
+        const callKey = `${bounds.minLat.toFixed(4)}-${bounds.minLng.toFixed(4)}-${bounds.maxLat.toFixed(4)}-${bounds.maxLng.toFixed(4)}-${bounds.zoom.toFixed(1)}`;
+
+        // Skip if duplicate or already calling
+        if (callKey === lastApiCallRef.current || isApiCallingRef.current) {
             return;
         }
 
         try {
-            console.log(`Map ${eventType} - Fetching properties within viewport:`, bounds);
+            isApiCallingRef.current = true;
+            lastApiCallRef.current = callKey;
             const response = await getPropertiesWithinViewPort(
                 bounds.minLat,
                 bounds.minLng,
@@ -173,10 +187,9 @@ export const BuyProperty: React.FC = () => {
             );
 
             if (response.status === "200" && response.data) {
-                // Map response to PropertyListing format
+                // Map response - OPTIMIZED: Simplified mapping
                 const mappedProperties: PropertyListing[] = response.data
                     .filter((item: { listingType?: string; listing_type?: string; [key: string]: unknown }) => {
-                        // Only include properties with listingType = 'for_sale'
                         const listingType = item.listingType || item.listing_type;
                         return listingType === 'for_sale';
                     })
@@ -232,21 +245,29 @@ export const BuyProperty: React.FC = () => {
                     updatedAt: item.updatedAt || item.updated_at || new Date().toISOString(),
                 }));
 
-                // Update property list with viewport data
                 setPropertyList(mappedProperties);
-                setTotalPages(1); // Viewport data doesn't use pagination
+                setTotalPages(1);
 
-                // Check liked status for new properties
                 if (userId) {
-                    checkLikedStatus(mappedProperties);
+                    await checkLikedStatus(mappedProperties);
                 }
-
-                console.log(`Loaded ${mappedProperties.length} properties from viewport`);
             }
         } catch (error) {
-            console.error('Error fetching properties within viewport:', error);
+            console.error('Error fetching viewport properties:', error);
+        } finally {
+            isApiCallingRef.current = false;
         }
-    }, [userId, checkLikedStatus]);
+    }, []);
+
+    // Debounced version - wait 500ms after last interaction
+    const [debouncedHandleMapInteraction] = useDebounce(handleMapInteractionCore, 500);
+
+    // Wrapper to use debounced version
+    const handleMapInteraction = useCallback((
+        bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number },
+    ) => {
+        debouncedHandleMapInteraction(bounds);
+    }, [debouncedHandleMapInteraction]);
 
     const handleFavoriteClick = async (id: string, currentLikedState: boolean) => {
         try {
@@ -805,7 +826,6 @@ export const BuyProperty: React.FC = () => {
                                 <MultipleMarkerMap
                                     properties={propertyMarkers}
                                     defaultZoom={11}
-                                    showNavigation={true}
                                     onMapInteraction={handleMapInteraction}
                                 />
                             </div>

@@ -82,7 +82,7 @@ export const EstimatePropertyPrice: React.FC = () => {
     };
 
     const componentScoreLabels = [
-        { key: 'score_public_safety', label: 'An ninh', icon: Shield, color: '#3b82f6', bgColor: 'bg-blue-500' },
+        { key: 'score_public_safety', label: 'An ninh', icon: Shield, color: '#f97316', bgColor: 'bg-blue-500' },
         { key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444', bgColor: 'bg-red-500' },
         { key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#8b5cf6', bgColor: 'bg-purple-500' },
         { key: 'score_shopping', label: 'Tiện ích', icon: ShoppingBag, color: '#22c55e', bgColor: 'bg-green-500' },

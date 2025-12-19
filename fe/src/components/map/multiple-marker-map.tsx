@@ -1,415 +1,303 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
-import ReactMapGL, { Marker, Popup, NavigationControl, type MapRef } from '@goongmaps/goong-map-react';
-import Supercluster from 'supercluster';
+import React, { useState, useMemo } from 'react';
+import { APIProvider, Map, InfoWindow } from '@vis.gl/react-google-maps';
 import { PropertyPopupCard } from '@/components/card-item/property-popup-card.tsx';
-import type { Location } from '@/types/location.d.ts';
+import type { PropertyMarker } from '@/types/property-marker.d.ts';
+import type { Amenity, AmenityFilterState, AmenityCategory } from '@/types/amenity.d.ts';
+import { MarkersWithClustering } from './components/MarkersWithClustering';
+import { AmenitiesWithClustering } from './components/AmenitiesWithClustering';
+import { AmenityFilterPanel } from './components/AmenityFilterPanel';
+import { AmenityInfoCard } from './components/AmenityInfoCard';
+import { MapEventHandler } from './components/MapEventHandler';
+import { DEFAULT_MAP_CENTER, DEFAULT_ZOOM, MIN_ZOOM_FOR_MARKERS } from './constants/mapConstants';
+import { getAmenitiesWithinViewPort } from '@/services/propertyServices';
 
-export interface PropertyMarker {
-    id: string;
-    location: Location;
-    title: string;
-    image: string;
-    price: number;
-    area: number;
-}
-
+// ============================================
+// TYPES
+// ============================================
 export interface MultipleMarkerMapProps {
     properties: PropertyMarker[];
     defaultZoom?: number;
     height?: string;
     width?: string;
-    mapStyle?: string;
-    showNavigation?: boolean;
     centerLat?: number;
     centerLng?: number;
-    minZoomToShow?: number; // Zoom tối thiểu để hiển thị markers
-    onMapInteraction?: (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number }, eventType: 'zoom' | 'dragEnd') => void;
+    onMapInteraction?: (
+        bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number }
+    ) => void;
 }
 
+// ============================================
+// MAIN COMPONENT
+// ============================================
 const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
-    properties,
-    defaultZoom = 11,
-    height = '100%',
-    width = '100%',
-    mapStyle = 'https://tiles.goong.io/assets/goong_map_web.json',
-    showNavigation = true,
-    centerLat,
-    centerLng,
-    minZoomToShow = 12,
-    onMapInteraction,
-}) => {
-    // Calculate center - Always default to Ho Chi Minh City unless explicitly provided
-    const calculateCenter = () => {
-        // If explicit coordinates are provided, use them
-        if (centerLat !== undefined && centerLng !== undefined) {
-            return { latitude: centerLat, longitude: centerLng };
-        }
+                                                                 properties,
+                                                                 defaultZoom = DEFAULT_ZOOM,
+                                                                 height = '100%',
+                                                                 width = '100%',
+                                                                 centerLat,
+                                                                 centerLng,
+                                                                 onMapInteraction,
+                                                             }) => {
+    const [selectedProperty, setSelectedProperty] = useState<PropertyMarker | null>(null);
+    const [currentZoom, setCurrentZoom] = useState<number>(defaultZoom);
+    const [currentBounds, setCurrentBounds] = useState<{ minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number } | null>(null);
 
-        // Always default to Ho Chi Minh City center for initial view
-        return { latitude: 10.8231, longitude: 106.6297 }; // Ho Chi Minh City center
-    };
-
-    // Goong API Key
-    const GOONG_API_KEY = import.meta.env.VITE_MAPTILES_KEY;
-
-    const center = calculateCenter();
-    const mapRef = useRef<MapRef>(null);
-
-    const [viewport, setViewport] = useState({
-        latitude: center.latitude,
-        longitude: center.longitude,
-        zoom: defaultZoom,
-        bearing: 0,
-        pitch: 0,
+    // Amenity states
+    const [amenities, setAmenities] = useState<Amenity[]>([]);
+    const [selectedAmenity, setSelectedAmenity] = useState<Amenity | null>(null);
+    const [amenityFilterState, setAmenityFilterState] = useState<AmenityFilterState>({
+        healthcare: true,
+        education: true,
+        transportation: true,
+        environment: true,
+        public_safety: true,
+        shopping: true,
+        entertainment: true,
     });
 
-    const [selectedPropertyId, setSelectedPropertyId] = useState<string | null>(null);
-    const [bounds, setBounds] = useState<[number, number, number, number] | null>(null);
+    const center = useMemo(() => {
+        if (centerLat !== undefined && centerLng !== undefined) {
+            return { lat: centerLat, lng: centerLng };
+        }
+        return DEFAULT_MAP_CENTER;
+    }, [centerLat, centerLng]);
 
-    // Track interaction type to determine zoom vs drag
-    const interactionTypeRef = useRef<'zoom' | 'drag' | null>(null);
-    const previousZoomRef = useRef<number>(9);
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || '';
 
-    useEffect(() => {
-        setViewport(prev => ({
-            ...prev,
-            latitude: center.latitude,
-            longitude: center.longitude,
-            zoom: defaultZoom,
-        }));
-        previousZoomRef.current = defaultZoom;
-    }, [defaultZoom, center.latitude, center.longitude]);
+    // Map styles to hide default POIs
+    const mapStyles = useMemo(() => [
+        {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+        },
+        {
+            featureType: "poi.business",
+            stylers: [{ visibility: "off" }]
+        },
+        {
+            featureType: "poi.park",
+            elementType: "labels.text",
+            stylers: [{ visibility: "off" }]
+        }
+    ], []);
 
-    // Initialize Supercluster
-    const supercluster = useMemo(() => {
-        if (!properties || properties.length === 0) return null;
-
-        const cluster = new Supercluster({
-            radius: 30,
-            maxZoom: 16,
-            minZoom: 0,
-            minPoints: 2,
-        });
-
-        // Convert properties to GeoJSON features
-        const points = properties.map(property => ({
-            type: 'Feature' as const,
-            properties: {
-                cluster: false,
-                propertyId: property.id,
-                property: property,
-            },
-            geometry: {
-                type: 'Point' as const,
-                coordinates: [property.location.longitude, property.location.latitude],
-            },
-        }));
-
-        cluster.load(points);
-        return cluster;
-    }, [properties]);
-
-    // Get clusters based on current viewport
-    const clusters = useMemo(() => {
-        if (!supercluster || !bounds || !properties) return [];
-
-        // Ẩn tất cả markers khi zoom quá xa
-        if (viewport.zoom < minZoomToShow) {
-            console.log(`Zoom ${viewport.zoom} < ${minZoomToShow} - Hiding all markers`);
-            return [];
+    // Fetch amenities within viewport
+    const fetchAmenities = async (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number }) => {
+        if (bounds.zoom < MIN_ZOOM_FOR_MARKERS) {
+            setAmenities([]);
+            return;
         }
 
-        const clustersData = supercluster.getClusters(bounds, Math.floor(viewport.zoom));
+        try {
+            // Get all enabled categories
+            const enabledCategories = (Object.keys(amenityFilterState) as AmenityCategory[])
+                .filter(category => amenityFilterState[category]);
 
-        // Debug log
-        console.log('Zoom:', viewport.zoom.toFixed(2), 'Clusters:', clustersData.length, 'Total properties:', properties.length);
+            // Fetch amenities for each enabled category
+            const amenityPromises = enabledCategories.map(category =>
+                getAmenitiesWithinViewPort(
+                    bounds.minLat,
+                    bounds.minLng,
+                    bounds.maxLat,
+                    bounds.maxLng,
+                    category,
+                    200 // limit per category
+                )
+            );
 
-        return clustersData;
-    }, [supercluster, bounds, viewport.zoom, properties, minZoomToShow]);
+            const results = await Promise.all(amenityPromises);
 
-    const handleMarkerClick = (propertyId: string) => {
-        setSelectedPropertyId(propertyId);
-    };
+            // Flatten and combine all amenities
+            const allAmenities = results.flatMap(result => result.data.items || []);
 
-    const handleClusterClick = (clusterId: number, longitude: number, latitude: number) => {
-        if (!supercluster) return;
-
-        const expansionZoom = Math.min(
-            supercluster.getClusterExpansionZoom(clusterId),
-            20
-        );
-
-        setViewport({
-            ...viewport,
-            longitude,
-            latitude,
-            zoom: expansionZoom,
-        });
-    };
-
-    const handleClosePopup = () => {
-        console.log('close popup');
-        setSelectedPropertyId(null);
-    };
-
-    // Update viewport - NO API calls here
-    const handleViewportChange = (newViewport: typeof viewport) => {
-        setViewport(newViewport);
-
-        if (mapRef.current) {
-            const map = mapRef.current.getMap();
-            const mapBounds = map.getBounds();
-
-            setBounds([
-                mapBounds.getWest(),
-                mapBounds.getSouth(),
-                mapBounds.getEast(),
-                mapBounds.getNorth(),
-            ]);
+            setAmenities(allAmenities);
+            console.log(`📍 Loaded ${allAmenities.length} amenities`);
+        } catch (error) {
+            console.error('Error fetching amenities:', error);
+            setAmenities([]);
         }
     };
 
-    // Track interaction type
-    const handleInteractionStateChange = (state: { isZooming?: boolean; isDragging?: boolean; isPanning?: boolean }) => {
-        if (state.isZooming) {
-            interactionTypeRef.current = 'zoom';
-        } else if (state.isDragging || state.isPanning) {
-            interactionTypeRef.current = 'drag';
-        }
+    // Handle map interaction (zoom/drag)
+    const handleMapInteraction = (bounds: { minLat: number; minLng: number; maxLat: number; maxLng: number; zoom: number }) => {
+        // Save current bounds
+        setCurrentBounds(bounds);
+
+        // Call parent handler if provided
+        onMapInteraction?.(bounds);
+
+        // Fetch amenities for new bounds
+        fetchAmenities(bounds);
     };
 
-    // Called when animation completes - THIS is where we call API (only once per interaction)
-    const handleTransitionEnd = () => {
-        if (!mapRef.current || !onMapInteraction) return;
-
-        const map = mapRef.current.getMap();
-        const mapBounds = map.getBounds();
-        const currentZoom = viewport.zoom;
-
-        const boundsData = {
-            minLat: mapBounds.getSouth(),
-            minLng: mapBounds.getWest(),
-            maxLat: mapBounds.getNorth(),
-            maxLng: mapBounds.getEast(),
-            zoom: currentZoom,
+    // Handle amenity filter change
+    const handleFilterChange = (category: AmenityCategory, enabled: boolean) => {
+        const newFilterState = {
+            ...amenityFilterState,
+            [category]: enabled,
         };
+        setAmenityFilterState(newFilterState);
 
-        const interactionType = interactionTypeRef.current;
+        // Re-fetch amenities immediately with current bounds if available
+        if (currentBounds) {
+            // Create a temporary fetchAmenities call with the new filter state
+            const fetchWithNewFilter = async () => {
+                if (currentBounds.zoom < MIN_ZOOM_FOR_MARKERS) {
+                    setAmenities([]);
+                    return;
+                }
 
-        if (interactionType === 'zoom') {
-            if (Math.abs(currentZoom - previousZoomRef.current) > 0.01) {
-                console.log('Zoom ended at:', currentZoom.toFixed(2));
-                onMapInteraction(boundsData, 'zoom');
-                previousZoomRef.current = currentZoom;
-            }
-        } else if (interactionType === 'drag') {
-            console.log('Drag ended');
-            onMapInteraction(boundsData, 'dragEnd');
+                try {
+                    const enabledCategories = (Object.keys(newFilterState) as AmenityCategory[])
+                        .filter(cat => newFilterState[cat]);
+
+                    const amenityPromises = enabledCategories.map(cat =>
+                        getAmenitiesWithinViewPort(
+                            currentBounds.minLat,
+                            currentBounds.minLng,
+                            currentBounds.maxLat,
+                            currentBounds.maxLng,
+                            cat,
+                            200
+                        )
+                    );
+
+                    const results = await Promise.all(amenityPromises);
+                    const allAmenities = results.flatMap(result => result.data.items || []);
+
+                    setAmenities(allAmenities);
+                    console.log(`📍 Reloaded ${allAmenities.length} amenities after filter change`);
+                } catch (error) {
+                    console.error('Error fetching amenities:', error);
+                    setAmenities([]);
+                }
+            };
+
+            fetchWithNewFilter();
         }
-
-        interactionTypeRef.current = null;
     };
-
-    const selectedProperty = properties.find(p => p.id === selectedPropertyId);
-
-    const [isDragging] = useState(false);
-    const [isHovering] = useState(false);
-    const cursor = isDragging ? 'grabbing' : isHovering ? 'pointer' : 'default';
 
     return (
         <div className="relative" style={{ width, height }}>
-            <ReactMapGL
-                ref={mapRef}
-                {...viewport}
-                width="100%"
-                height="100%"
-                mapStyle={mapStyle}
-                onViewportChange={handleViewportChange}
-                onTransitionStart={() => {}}
-                onTransitionEnd={handleTransitionEnd}
-                onTransitionInterrupt={() => {}}
-                onInteractionStateChange={handleInteractionStateChange}
-                goongApiAccessToken={GOONG_API_KEY}
-                onResize={() => {}}
-                touchAction="pan-y"
-                getCursor={() => cursor}
-                onLoad={() => {
-                    // Initialize bounds on load
-                    if (mapRef.current) {
-                        const map = mapRef.current.getMap();
-                        const mapBounds = map.getBounds();
-                        setBounds([
-                            mapBounds.getWest(),
-                            mapBounds.getSouth(),
-                            mapBounds.getEast(),
-                            mapBounds.getNorth(),
-                        ]);
-                    }
-                }}
-            >
-                {/* Navigation Controls */}
-                {showNavigation && (
-                    <div style={{ position: 'absolute', top: 10, right: 10 }}>
-                        <NavigationControl />
-                    </div>
-                )}
+            <APIProvider apiKey={apiKey}>
+                <Map
+                    mapId="multiple-markers-map"
+                    defaultCenter={center}
+                    defaultZoom={defaultZoom}
+                    gestureHandling="greedy"
+                    disableDefaultUI={false}
+                    zoomControl={true}
+                    mapTypeControl={false}
+                    streetViewControl={false}
+                    fullscreenControl={true}
+                    clickableIcons={false}
+                    styles={mapStyles}
+                    style={{ width: '100%', height: '100%' }}
+                >
+                    {/* Event Handlers */}
+                    <MapEventHandler
+                        onZoomChange={setCurrentZoom}
+                        onMapInteraction={handleMapInteraction}
+                        onMapClick={() => {
+                            setSelectedProperty(null);
+                            setSelectedAmenity(null);
+                        }}
+                    />
 
-                {/* Render Clusters and Markers */}
-                {clusters.map((cluster) => {
-                    const [longitude, latitude] = cluster.geometry.coordinates;
-                    const { cluster: isCluster, point_count: pointCount } = cluster.properties;
+                    {/* Markers with Clustering */}
+                    <MarkersWithClustering
+                        properties={properties}
+                        selectedProperty={selectedProperty}
+                        onPropertySelect={setSelectedProperty}
+                        currentZoom={currentZoom}
+                        minZoomForMarkers={MIN_ZOOM_FOR_MARKERS}
+                    />
 
-                    if (isCluster) {
-                        // Render Cluster Marker - Smaller and more compact
-                        const size = 24 + (pointCount / (properties?.length || 1)) * 32;
+                    {/* Amenity Markers with Clustering */}
+                    <AmenitiesWithClustering
+                        amenities={amenities}
+                        selectedAmenity={selectedAmenity}
+                        onAmenitySelect={setSelectedAmenity}
+                        currentZoom={currentZoom}
+                        filterState={amenityFilterState}
+                        minZoomForMarkers={MIN_ZOOM_FOR_MARKERS}
+                    />
 
-                        return (
-                            <Marker
-                                key={`cluster-${cluster.id}`}
-                                latitude={latitude}
-                                longitude={longitude}
-                                offsetLeft={-size / 2}
-                                offsetTop={-size / 2}
-                            >
-                                <div
-                                    onClick={() => handleClusterClick(cluster.id as number, longitude, latitude)}
-                                    className="cursor-pointer flex items-center justify-center relative"
-                                    style={{
-                                        width: `${size}px`,
-                                        height: `${size}px`,
-                                    }}
-                                >
-                                    {/* Outer ring */}
-                                    <div
-                                        className="absolute rounded-full bg-blue-400 opacity-20"
-                                        style={{
-                                            width: `${size + 20}px`,
-                                            height: `${size + 20}px`,
-                                        }}
-                                    />
-
-                                    {/* Cluster circle */}
-                                    <div
-                                        className="absolute rounded-full bg-blue-500 border-4 border-white shadow-lg hover:bg-blue-600 transition-colors flex items-center justify-center"
-                                        style={{
-                                            width: `${size}px`,
-                                            height: `${size}px`,
-                                        }}
-                                    >
-                                        <span className="text-white font-bold text-sm">
-                                            {pointCount}
-                                        </span>
-                                    </div>
-                                </div>
-                            </Marker>
-                        );
-                    }
-
-                    // Render Individual Property Marker
-                    const property = cluster.properties.property;
-                    const isSelected = selectedPropertyId === property.id;
-
-                    return (
-                        <Marker
-                            key={`property-${property.id}`}
-                            latitude={latitude}
-                            longitude={longitude}
-                            offsetLeft={-8}
-                            offsetTop={-8}
+                    {/* Property Info Window */}
+                    {selectedProperty && (
+                        <InfoWindow
+                            pixelOffset={[0, -30]}
+                            position={{
+                                lat: selectedProperty.location.latitude,
+                                lng: selectedProperty.location.longitude,
+                            }}
+                            onCloseClick={() => setSelectedProperty(null)}
+                            headerDisabled
                         >
-                            <div
-                                onClick={(e) => {
-                                    e.stopPropagation();
-                                    handleMarkerClick(property.id);
-                                }}
-                                className="cursor-pointer relative"
-                            >
-                                {/* Outer ring - pulse effect when selected */}
-                                <div
-                                    className={`absolute inset-0 rounded-full transition-all duration-300 ${
-                                        isSelected
-                                            ? 'bg-[#008DDA] opacity-35 animate-ping'
-                                            : 'bg-transparent'
-                                    }`}
-                                    style={{
-                                        width: '16px',
-                                        height: '16px',
-                                        transform: 'translate(-50%, -50%)',
-                                        top: '8px',
-                                        left: '8px',
-                                    }}
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <PropertyPopupCard
+                                    id={selectedProperty.id}
+                                    title={selectedProperty.title}
+                                    image={selectedProperty.image}
+                                    address={selectedProperty.location.address}
+                                    price={selectedProperty.price}
+                                    area={selectedProperty.area}
+                                    onClose={() => setSelectedProperty(null)}
                                 />
-
-                                {/* Dot Marker - Theme colors with thin border */}
-                                <div
-                                    className={`relative rounded-full border-0 transition-all duration-200 hover:scale-150 ${
-                                        isSelected
-                                            ? 'bg-[#E53935] border-white scale-150'
-                                            : 'bg-[#E53935] border-white hover:bg-[#B71C1C]'
-                                    }`}
-                                    style={{
-                                        width: '16px',
-                                        height: '16px',
-                                        boxShadow: isSelected
-                                            ? '0 0 0 2px rgba(0,141,218,0.3), 0 4px 14px rgba(0,141,218,0.5)'
-                                            : '0 0 0 2px rgba(255,255,255,0.9), 0 4px 12px rgba(0,141,218,0.3)',
-                                    }}
-                                >
-                                    {/* Inner white dot - smaller */}
-                                    <div
-                                        className="absolute bg-white rounded-full"
-                                        style={{
-                                            width: '5px',
-                                            height: '5px',
-                                            top: '50%',
-                                            left: '50%',
-                                            transform: 'translate(-50%, -50%)',
-                                        }}
-                                    />
-                                </div>
                             </div>
-                        </Marker>
-                    );
-                })}
+                        </InfoWindow>
+                    )}
 
-                {selectedProperty && (
-                    <Popup
-                        latitude={selectedProperty.location.latitude}
-                        longitude={selectedProperty.location.longitude}
-                        onClose={handleClosePopup}
-                        closeButton={false}
-                        closeOnClick={false}
-                        offsetTop={-15}
-                        offsetLeft={0}
-                        anchor="bottom"
-                        dynamicPosition={true}
-                    >
-                        <div onClick={(e) => e.stopPropagation()}>
-                            <PropertyPopupCard
-                                id={selectedProperty.id}
-                                title={selectedProperty.title}
-                                image={selectedProperty.image}
-                                address={selectedProperty.location.address}
-                                price={selectedProperty.price}
-                                area={selectedProperty.area}
-                                onClose={handleClosePopup}
-                            />
-                        </div>
-                    </Popup>
-                )}
-            </ReactMapGL>
+                    {/* Amenity Info Window */}
+                    {selectedAmenity && (
+                        <InfoWindow
+                            pixelOffset={[0, -50]}
+                            position={{
+                                lat: selectedAmenity.latitude,
+                                lng: selectedAmenity.longitude,
+                            }}
+                            onCloseClick={() => setSelectedAmenity(null)}
+                            headerDisabled
+                        >
+                            <div onClick={(e) => e.stopPropagation()}>
+                                <AmenityInfoCard
+                                    amenity={selectedAmenity}
+                                    onClose={() => setSelectedAmenity(null)}
+                                />
+                            </div>
+                        </InfoWindow>
+                    )}
+                </Map>
 
-            {/* Info Badge */}
-            <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200">
-                <p className="text-sm font-semibold text-gray-800">
-                    {properties.length} bất động sản
-                </p>
-                <p className="text-xs text-gray-500">
-                    Click vào marker để xem chi tiết
-                </p>
-            </div>
+                {/* Amenity Filter Panel */}
+                <div className="absolute top-4 right-4 z-10">
+                    <AmenityFilterPanel
+                        filterState={amenityFilterState}
+                        onFilterChange={handleFilterChange}
+                    />
+                </div>
+
+                {/* Info Badge */}
+                <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg px-4 py-2 border border-gray-200 z-10">
+                    <p className="text-sm font-semibold text-gray-800">
+                        {properties.length} bất động sản
+                        {amenities.length > 0 && ` • ${amenities.length} tiện ích`}
+                    </p>
+                    {currentZoom < MIN_ZOOM_FOR_MARKERS ? (
+                        <p className="text-xs text-amber-600 font-medium">
+                            📍 Phóng to bản đồ để xem marker
+                        </p>
+                    ) : (
+                        <p className="text-xs text-gray-500">
+                            Click vào marker để xem chi tiết
+                        </p>
+                    )}
+                </div>
+            </APIProvider>
         </div>
     );
 };
 
 export default MultipleMarkerMap;
+

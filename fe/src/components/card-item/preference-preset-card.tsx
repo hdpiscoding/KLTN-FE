@@ -14,8 +14,8 @@ const preferenceConfig = [
         key: 'preferenceSafety' as keyof PreferencePreset,
         label: 'An ninh',
         icon: Shield,
-        color: 'bg-blue-100 text-blue-600',
-        barColor: 'bg-blue-500'
+        color: 'bg-orange-100 text-orange-600',
+        barColor: 'bg-orange-500'
     },
     {
         key: 'preferenceHealthcare' as keyof PreferencePreset,
