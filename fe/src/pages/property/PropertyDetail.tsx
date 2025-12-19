@@ -32,7 +32,7 @@ import StaticMarkerMap from "@/components/map/static-marker-map.tsx";
 import type {Location} from "@/types/location.d.ts";
 import type {PropertyListing} from "@/types/property-listing.d.ts";
 import {useUserStore} from "@/store/userStore.ts";
-import {getPropertyDetails, getLivabilityScore, getRecommendedProperties} from "@/services/propertyServices.ts";
+import {getPropertyDetails, getLivabilityScore, getRecommendedPropertiesDetail} from "@/services/propertyServices.ts";
 import {getPropertyInsight} from "@/services/chatbotServices.ts";
 import {likeProperty, unlikeProperty, checkLikeProperty} from "@/services/userServices.ts";
 import {PROPERTY_TYPES} from "@/constants/propertyTypes.ts";
@@ -91,10 +91,7 @@ export const PropertyDetail: React.FC = () => {
     const { loadHistory } = useLoadChatHistory();
     const setIsOpen = useChatStore((state) => state.setIsOpen);
 
-    // Location and recommended properties states
-    const userId = useUserStore((state) => state.userId);
-    const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
-    const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt' | null>(null);
+    // Recommended properties states
     const [suggestedProperties, setSuggestedProperties] = useState<PropertyListing[]>([]);
     const [isLoadingSuggested, setIsLoadingSuggested] = useState(false);
 
@@ -102,30 +99,6 @@ export const PropertyDetail: React.FC = () => {
     const [propertyInsight, setPropertyInsight] = useState<string>('');
     const [isLoadingInsight, setIsLoadingInsight] = useState(false);
 
-    // Request user location
-    const requestUserLocation = useCallback(() => {
-        if (!navigator.geolocation) {
-            console.error('Geolocation is not supported by this browser');
-            setLocationPermission('denied');
-            return;
-        }
-
-        navigator.geolocation.getCurrentPosition(
-            (position) => {
-                const location = {
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude,
-                };
-                setUserLocation(location);
-                setLocationPermission('granted');
-                console.log('User location obtained:', position.coords.latitude, position.coords.longitude);
-            },
-            (error) => {
-                console.error('Error getting location:', error);
-                setLocationPermission('denied');
-            }
-        );
-    }, []);
 
     // Fetch property details from API
     useEffect(() => {
@@ -309,65 +282,49 @@ export const PropertyDetail: React.FC = () => {
         return propertyType ? propertyType.name : typeId;
     };
 
-    // Fetch recommended properties based on user location
+    // Fetch recommended properties based on current property
     const getRecommendedPropertiesData = useCallback(async () => {
+        if (!property?.id) return;
+
         try {
             setIsLoadingSuggested(true);
 
-            // Only fetch if user has granted location permission and we have coordinates
-            if (locationPermission === 'granted' && userLocation) {
-                let response;
-                if (userId) {
-                    response = await getRecommendedProperties(
-                        userLocation.lat,
-                        userLocation.lng,
-                        6, // limit to 6 properties
-                        20,
-                        userId
-                    );
-                } else {
-                    response = await getRecommendedProperties(
-                        userLocation.lat,
-                        userLocation.lng,
-                        6, // limit to 6 properties
-                        20,
-                    );
-                }
+            const response = await getRecommendedPropertiesDetail(
+                property.id,
+                6, // limit to 6 properties
+                20 // radius_km
+            );
 
-                if (response.status === "200" && response.data?.items) {
-                    // Map response from getRecommendedProperties format to PropertyListing format
-                    const mappedProperties: PropertyListing[] = response.data.items.map((item: RecommendedPropertyItem) => ({
-                        id: item.id,
-                        title: item.title,
-                        price: item.price,
-                        priceUnit: item.price_unit,
-                        area: item.area,
-                        // Parse address string to get district
-                        addressDistrict: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Quận') || s.includes('Huyện')) || '',
-                        // Use full address as street for display
-                        addressStreet: item.address.split(',')[0]?.trim() || '',
-                        addressWard: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Phường') || s.includes('Xã')) || '',
-                        addressCity: 'TPHCM',
-                        numBedrooms: item.num_bedrooms,
-                        numBathrooms: item.num_bathrooms,
-                        imageUrls: item.thumbnail_url ? [item.thumbnail_url] : [],
-                        // Set other required fields with defaults
-                        listingType: 'for_sale',
-                        propertyType: 'house',
-                        approvalStatus: 'APPROVED',
-                        createdAt: new Date().toISOString(),
-                        updatedAt: new Date().toISOString(),
-                        userId: 0,
-                        location: {type: 'Point', coordinates: [0, 0]},
-                    }));
+            if (response.status === "200" && response.data?.items) {
+                // Map response from getRecommendedPropertiesDetail format to PropertyListing format
+                const mappedProperties: PropertyListing[] = response.data.items.map((item: RecommendedPropertyItem) => ({
+                    id: item.id,
+                    title: item.title,
+                    price: item.price,
+                    priceUnit: item.price_unit,
+                    area: item.area,
+                    // Parse address string to get district
+                    addressDistrict: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Quận') || s.includes('Huyện')) || '',
+                    // Use full address as street for display
+                    addressStreet: item.address.split(',')[0]?.trim() || '',
+                    addressWard: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Phường') || s.includes('Xã')) || '',
+                    addressCity: 'TPHCM',
+                    numBedrooms: item.num_bedrooms,
+                    numBathrooms: item.num_bathrooms,
+                    imageUrls: item.thumbnail_url ? [item.thumbnail_url] : [],
+                    // Set other required fields with defaults
+                    listingType: 'for_sale',
+                    propertyType: 'house',
+                    approvalStatus: 'APPROVED',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString(),
+                    userId: 0,
+                    location: {type: 'Point', coordinates: [0, 0]},
+                }));
 
-                    setSuggestedProperties(mappedProperties);
-                } else {
-                    // Clear recommendations if API fails
-                    setSuggestedProperties([]);
-                }
+                setSuggestedProperties(mappedProperties);
             } else {
-                // No location permission - clear properties
+                // Clear recommendations if API fails
                 setSuggestedProperties([]);
             }
         } catch (error) {
@@ -376,7 +333,7 @@ export const PropertyDetail: React.FC = () => {
         } finally {
             setIsLoadingSuggested(false);
         }
-    }, [locationPermission, userLocation, userId]);
+    }, [property?.id]);
 
     React.useEffect(() => {
         if (!carouselApi) return;
@@ -393,17 +350,11 @@ export const PropertyDetail: React.FC = () => {
         };
     }, [carouselApi]);
 
-    // Fetch recommended properties when location changes
+    // Fetch recommended properties when property changes
     useEffect(() => {
         getRecommendedPropertiesData();
     }, [getRecommendedPropertiesData]);
 
-    // Request user location on mount if not already obtained
-    useEffect(() => {
-        if (locationPermission === null) {
-            requestUserLocation();
-        }
-    }, [locationPermission, requestUserLocation]);
 
     // Show loading skeleton
     if (isLoading || !property) {
@@ -907,82 +858,84 @@ export const PropertyDetail: React.FC = () => {
                         </div>
 
                         {/* Suggested Properties Section */}
-                        {locationPermission === 'granted' && userLocation && (
-                            <div className="bg-white rounded-lg shadow-md p-6">
-                                <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                                    Bất động sản gợi ý
-                                </h2>
+                        <div className="bg-white rounded-lg shadow-md p-6">
+                            <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                                Bất động sản gợi ý
+                            </h2>
 
-                                {isLoadingSuggested ? (
-                                    /* Loading Skeleton */
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                        {[...Array(6)].map((_, index) => (
-                                            <div key={index} className="space-y-3">
-                                                <Skeleton className="h-48 w-full rounded-lg"/>
-                                                <Skeleton className="h-4 w-3/4"/>
-                                                <Skeleton className="h-4 w-full"/>
-                                                <div className="flex justify-between">
-                                                    <Skeleton className="h-4 w-1/3"/>
-                                                    <Skeleton className="h-4 w-1/3"/>
-                                                </div>
-                                                <Skeleton className="h-4 w-1/2"/>
+                            {isLoadingSuggested ? (
+                                /* Loading Skeleton */
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {[...Array(6)].map((_, index) => (
+                                        <div key={index} className="space-y-3">
+                                            <Skeleton className="h-48 w-full rounded-lg"/>
+                                            <Skeleton className="h-4 w-3/4"/>
+                                            <Skeleton className="h-4 w-full"/>
+                                            <div className="flex justify-between">
+                                                <Skeleton className="h-4 w-1/3"/>
+                                                <Skeleton className="h-4 w-1/3"/>
                                             </div>
-                                        ))}
+                                            <Skeleton className="h-4 w-1/2"/>
+                                        </div>
+                                    ))}
+                                </div>
+                            ) : suggestedProperties.length > 0 ? (
+                                <>
+                                    {/* Desktop Grid View - hidden on mobile */}
+                                    <div className="hidden sm:block">
+                                        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                                            {suggestedProperties.map((item) => (
+                                                <PropertyCardItem
+                                                    key={item.id}
+                                                    id={String(item.id)}
+                                                    title={item.title}
+                                                    price={item.price}
+                                                    area={item.area}
+                                                    address={`${item.addressStreet}, ${item.addressWard}, ${item.addressDistrict}, ${item.addressCity}`}
+                                                    imageUrl={item.imageUrls?.[0] || ""}
+                                                    createdAt={item.createdAt || ""}
+                                                    onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
-                                ) : suggestedProperties.length > 0 ? (
-                                    <>
-                                        {/* Desktop Grid View - hidden on mobile */}
-                                        <div className="hidden sm:block">
-                                            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-                                                {suggestedProperties.map((item) => (
-                                                    <PropertyCardItem
-                                                        key={item.id}
-                                                        id={String(item.id)}
-                                                        title={item.title}
-                                                        price={item.price}
-                                                        area={item.area}
-                                                        address={`${item.addressStreet}, ${item.addressWard}, ${item.addressDistrict}, ${item.addressCity}`}
-                                                        imageUrl={item.imageUrls?.[0] || ""}
-                                                        createdAt={item.createdAt || ""}
-                                                        onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
-                                                    />
-                                                ))}
-                                            </div>
-                                        </div>
 
-                                        {/* Mobile Carousel View - visible only on mobile */}
-                                        <div className="block sm:hidden">
-                                            <Carousel
-                                                opts={{
-                                                    align: 'start',
-                                                    loop: true,
-                                                }}
-                                                className="w-full"
-                                            >
-                                                <CarouselContent className="-ml-2 md:-ml-4">
-                                                    {suggestedProperties.map((item) => (
-                                                        <CarouselItem key={item.id} className="pl-2 md:pl-4">
-                                                            <PropertyCardItem
-                                                                id={String(item.id)}
-                                                                title={item.title}
-                                                                price={item.price}
-                                                                area={item.area}
-                                                                address={`${item.addressStreet}, ${item.addressWard}, ${item.addressDistrict}, ${item.addressCity}`}
-                                                                imageUrl={item.imageUrls?.[0] || ""}
-                                                                createdAt={item.createdAt || ""}
-                                                                onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
-                                                            />
-                                                        </CarouselItem>
-                                                    ))}
-                                                </CarouselContent>
-                                                <CarouselPrevious className="left-2 cursor-pointer hidden md:block"/>
-                                                <CarouselNext className="right-2 cursor-pointer hidden md:block"/>
-                                            </Carousel>
-                                        </div>
-                                    </>
-                                ) : null}
-                            </div>
-                        )}
+                                    {/* Mobile Carousel View - visible only on mobile */}
+                                    <div className="block sm:hidden">
+                                        <Carousel
+                                            opts={{
+                                                align: 'start',
+                                                loop: true,
+                                            }}
+                                            className="w-full"
+                                        >
+                                            <CarouselContent className="-ml-2 md:-ml-4">
+                                                {suggestedProperties.map((item) => (
+                                                    <CarouselItem key={item.id} className="pl-2 md:pl-4">
+                                                        <PropertyCardItem
+                                                            id={String(item.id)}
+                                                            title={item.title}
+                                                            price={item.price}
+                                                            area={item.area}
+                                                            address={`${item.addressStreet}, ${item.addressWard}, ${item.addressDistrict}, ${item.addressCity}`}
+                                                            imageUrl={item.imageUrls?.[0] || ""}
+                                                            createdAt={item.createdAt || ""}
+                                                            onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                                        />
+                                                    </CarouselItem>
+                                                ))}
+                                            </CarouselContent>
+                                            <CarouselPrevious className="left-2 cursor-pointer hidden md:block"/>
+                                            <CarouselNext className="right-2 cursor-pointer hidden md:block"/>
+                                        </Carousel>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="text-center py-8 text-gray-500">
+                                    <p>Không tìm thấy bất động sản gợi ý phù hợp</p>
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {/* Contact Card - 25% */}

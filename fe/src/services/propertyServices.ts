@@ -101,6 +101,11 @@ export const getRecommendedProperties = async (lat: number, lng: number, limit: 
     return response.data;
 }
 
+export const getRecommendedPropertiesDetail = async (propertyId: number, limit: number = 6,radius_km: number = 20 ) => {
+    const response = await instance.get(`recommendation/related/${propertyId}?limit=${limit}&radius_km=${radius_km}`);
+    return response.data;
+}
+
 export const getLivabilityScore = async (data: { propertyIds: number[] }) => {
     const response = await instance.post("recommendation/livability/scores/batch", data);
     return response.data;
