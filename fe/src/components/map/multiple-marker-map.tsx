@@ -182,7 +182,7 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
         <div className="relative" style={{ width, height }}>
             <APIProvider apiKey={apiKey}>
                 <Map
-                    mapId="multiple-markers-map"
+                    mapId="b4e09e31598ea5482295a4f9"
                     defaultCenter={center}
                     defaultZoom={defaultZoom}
                     gestureHandling="greedy"
