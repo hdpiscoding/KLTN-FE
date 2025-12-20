@@ -1,4 +1,4 @@
-name: "[STAGING] CI & CD KLTN Recommendation Service [BE]"
+name: "[STAGING] CI & CD KLTN FE CLIENT"
 
 env:
   # frontend deployment folder on the server
@@ -37,7 +37,12 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Build Docker image
-        run: docker build -t ${{ env.IMAGE_NAME }} ./${{ env.SERVICE_FOLDER }}
+        run: |
+          docker build \
+            --build-arg VITE_GOOGLE_MAPS_API_KEY=${{ secrets.VITE_GOOGLE_MAPS_API_KEY }} \
+            --build-arg VITE_MAPTILES_KEY=${{ secrets.VITE_MAPTILES_KEY }} \
+            --build-arg VITE_GOONG_API_KEY=${{ secrets.VITE_GOONG_API_KEY }} \
+            -t ${{ env.IMAGE_NAME }} ./${{ env.SERVICE_FOLDER }}
 
       - name: Save Docker image to a tar file
         run: docker save -o ${{ env.IMAGE_FILENAME }} ${{ env.IMAGE_NAME }}
