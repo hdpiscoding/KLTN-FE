@@ -3,89 +3,118 @@ import { registerPlugin } from "@capacitor/core";
 import type { BackgroundGeolocationPlugin } from "@capacitor-community/background-geolocation";
 import { sendLocationToBackend } from "../services/trackingApi";
 import { Capacitor } from "@capacitor/core";
-import { toast } from "react-toastify"; // Giả sử bạn dùng toastify để thông báo
+import { toast } from "react-toastify";
 
 const BackgroundGeolocation = registerPlugin<BackgroundGeolocationPlugin>(
   "BackgroundGeolocation"
 );
+const STORAGE_KEY = "is_location_tracking_enabled";
 
 export const useBackgroundLocation = () => {
-  const [isTracking, setIsTracking] = useState(false);
+  // Khởi tạo state dựa trên localStorage
+  const [isTracking, setIsTracking] = useState(() => {
+    return localStorage.getItem(STORAGE_KEY) === "true";
+  });
+
   const watcherId = useRef<string | null>(null);
 
-  // Hàm bắt đầu theo dõi
+  // Hàm khởi tạo watcher (được tách ra để tái sử dụng)
+  const initializeWatcher = async () => {
+    try {
+      const id = await BackgroundGeolocation.addWatcher(
+        {
+          backgroundMessage: "Đang tìm kiếm BĐS phù hợp gần bạn...",
+          backgroundTitle: "Real Estate Tracker",
+          requestPermissions: true,
+          stale: false,
+          distanceFilter: 2, // Set 2 for debug purposes => set to 50 for production
+        },
+        (location, error) => {
+          if (error) {
+            if (error.code === "NOT_AUTHORIZED") {
+              // Silent fail or toast once
+              console.error("Location permission missing");
+            }
+            return;
+          }
+          if (location) {
+            console.log(
+              "📍 Location update:",
+              location.latitude,
+              location.longitude
+            );
+            sendLocationToBackend(location.latitude, location.longitude);
+          }
+        }
+      );
+      watcherId.current = id;
+      return true;
+    } catch (e) {
+      console.error("Failed to add watcher:", e);
+      return false;
+    }
+  };
+
   const startTracking = async () => {
-    // Chỉ chạy trên Mobile App (Native)
     if (!Capacitor.isNativePlatform()) {
       toast.warning("Tính năng này chỉ hoạt động trên Mobile App!");
       return;
     }
 
-    try {
-      // 1. Xin quyền (quan trọng trên Android 10+)
-      // Lưu ý: Android có thể yêu cầu người dùng chọn "Allow all the time" trong settings thủ công
-      // để chạy nền ổn định.
+    // Nếu đã có watcher rồi thì không tạo thêm
+    if (watcherId.current) return;
 
-      // 2. Thêm Watcher
-      watcherId.current = await BackgroundGeolocation.addWatcher(
-        {
-          // Cấu hình hiển thị Notification (bắt buộc để chạy nền không bị kill)
-          backgroundMessage: "Đang tìm kiếm BĐS phù hợp gần bạn...",
-          backgroundTitle: "Real Estate Tracker",
-          requestPermissions: true,
-
-          // Cấu hình tối ưu pin và dữ liệu
-          stale: false,
-          distanceFilter: 50, // Chỉ gửi khi di chuyển > 50m
-        },
-        (location, error) => {
-          if (error) {
-            if (error.code === "NOT_AUTHORIZED") {
-              toast.error(
-                "Vui lòng cấp quyền vị trí 'Luôn cho phép' để sử dụng."
-              );
-            }
-            return;
-          }
-
-          if (location) {
-            console.log(
-              "📍 New Location:",
-              location.latitude,
-              location.longitude
-            );
-            // Gửi về Golang Backend
-            sendLocationToBackend(location.latitude, location.longitude);
-          }
-        }
-      );
-
+    const success = await initializeWatcher();
+    if (success) {
       setIsTracking(true);
+      localStorage.setItem(STORAGE_KEY, "true"); // Lưu trạng thái
       toast.success("Đã bật theo dõi vị trí nền!");
-    } catch (err) {
-      console.error("Tracking Error:", err);
+    } else {
       toast.error("Không thể khởi động theo dõi vị trí.");
     }
   };
 
-  // Hàm dừng theo dõi
   const stopTracking = async () => {
     if (watcherId.current) {
       await BackgroundGeolocation.removeWatcher({
         id: watcherId.current,
       });
       watcherId.current = null;
-      setIsTracking(false);
-      toast.info("Đã tắt theo dõi.");
     }
+    // Dù remove watcher thành công hay không cũng reset state để UI đồng bộ
+    setIsTracking(false);
+    localStorage.removeItem(STORAGE_KEY); // Xóa trạng thái
+    toast.info("Đã tắt theo dõi.");
   };
 
-  // Cleanup khi unmount component
+  // Effect: Tự động khôi phục watcher khi reload app hoặc mount lại component
+  // nếu trước đó user đã bật
   useEffect(() => {
+    const shouldBeTracking = localStorage.getItem(STORAGE_KEY) === "true";
+
+    if (
+      shouldBeTracking &&
+      Capacitor.isNativePlatform() &&
+      !watcherId.current
+    ) {
+      console.log("🔄 Restoring background tracking from storage...");
+      initializeWatcher().then((success) => {
+        if (success) {
+          setIsTracking(true);
+        } else {
+          // Nếu khôi phục thất bại thì tắt luôn trong storage
+          setIsTracking(false);
+          localStorage.removeItem(STORAGE_KEY);
+        }
+      });
+    }
+
+    // Cleanup khi component unmount:
+    // QUAN TRỌNG: Không remove watcher ở đây!
+    // Nếu remove ở đây thì chuyển trang sẽ mất tracking.
+    // Chúng ta muốn tracking chạy global cho đến khi user bấm tắt.
     return () => {
-      if (watcherId.current) {
-        BackgroundGeolocation.removeWatcher({ id: watcherId.current });
-      }
+      // Do nothing on unmount
     };
   }, []);
 
