@@ -4,7 +4,6 @@ import {
     Menu,
     Home,
     Key,
-    TrendingUp,
     Calculator,
     PenSquare,
     FileText,
@@ -12,7 +11,8 @@ import {
     Lock,
     LogOut,
     Heart,
-    User
+    User,
+    History
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -36,7 +36,6 @@ export const Header = () => {
     const baseNavItems = [
         { label: "Mua nhà", path: "/mua-nha", icon: <Home className="w-4 h-4" /> },
         { label: "Thuê nhà", path: "/thue-nha", icon: <Key className="w-4 h-4" /> },
-        { label: "Giá nhà đất", path: "/gia-nha-dat", icon: <TrendingUp className="w-4 h-4" /> },
     ];
 
     // Add "Định giá nhà" and "Đăng tin" when logged in
@@ -127,6 +126,12 @@ export const Header = () => {
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link to="/dinh-gia-nha/lich-su" className="w-full flex items-center gap-2">
+                                                <History className="w-4 h-4" />
+                                                Lịch sử định giá
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild className="cursor-pointer">
                                             <Link to="/thong-tin-ca-nhan" className="w-full flex items-center gap-2">
                                                 <UserCircle className="w-4 h-4" />
                                                 Thông tin cá nhân
@@ -175,7 +180,7 @@ export const Header = () => {
                                     <>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link to="/quan-ly-tin-dang" className="w-full flex items-center gap-2">
+                                            <Link to="/tin-dang" className="w-full flex items-center gap-2">
                                                 <FileText className="w-4 h-4" />
                                                 Quản lý tin đăng
                                             </Link>
@@ -184,6 +189,12 @@ export const Header = () => {
                                             <Link to="/tin-yeu-thich" className="w-full flex items-center gap-2">
                                                 <Heart className="w-4 h-4" />
                                                 Tin yêu thích
+                                            </Link>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem asChild className="cursor-pointer">
+                                            <Link to="/dinh-gia-nha/lich-su" className="w-full flex items-center gap-2">
+                                                <History className="w-4 h-4" />
+                                                Lịch sử định giá
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuItem asChild className="cursor-pointer">

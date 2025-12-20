@@ -3,10 +3,11 @@ import { Outlet } from 'react-router-dom';
 import {Header} from "@/layouts/Header.tsx";
 import {Footer} from "@/layouts/Footer.tsx";
 import {useAuthGuard} from "@/hooks/use-auth-guard.ts";
-import {SessionExpiredDialog} from "@/components/session-expired-dialog.tsx";
+import {SessionExpiredDialog} from "@/components/dialog/session-expired-dialog.tsx";
+import {ChatBot} from "@/components/chat";
 
 export const MainLayout: React.FC = () => {
-    const { showExpiredDialog, handleLoginRedirect, handleHomeRedirect } = useAuthGuard();
+    const { showExpiredDialog, handleLoginRedirect, handleHomeRedirect, checkTokenExpired } = useAuthGuard();
     return (
         <>
             <div className="min-h-full flex flex-col">
@@ -16,6 +17,9 @@ export const MainLayout: React.FC = () => {
                 </main>
                 <Footer />
             </div>
+
+            {/* ChatBot */}
+            <ChatBot checkTokenExpired={checkTokenExpired} />
 
             {/* Session Expired Dialog */}
             <SessionExpiredDialog

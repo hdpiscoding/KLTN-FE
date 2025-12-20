@@ -12,6 +12,15 @@ interface SortParams {
     type: string;
 }
 
+type AmenityCategory =
+    "healthcare"
+    | "education"
+    | "transportation"
+    | "environment"
+    | "public_safety"
+    | "shopping"
+    | "entertainment";
+
 export const searchProperties = async (query: {
     filters?: FilterParams[],
     sorts?: SortParams[],
@@ -29,6 +38,11 @@ export const searchProperties = async (query: {
 
 export const getPropertiesWithinViewPort = async (minLat: number, minLng: number, maxLat: number, maxLng: number) => {
     const response = await instance.get(`properties/search/map?minLat=${minLat}&minLng=${minLng}&maxLat=${maxLat}&maxLng=${maxLng}`);
+    return response.data;
+}
+
+export const getAmenitiesWithinViewPort = async (minLat: number, minLng: number, maxLat: number, maxLng: number, category: AmenityCategory, limit: number = 200) => {
+    const response = await instance.get(`recommendation/amenities/search/map?minLat=${minLat}&minLng=${minLng}&maxLat=${maxLat}&maxLng=${maxLng}&category=${category}&limit=${limit}`);
     return response.data;
 }
 
@@ -67,8 +81,13 @@ export const predictPropertyPrice = async (data: {
     house_direction?: string,
     balcony_direction?: string,
     furniture_status?: string,
-})=> {
+}) => {
     const response = await instance.post("recommendation/prediction/property/price", data);
+    return response.data;
+}
+
+export const getPredictionHistory = async () => {
+    const response = await instance.get(`recommendation/prediction/history`);
     return response.data;
 }
 
@@ -76,14 +95,18 @@ export const getRecommendedProperties = async (lat: number, lng: number, limit: 
     let response;
     if (user_id) {
         response = await instance.get(`recommendation/home?lat=${lat}&lng=${lng}&limit=${limit}&radius_km=${radius_km}&user_id=${user_id}`);
-    }
-    else {
+    } else {
         response = await instance.get(`recommendation/home?lat=${lat}&lng=${lng}&limit=${limit}&radius_km=${radius_km}`);
-    };
+    }
     return response.data;
 }
 
-export const getLivabilityScore = async (data: {propertyIds: number[]}) => {
+export const getRecommendedPropertiesDetail = async (propertyId: number, limit: number = 6,radius_km: number = 20 ) => {
+    const response = await instance.get(`recommendation/related/${propertyId}?limit=${limit}&radius_km=${radius_km}`);
+    return response.data;
+}
+
+export const getLivabilityScore = async (data: { propertyIds: number[] }) => {
     const response = await instance.post("recommendation/livability/scores/batch", data);
     return response.data;
 }

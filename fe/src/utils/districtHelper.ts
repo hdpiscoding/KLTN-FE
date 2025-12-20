@@ -46,3 +46,42 @@ export function isValidDistrictName(name: string): boolean {
 export function getDistrictById(id: District['id']): District | undefined {
     return DISTRICTS.find(d => d.id === id);
 }
+
+export function convertDistrictToVN(input: string): string {
+    if (!input) return input;
+
+    const key = normalize(input);
+
+    // District 1 -> District 12
+    const districtNumberMatch = key.match(/^district (\d{1,2})$/);
+    if (districtNumberMatch) {
+        const num = Number(districtNumberMatch[1]);
+        if (num >= 1 && num <= 12) {
+            return `Quận ${num}`;
+        }
+    }
+
+    const map: Record<string, string> = {
+        // ===== QUẬN =====
+        "binh thanh district": "Quận Bình Thạnh",
+        "go vap district": "Quận Gò Vấp",
+        "tan binh district": "Quận Tân Bình",
+        "tan phu district": "Quận Tân Phú",
+        "phu nhuan district": "Quận Phú Nhuận",
+        "binh tan district": "Quận Bình Tân",
+
+        // ===== HUYỆN =====
+        "hoc mon district": "Huyện Hóc Môn",
+        "cu chi district": "Huyện Củ Chi",
+        "binh chanh district": "Huyện Bình Chánh",
+        "nha be district": "Huyện Nhà Bè",
+        "can gio district": "Huyện Cần Giờ",
+
+        // ===== TP. THỦ ĐỨC =====
+        "thu duc": "TP. Thủ Đức",
+        "thu duc city": "TP. Thủ Đức",
+        "thu duc district": "TP. Thủ Đức",
+    };
+
+    return map[key] ?? input;
+}
