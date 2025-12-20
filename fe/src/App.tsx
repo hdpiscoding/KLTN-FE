@@ -1,4 +1,11 @@
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useNavigate,
+  useLocation,
+} from "react-router-dom";
 import { Login } from "@/pages/authentication/Login.tsx";
 import { Register } from "@/pages/authentication/Register.tsx";
 import { RegisterInfo } from "@/pages/authentication/RegisterInfo.tsx";
@@ -32,10 +39,44 @@ import "@goongmaps/goong-js/dist/goong-js.css";
 import { RentProperty } from "@/pages/property/RentProperty.tsx";
 import { PrivateRoute } from "@/components/general/private-route.tsx";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { useEffect } from "react";
+import { StatusBar, Style } from "@capacitor/status-bar";
+import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 
 function AppRoutes() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   // Kích hoạt lắng nghe thông báo
   usePushNotifications();
+
+  // Xử lý nút Back trên Android
+  useEffect(() => {
+    if (Capacitor.isNativePlatform()) {
+      const handleBackButton = async () => {
+        // eslint-disable-next-line no-empty-pattern
+        await CapacitorApp.addListener("backButton", ({}) => {
+          // Các route được coi là "Root" của App -> Bấm back sẽ thoát app
+          const rootRoutes = ["/", "/dang-nhap"];
+
+          if (rootRoutes.includes(location.pathname)) {
+            CapacitorApp.exitApp();
+          } else {
+            // Các trang khác -> Quay lại trang trước
+            navigate(-1);
+          }
+        });
+      };
+
+      handleBackButton();
+
+      // Cleanup listener khi unmount hoặc location thay đổi để tránh duplicate
+      return () => {
+        CapacitorApp.removeAllListeners();
+      };
+    }
+  }, [navigate, location.pathname]);
 
   return (
     <>
@@ -103,6 +144,23 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    // Chỉ chạy trên Mobile
+    if (Capacitor.isNativePlatform()) {
+      const configStatusBar = async () => {
+        try {
+          // Làm status bar trong suốt
+          await StatusBar.setOverlaysWebView({ overlay: true });
+          // Chữ đen (dùng 'Dark' nếu nền app sáng, 'Light' nếu nền app tối)
+          await StatusBar.setStyle({ style: Style.Light });
+        } catch (e) {
+          console.error("StatusBar error:", e);
+        }
+      };
+      configStatusBar();
+    }
+  }, []);
+
   return (
     <Router>
       <AppRoutes />
