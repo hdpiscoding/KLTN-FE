@@ -1,1 +1,1 @@
-# KLTN_FE
+Smart Real Estate Platform
