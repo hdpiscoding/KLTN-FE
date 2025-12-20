@@ -1,4 +1,4 @@
-name: "[STAGING] CI & CD KLTN Recommendation Service [BE]"
+name: "[STAGING] CI & CD KLTN FE CLIENT"
 
 env:
   # frontend deployment folder on the server
