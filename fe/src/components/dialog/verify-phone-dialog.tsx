@@ -22,6 +22,7 @@ import { Phone } from "lucide-react";
 import { verifyPhoneNumberSendOtp } from "@/services/userServices.ts";
 import { toast } from "react-toastify";
 import { convertPhoneNumber } from "@/utils/generalFormat.ts";
+import {useUserStore} from "@/store/userStore.ts";
 
 interface VerifyPhoneDialogProps {
     open: boolean;
@@ -39,6 +40,7 @@ export const VerifyPhoneDialog: React.FC<VerifyPhoneDialogProps> = ({
     const [isLoading, setIsLoading] = useState(false);
     const [countdown, setCountdown] = useState(120); // 2 phút = 120 giây
     const [isResending, setIsResending] = useState(false);
+    const {setPhoneVerificationStatus} = useUserStore();
 
     const form = useForm({
         defaultValues: {
@@ -99,6 +101,7 @@ export const VerifyPhoneDialog: React.FC<VerifyPhoneDialogProps> = ({
                 await onVerify(data.otp);
             }
             // Close dialog on success
+            setPhoneVerificationStatus(true);
             onOpenChange(false);
         } catch (error) {
             console.error("Verification failed:", error);

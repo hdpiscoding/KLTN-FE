@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils.ts';
 import {useUserStore} from "@/store/userStore.ts";
 import { VerifyPhoneDialog } from '@/components/dialog/verify-phone-dialog.tsx';
 import { convertPhoneNumber } from '@/utils/generalFormat.ts';
+import {Spinner} from "@/components/ui/spinner.tsx";
 
 type UserProfileFormData = {
     fullName: string;
@@ -69,6 +70,7 @@ export const UserProfile: React.FC = () => {
     // Autocomplete states for address
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
     const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+    const [isPhoneVerificationLoading, setIsPhoneVerificationLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedIndex, setSelectedIndex] = useState(-1);
     const [hasUserInteracted, setHasUserInteracted] = useState(false);
@@ -443,7 +445,7 @@ export const UserProfile: React.FC = () => {
             toast.error('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)');
             return;
         }
-
+        setIsPhoneVerificationLoading(true);
         try {
             // Call API to send OTP to phone number
             await verifyPhoneNumberSendOtp(convertPhoneNumber(currentPhone));
@@ -453,6 +455,9 @@ export const UserProfile: React.FC = () => {
             console.error('Failed to send OTP:', error);
             const errorMessage = error?.response?.data?.error?.message || 'Không thể gửi mã OTP. Vui lòng thử lại!';
             toast.error(errorMessage);
+        }
+        finally {
+            setIsPhoneVerificationLoading(false);
         }
     };
 
@@ -688,9 +693,12 @@ export const UserProfile: React.FC = () => {
                                                     <Button
                                                         type="button"
                                                         variant="outline"
-                                                        className="border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white whitespace-nowrap cursor-pointer"
+                                                        className={`transition-colors text-white hover:text-white whitespace-nowrap duration-200 ${
+                                                            isPhoneVerificationLoading ? "bg-[#0064A6]" : "bg-[#008DDA] cursor-pointer"
+                                                        } hover:bg-[#0064A6] `}
                                                         onClick={handleOpenVerifyDialog}
                                                     >
+                                                        {isPhoneVerificationLoading ? <Spinner /> : null}
                                                         Xác thực
                                                     </Button>
                                                 )}
