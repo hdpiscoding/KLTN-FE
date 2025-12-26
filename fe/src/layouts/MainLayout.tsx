@@ -15,7 +15,9 @@ export const MainLayout: React.FC = () => {
                 <main className="flex-grow">
                     <Outlet />
                 </main>
-                <Footer />
+                <div className="hidden sm:block" aria-hidden="true">
+                    <Footer />
+                </div>
             </div>
 
             {/* ChatBot */}
