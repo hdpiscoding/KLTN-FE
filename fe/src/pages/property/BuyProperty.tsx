@@ -81,6 +81,7 @@ export const BuyProperty: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isMobileMapView, setIsMobileMapView] = useState(false); // For mobile full-screen map
   const [propertyList, setPropertyList] = useState<PropertyListing[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { filters, setFilter } = useSearchFilters();
@@ -223,6 +224,11 @@ export const BuyProperty: React.FC = () => {
 
   const handleToggleMap = () => {
     setIsMapOpen(!isMapOpen);
+  };
+
+  // Toggle mobile map view (full screen)
+  const handleToggleMobileMap = () => {
+    setIsMobileMapView((prev) => !prev);
   };
 
   // Helper: Check if region is cached
@@ -708,7 +714,7 @@ export const BuyProperty: React.FC = () => {
 
   // Effect to handle body overflow based on map state
   useEffect(() => {
-    if (isMapOpen) {
+    if (isMapOpen || isMobileMapView) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
@@ -718,7 +724,7 @@ export const BuyProperty: React.FC = () => {
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isMapOpen]);
+  }, [isMapOpen, isMobileMapView]);
 
   return (
     <div
@@ -726,7 +732,19 @@ export const BuyProperty: React.FC = () => {
         isMapOpen ? "h-screen overflow-hidden" : ""
       }`}
     >
-      <div className={isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}>
+      {/* Mobile Full Screen Map View */}
+      {isMobileMapView && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <MultipleMarkerMap
+            properties={propertyMarkers}
+            defaultZoom={11}
+            onMapInteraction={handleMapInteraction}
+          />
+        </div>
+      )}
+
+      {/* Main Content - Hidden when mobile map is active */}
+      <div className={`${isMobileMapView ? "hidden md:block" : ""} ${isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}`}>
         <div className="flex flex-col lg:flex-row lg:gap-6">
           {/* Main Content - Dynamic width based on map state */}
           <div
@@ -756,10 +774,11 @@ export const BuyProperty: React.FC = () => {
                     <Search className="w-4 h-4 text-white" />
                   </Button>
                 </div>
+                  {/*Map Button - Hidden on mobile */}
                 <Button
                   onClick={handleToggleMap}
                   variant="outline"
-                  className="flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
+                  className="hidden md:flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
                 >
                   <MapIcon className="w-4 h-4" />
                   {isMapOpen ? "Đóng bản đồ" : "Mở bản đồ"}
@@ -1033,6 +1052,17 @@ export const BuyProperty: React.FC = () => {
           </aside>
         </div>
       </div>
+
+      {/* Floating Map/List Toggle Button - Mobile Only */}
+      <Button
+        onClick={handleToggleMobileMap}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[1001] bg-[#008DDA] hover:bg-[#0072b0] text-white shadow-lg px-6 py-6 rounded-full flex items-center gap-2 cursor-pointer"
+      >
+        <MapIcon className="w-5 h-5" />
+        <span className="font-semibold">
+          {isMobileMapView ? "Danh sách" : "Bản đồ"}
+        </span>
+      </Button>
     </div>
   );
 };

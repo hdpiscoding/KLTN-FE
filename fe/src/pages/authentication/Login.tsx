@@ -21,42 +21,43 @@ import { getUserIdFromToken } from "@/utils/jwtHelper.ts";
 import logo from "../../assets/timnha-icon.png";
 
 export const Login = () => {
-  const [isLoading, setIsLoading] = React.useState(false);
-  const navigate = useNavigate();
-  const form = useForm({
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-    mode: "onSubmit",
-  });
-  const loginData = useUserStore((state) => state.login);
-  const setUserInfo = useUserStore((state) => state.setUserInfo);
+    const [isLoading, setIsLoading] = React.useState(false);
+    const navigate = useNavigate();
+    const form = useForm({
+        defaultValues: {
+            email: "",
+            password: "",
+        },
+        mode: "onSubmit",
+    });
+    const loginData = useUserStore((state) => state.login);
+    const {setUserInfo, setApproveStatus, setPhoneVerificationStatus} = useUserStore();
 
-  const onSubmit = async (data: { email: string; password: string }) => {
-    setIsLoading(true);
-    try {
-      const response = await login(data.email, data.password);
-      console.log(response);
-      if (response.status === "200") {
-        loginData(response.data.token);
-        toast.success("Đăng nhập thành công!");
-        const res = await getMyProfile();
-        setUserInfo(
-          getUserIdFromToken(response.data.token),
-          res?.data.avatarUrl,
-          res.data.becomeSellerApproveStatus
-        );
-        console.log(res);
-        navigate("/");
-      }
-    } catch (error) {
-      toast.error("Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
-      console.log(error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+
+    const onSubmit = async (data: {email: string, password: string}) => {
+        setIsLoading(true);
+        try {
+            const response = await login(data.email, data.password);
+            console.log(response);
+            if (response.status === "200") {
+                loginData(response.data.token);
+                toast.success("Đăng nhập thành công!");
+                const res = await getMyProfile();
+                setUserInfo(getUserIdFromToken(response.data.token), res?.data.avatarUrl);
+                setApproveStatus(res?.data.becomeSellerApproveStatus);
+                setPhoneVerificationStatus(res?.data.verifiedPhone);
+                console.log(res);
+                navigate("/");
+            }
+        }
+        catch (error) {
+            toast.error("Đăng nhập thất bại! Vui lòng kiểm tra lại thông tin.");
+            console.log(error);
+        }
+        finally {
+            setIsLoading(false);
+        }
+    };
 
   return (
     <div className="bg-[#fff] w-screen h-screen flex items-center justify-center">

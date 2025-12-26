@@ -20,6 +20,7 @@ export const updateMyProfile = async (data: {
     fullName?: string;
     avatarUrl?: string;
     liveAddress?: string;
+    phoneNumber?: string;
     preferencePresetId?: number | null;
     preferenceSafety?: number;
     preferenceEducation?: number;
@@ -68,5 +69,15 @@ export const searchFavoriteProperties = async (data: {
     page: number
 }) => {
     const response = await instance.post("properties/favorites/search", data);
+    return response.data;
+}
+
+export const verifyPhoneNumberSendOtp = async (phoneNumber: string) => {
+    const response = await instance.post("user/verify-phone/send-otp", {phoneNumber});
+    return response.data;
+}
+
+export const verifyPhoneNumberVerifyOtp = async (phoneNumber: string, otp: string) => {
+    const response = await instance.post("user/verify-phone", {otp, phoneNumber});
     return response.data;
 }

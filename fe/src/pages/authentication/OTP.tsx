@@ -44,7 +44,13 @@ export const OTP = ({from}: {from:string}) => {
             if (from === "register") {
                 // Resend OTP for registration
                 const {email, phoneNumber, fullName, password} = useAuthStore.getState();
-                const response = await register(email ?? "", password ?? "", fullName ?? "", phoneNumber ?? "");
+                const registerData = {
+                    email: email ?? "",
+                    phoneNumber: phoneNumber ?? "",
+                    fullName: fullName ?? "",
+                    password: password ?? ""
+                }
+                const response = await register(registerData);
                 if (response.status === "200") {
                     toast.success("Đã gửi lại mã OTP!");
                     setCountdown(120);
