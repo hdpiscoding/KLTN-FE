@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -7,10 +8,10 @@ import { Button } from '@/components/ui/button.tsx';
 import { Slider } from '@/components/ui/slider.tsx';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs.tsx';
 import { Skeleton } from '@/components/ui/skeleton.tsx';
-import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music, Loader2 } from 'lucide-react';
+import { User, Upload, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music, Loader2, CheckCircle2, AlertCircle } from 'lucide-react';
 import { PreferencePresetCard } from '@/components/card-item/preference-preset-card.tsx';
 import type { PreferencePreset } from '@/types/preference-preset';
-import {getMyProfile, updateMyProfile} from "@/services/userServices.ts";
+import {getMyProfile, updateMyProfile, verifyPhoneNumberSendOtp, verifyPhoneNumberVerifyOtp} from "@/services/userServices.ts";
 import {uploadImage} from "@/services/mediaServices.ts";
 import {toast} from "react-toastify";
 import { useDebounce } from 'use-debounce';
@@ -19,6 +20,8 @@ import type { PlacePrediction } from '@/types/place-prediction';
 import { placeAutocomplete } from '@/services/goongAPIServices.ts';
 import { cn } from '@/lib/utils.ts';
 import {useUserStore} from "@/store/userStore.ts";
+import { VerifyPhoneDialog } from '@/components/dialog/verify-phone-dialog.tsx';
+import { convertPhoneNumber } from '@/utils/generalFormat.ts';
 
 type UserProfileFormData = {
     fullName: string;
@@ -39,6 +42,7 @@ type PreferenceFormData = {
 
 export const UserProfile: React.FC = () => {
     const navigate = useNavigate();
+    const [isVerifyPhoneDialogOpen, setIsVerifyPhoneDialogOpen] = useState(false);
     const [isLoadingProfile, setIsLoadingProfile] = useState(true);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
@@ -59,7 +63,7 @@ export const UserProfile: React.FC = () => {
         environment: 50,
         entertainment: 50,
     })
-    const setUserInfo = useUserStore(state => state.setUserInfo);
+    const {setUserInfo, setApproveStatus, setPhoneVerificationStatus, verifiedPhone} = useUserStore();
     const userId = useUserStore(state => state.userId);
 
     // Autocomplete states for address
@@ -116,7 +120,9 @@ export const UserProfile: React.FC = () => {
             setPhoneNumber(response?.data.phoneNumber);
             setAddress(response?.data.liveAddress);
             setAvatarPreview(response?.data.avatarUrl);
-            setUserInfo(userId, response?.data.avatarUrl, response?.data.becomeSellerApproveStatus)
+            setUserInfo(userId, response?.data.avatarUrl)
+            setApproveStatus(response?.data.becomeSellerApproveStatus);
+            setPhoneVerificationStatus(response?.data.verifiedPhone);
 
             // Convert decimal values (0-1) from API to percentage values (0-100) for display
             setPreferences({
@@ -254,7 +260,7 @@ export const UserProfile: React.FC = () => {
             return;
         }
 
-        const trimmedAddress = debouncedAddress.trim();
+        const trimmedAddress = debouncedAddress?.trim();
         if (!trimmedAddress || trimmedAddress.length < 3) {
             setSuggestions([]);
             setShowSuggestions(false);
@@ -413,6 +419,43 @@ export const UserProfile: React.FC = () => {
         });
     }
 
+    // Handle phone verification
+    const handleVerifyPhone = async (otp: string) => {
+        try {
+            const currentPhone = form.getValues('phoneNumber');
+            // Call API to verify phone with OTP
+            await verifyPhoneNumberVerifyOtp(convertPhoneNumber(currentPhone), otp);
+            // Update verification status in store
+            setPhoneVerificationStatus(true);
+            toast.success('Xác thực số điện thoại thành công!');
+            // Dialog will close automatically via onOpenChange in the dialog component
+        } catch (error: any) {
+            console.error('Phone verification failed:', error);
+            const errorMessage = error?.response?.data?.error?.message || 'Xác thực thất bại. Vui lòng thử lại!';
+            toast.error(errorMessage);
+            throw error; // Re-throw to keep dialog open
+        }
+    };
+
+    const handleOpenVerifyDialog = async () => {
+        const currentPhone = form.getValues('phoneNumber');
+        if (!currentPhone || currentPhone.length !== 10) {
+            toast.error('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)');
+            return;
+        }
+
+        try {
+            // Call API to send OTP to phone number
+            await verifyPhoneNumberSendOtp(convertPhoneNumber(currentPhone));
+            toast.success('Mã OTP đã được gửi đến số điện thoại của bạn!');
+            setIsVerifyPhoneDialogOpen(true);
+        } catch (error: any) {
+            console.error('Failed to send OTP:', error);
+            const errorMessage = error?.response?.data?.error?.message || 'Không thể gửi mã OTP. Vui lòng thử lại!';
+            toast.error(errorMessage);
+        }
+    };
+
     // Combined submit handler for both profile and preferences
     const handleSaveAll = async () => {
         try {
@@ -440,6 +483,7 @@ export const UserProfile: React.FC = () => {
                 fullName: profileData.fullName,
                 avatarUrl: avatarUrl,
                 liveAddress: profileData.address,
+                phoneNumber: profileData.phoneNumber,
                 preferencePresetId: selectedPresetId ? Number(selectedPresetId) : null,
                 preferenceSafety: preferenceData.safety / 100,
                 preferenceHealthcare: preferenceData.healthcare / 100,
@@ -606,22 +650,51 @@ export const UserProfile: React.FC = () => {
                                 control={form.control}
                                 name="phoneNumber"
                                 rules={{
+                                    required: "Số điện thoại không được để trống!",
                                     pattern: {
                                         value: /^[0-9]{10}$/,
-                                        message: 'Số điện thoại phải gồm đúng 10 chữ số',
+                                        message: "Số điện thoại phải có 10 chữ số!",
                                     },
                                 }}
                                 render={({ field }) => (
                                     <FormItem>
-                                        <FormLabel>Số điện thoại</FormLabel>
+                                        <FormLabel className="flex items-center gap-2">
+                                            Số điện thoại
+                                            {phoneNumber
+                                                ?
+                                                (verifiedPhone ? (
+                                                    <span className="flex items-center gap-1 text-xs text-green-600 font-normal">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    Đã xác thực
+                                                </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 text-xs text-orange-600 font-normal">
+                                                    <AlertCircle className="w-4 h-4" />
+                                                    Chưa xác thực
+                                                </span>
+                                                ))
+                                                :
+                                                <div></div>}
+                                        </FormLabel>
                                         <FormControl>
-                                            <Input
-                                                type="tel"
-                                                disabled={true}
-                                                className="focus-visible:ring-[#008DDA] cursor-not-allowed"
-                                                maxLength={10}
-                                                {...field}
-                                            />
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    type="tel"
+                                                    className="focus-visible:ring-[#008DDA] flex-1"
+                                                    maxLength={10}
+                                                    {...field}
+                                                />
+                                                {phoneNumber && !verifiedPhone && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className="border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white whitespace-nowrap cursor-pointer"
+                                                        onClick={handleOpenVerifyDialog}
+                                                    >
+                                                        Xác thực
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </FormControl>
                                         <FormMessage />
                                     </FormItem>
@@ -1080,6 +1153,14 @@ export const UserProfile: React.FC = () => {
                     </Button>
                 </div>
             )}
+
+            {/* Verify Phone Dialog */}
+            <VerifyPhoneDialog
+                open={isVerifyPhoneDialogOpen}
+                onOpenChange={setIsVerifyPhoneDialogOpen}
+                phoneNumber={phoneNumber}
+                onVerify={handleVerifyPhone}
+            />
         </div>
     );
 };

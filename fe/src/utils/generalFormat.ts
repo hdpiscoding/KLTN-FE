@@ -142,3 +142,17 @@ export const formatMessageTime = (dateString: string) => {
     // Different year, show full date
     return `${day}/${month}/${year}`;
 };
+
+export const convertPhoneNumber = (phone: string):string  => {
+    const normalized = phone.replace(/\D/g, "");
+    if (normalized.startsWith("0")) {
+        return "+84" + normalized.slice(1);
+    }
+    if (normalized.startsWith("84")) {
+        return "+" + normalized;
+    }
+    if (phone.startsWith("+84")) {
+        return phone;
+    }
+    return phone;
+}
