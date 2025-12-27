@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
+import { Helmet } from 'react-helmet-async';
 import { PropertyCardItem } from "@/components/card-item/property-card-item.tsx";
 import { DistrictCardItem } from "@/components/card-item/district-card-item.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -300,6 +301,11 @@ export const Home: React.FC = () => {
 
     return (
         <div>
+            <Helmet>
+                <title>Trang chủ - timnha</title>
+                <meta name="description" content="Tìm kiếm bất động sản nhà đất mua bán và cho thuê nhanh chóng, dễ dàng trên timnha." />
+            </Helmet>
+
             {/* Hero Section */}
             <div className="relative h-[600px] w-screen">
                 {/* Background Image */}
@@ -426,7 +432,12 @@ export const Home: React.FC = () => {
                                             title={property.title}
                                             price={property.price}
                                             area={property.area}
-                                            address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
+                                            address={[
+                                                property.addressStreet,
+                                                property.addressWard,
+                                                property.addressDistrict,
+                                                property.addressCity,
+                                            ].filter(Boolean).join(", ")}
                                             imageUrl={property.imageUrls?.[0] || ""}
                                             createdAt={property.createdAt || ""}
                                             onFavoriteClick={(id) => console.log('Favorite clicked:', id)}

@@ -1,5 +1,6 @@
 import React, {useState, useEffect, useCallback} from 'react';
 import {useParams} from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import {
     Carousel,
     CarouselContent,
@@ -303,11 +304,9 @@ export const PropertyDetail: React.FC = () => {
                     price: item.price,
                     priceUnit: item.price_unit,
                     area: item.area,
-                    // Parse address string to get district
                     addressDistrict: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Quận') || s.includes('Huyện')) || '',
-                    // Use full address as street for display
-                    addressStreet: item.address.split(',')[0]?.trim() || '',
-                    addressWard: item.address.split(',').map((s: string) => s.trim()).find((s: string) => s.includes('Phường') || s.includes('Xã')) || '',
+                    addressStreet: '',
+                    addressWard: item.address.split(',')[0]?.trim() || '',
                     addressCity: 'TPHCM',
                     numBedrooms: item.num_bedrooms,
                     numBathrooms: item.num_bathrooms,
@@ -355,6 +354,62 @@ export const PropertyDetail: React.FC = () => {
         getRecommendedPropertiesData();
     }, [getRecommendedPropertiesData]);
 
+
+    // Generate dynamic SEO based on property data
+    const generateSEOTitle = (): string => {
+        if (!property) return "Chi tiết bất động sản | TimNha";
+
+        const propertyTypeName = getPropertyTypeName(property.propertyType);
+        const district = property.addressDistrict || "TP.HCM";
+        const price = formatPrice(property.price);
+        const area = formatArea(property.area);
+
+        return `${propertyTypeName} ${district} ${area} giá ${price} | TimNha`;
+    };
+
+    const generateSEODescription = (): string => {
+        if (!property) return "Xem chi tiết bất động sản trên TimNha";
+
+        const propertyTypeName = getPropertyTypeName(property.propertyType);
+        const address = `${property.addressWard}, ${property.addressDistrict}`;
+        const price = formatPrice(property.price);
+        const area = formatArea(property.area);
+
+        let description = `${propertyTypeName} tại ${address}. Diện tích ${area}, giá ${price}.`;
+
+        // Add bedrooms/bathrooms if available
+        const features = [];
+        if (property.numBedrooms) features.push(`${property.numBedrooms} phòng ngủ`);
+        if (property.numBathrooms) features.push(`${property.numBathrooms} phòng tắm`);
+        if (features.length > 0) {
+            description += ` ${features.join(", ")}.`;
+        }
+
+        // Add short excerpt from description if available
+        if (property.description) {
+            const excerpt = property.description.substring(0, 80).trim();
+            description += ` ${excerpt}...`;
+        }
+
+        return description;
+    };
+
+    const generateKeywords = (): string => {
+        if (!property) return "";
+
+        const keywords = [
+            getPropertyTypeName(property.propertyType),
+            property.addressDistrict,
+            property.addressWard,
+            property.addressCity,
+            "bất động sản",
+            property.listingType === "for_sale" ? "mua bán" : "cho thuê"
+        ];
+
+        if (property.numBedrooms) keywords.push(`${property.numBedrooms} phòng ngủ`);
+
+        return keywords.filter(Boolean).join(", ");
+    };
 
     // Show loading skeleton
     if (isLoading || !property) {
@@ -424,6 +479,56 @@ export const PropertyDetail: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-gray-50">
+            <Helmet>
+                <title>{generateSEOTitle()}</title>
+                <meta name="description" content={generateSEODescription()} />
+                <meta name="keywords" content={generateKeywords()} />
+
+                {/* Open Graph */}
+                <meta property="og:title" content={generateSEOTitle()} />
+                <meta property="og:description" content={generateSEODescription()} />
+                <meta property="og:type" content="product" />
+                <meta property="og:url" content={`https://yourwebsite.com/property/${property.id}`} />
+                {property.imageUrls?.[0] && (
+                    <meta property="og:image" content={property.imageUrls[0]} />
+                )}
+
+                {/* Twitter Card */}
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={generateSEOTitle()} />
+                <meta name="twitter:description" content={generateSEODescription()} />
+                {property.imageUrls?.[0] && (
+                    <meta name="twitter:image" content={property.imageUrls[0]} />
+                )}
+
+                {/* Product Schema */}
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "Product",
+                        "name": property.title,
+                        "description": property.description,
+                        "image": property.imageUrls?.[0] || "",
+                        "offers": {
+                            "@type": "Offer",
+                            "price": property.price,
+                            "priceCurrency": "VND",
+                            "availability": "https://schema.org/InStock",
+                            "url": `https://yourwebsite.com/property/${property.id}`
+                        },
+                        "address": {
+                            "@type": "PostalAddress",
+                            "streetAddress": property.addressStreet,
+                            "addressLocality": property.addressDistrict,
+                            "addressRegion": property.addressCity,
+                            "addressCountry": "VN"
+                        }
+                    })}
+                </script>
+
+                <link rel="canonical" href={`https://yourwebsite.com/property/${property.id}`} />
+            </Helmet>
+
             <div className="max-w-7xl mx-auto px-4 py-6">
                 <div className="flex flex-col lg:flex-row gap-6">
                     {/* Main Content - 75% */}
@@ -891,10 +996,15 @@ export const PropertyDetail: React.FC = () => {
                                                     title={item.title}
                                                     price={item.price}
                                                     area={item.area}
-                                                    address={`${item.addressStreet}, ${item.addressWard}, ${item.addressDistrict}, ${item.addressCity}`}
+                                                    address={[
+                                                        item.addressStreet,
+                                                        item.addressWard,
+                                                        item.addressDistrict,
+                                                        item.addressCity,
+                                                    ].filter(Boolean).join(", ")}
                                                     imageUrl={item.imageUrls?.[0] || ""}
                                                     createdAt={item.createdAt || ""}
-                                                    onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
+                                                    onFavoriteClick={(id) => console.log("Favorite clicked:", id)}
                                                 />
                                             ))}
                                         </div>
@@ -917,8 +1027,12 @@ export const PropertyDetail: React.FC = () => {
                                                             title={item.title}
                                                             price={item.price}
                                                             area={item.area}
-                                                            address={`${item.addressStreet}, ${item.addressWard}, ${item.addressDistrict}, ${item.addressCity}`}
-                                                            imageUrl={item.imageUrls?.[0] || ""}
+                                                            address={[
+                                                                item.addressStreet,
+                                                                item.addressWard,
+                                                                item.addressDistrict,
+                                                                item.addressCity,
+                                                            ].filter(Boolean).join(", ")}                                                            imageUrl={item.imageUrls?.[0] || ""}
                                                             createdAt={item.createdAt || ""}
                                                             onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
                                                         />
