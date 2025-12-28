@@ -82,7 +82,7 @@ export const AmenityFilterPanel: React.FC<AmenityFilterPanelProps> = ({
   };
 
   return (
-    <div className="absolute top-16 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] overflow-hidden min-w-[280px]">
+    <div className="absolute top-2 md:top-16 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] overflow-hidden min-w-[280px]">
       {/* Header */}
       <div
         className="min-h-12 px-4 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
