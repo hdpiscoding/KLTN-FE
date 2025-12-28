@@ -39,12 +39,10 @@ export const EstimatePropertyMap: React.FC = () => {
     const isLocationValid = distanceFromOriginal <= MAX_DISTANCE_METERS;
 
     const handleLocationChange = (newLocation: Location) => {
-        console.log('Location changed:', newLocation);
         setCurrentLocation(newLocation);
     };
 
     const handleConfirmLocation = () => {
-        console.log('Location confirmed:', currentLocation);
         setEstimationData({latitude: currentLocation.latitude, longitude: currentLocation.longitude});
         navigate(`/dinh-gia-nha/ket-qua?lat=${currentLocation.latitude}&lon=${currentLocation.longitude}&address=${currentLocation.address}`);
     };

@@ -91,7 +91,6 @@ export const Home: React.FC = () => {
     // Request user location
     const requestUserLocation = () => {
         if (!navigator.geolocation) {
-            console.error('Geolocation is not supported by this browser');
             setLocationPermission('denied');
             setShowLocationNote(true);
             return;
@@ -105,8 +104,6 @@ export const Home: React.FC = () => {
                 });
                 setLocationPermission('granted');
                 setShowLocationNote(false);
-                // Will call getRecommendedProperties with location later
-                console.log('User location:', position.coords.latitude, position.coords.longitude);
             },
             (error) => {
                 console.error('Error getting location:', error);
@@ -233,9 +230,6 @@ export const Home: React.FC = () => {
                         userId: 0,
                         location: { type: 'Point', coordinates: [0, 0] },
                     }));
-
-                    console.log('Mapped recommended properties:', mappedProperties);
-
                     setRecommendedProperties(mappedProperties);
                     setShowLocationNote(false);
                 } else {
@@ -282,7 +276,6 @@ export const Home: React.FC = () => {
         } else {
             navigate(`/thue-nha?title_lk=${encodedValue}`)
         }
-        console.log('Searching for:', trimmedValue, 'Type:', searchType);
     }
 
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {

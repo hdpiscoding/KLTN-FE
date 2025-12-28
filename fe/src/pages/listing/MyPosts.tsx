@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React from 'react';
 import { MyPropertyListItem } from '@/components/list-item/my-property-list-item.tsx';
 // Cast to any due to stale TS mismatch on optional props
