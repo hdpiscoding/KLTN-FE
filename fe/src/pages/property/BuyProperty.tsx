@@ -113,7 +113,6 @@ export const BuyProperty: React.FC = () => {
   // Request user location
   const requestUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      console.error("Geolocation is not supported by this browser");
       setLocationPermission("denied");
       return;
     }
@@ -126,11 +125,6 @@ export const BuyProperty: React.FC = () => {
         };
         setUserLocation(location);
         setLocationPermission("granted");
-        console.log(
-          "User location obtained:",
-          position.coords.latitude,
-          position.coords.longitude
-        );
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -166,7 +160,6 @@ export const BuyProperty: React.FC = () => {
     const trimmedValue = searchValue.trim();
     if (trimmedValue) {
       setFilter("title", "lk", trimmedValue);
-      console.log("Searching for:", trimmedValue);
     } else {
       setFilter("title", "lk", ""); // Xóa filter nếu rỗng
     }

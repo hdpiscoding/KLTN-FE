@@ -42,7 +42,6 @@ export const ForgotEmail = () => {
             toast.success("Mã OTP đã được gửi đến email của bạn!");
             navigate("/quen-mat-khau/otp");
         } catch (error: any) {
-            console.error("Forgot password error:", error);
             const errorCode = error?.response?.data?.error?.code;
             const errorMessage = error?.response?.data?.error?.message;
             let displayMessage = "Gửi mã OTP thất bại. Vui lòng thử lại.";

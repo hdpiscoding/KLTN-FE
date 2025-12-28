@@ -32,7 +32,6 @@ export const RegisterInfo = () => {
     }) => {
         // handle next
         setIsLoading(true);
-        console.log(data);
         try {
             const register_data = {
                 email: data.email,

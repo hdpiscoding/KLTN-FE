@@ -38,7 +38,6 @@ export const Login = () => {
         setIsLoading(true);
         try {
             const response = await login(data.email, data.password);
-            console.log(response);
             if (response.status === "200") {
                 loginData(response.data.token);
                 toast.success("Đăng nhập thành công!");
@@ -46,7 +45,6 @@ export const Login = () => {
                 setUserInfo(getUserIdFromToken(response.data.token), res?.data.avatarUrl);
                 setApproveStatus(res?.data.becomeSellerApproveStatus);
                 setPhoneVerificationStatus(res?.data.verifiedPhone);
-                console.log(res);
                 navigate("/");
             }
         }

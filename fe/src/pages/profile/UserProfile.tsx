@@ -103,7 +103,6 @@ export const UserProfile: React.FC = () => {
                     preferenceEntertainment: Math.round((preset.preferenceEntertainment ?? 0.5) * 100),
                 };
             });
-            console.log('Processed presets:', presetsWithPercentages);
             setPresets(presetsWithPercentages);
         } catch (error) {
             console.error('Error fetching presets:', error);
@@ -143,10 +142,8 @@ export const UserProfile: React.FC = () => {
             if (presetIdFromAPI !== null && presetIdFromAPI !== undefined) {
                 // Convert to string to match preset.id type (which is always string)
                 const presetIdString = String(presetIdFromAPI);
-                console.log('Setting selectedPresetId to:', presetIdString);
                 setSelectedPresetId(presetIdString);
             } else {
-                console.log('No preferencePresetId found in response (null or undefined)');
                 setSelectedPresetId(null);
             }
         }
@@ -830,7 +827,6 @@ export const UserProfile: React.FC = () => {
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     {presets.map((preset) => {
                                         const isSelected = selectedPresetId === preset.id;
-                                        console.log('Comparing preset.id:', preset.id, 'with selectedPresetId:', selectedPresetId, 'Result:', isSelected);
                                         return (
                                             <PreferencePresetCard
                                                 key={preset.id}
