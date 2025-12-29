@@ -89,7 +89,6 @@ export const EstimatePropertyAddress: React.FC = () => {
             const data = await placeAutocomplete(input, 10);
 
             if (data.predictions && data.predictions.length > 0) {
-                console.log('Autocomplete suggestions:', data.predictions[0]);
                 setSuggestions(data.predictions);
                 setShowSuggestions(true);
                 setSelectedIndex(-1);

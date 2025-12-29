@@ -44,7 +44,13 @@ export const OTP = ({from}: {from:string}) => {
             if (from === "register") {
                 // Resend OTP for registration
                 const {email, phoneNumber, fullName, password} = useAuthStore.getState();
-                const response = await register(email ?? "", password ?? "", fullName ?? "", phoneNumber ?? "");
+                const registerData = {
+                    email: email ?? "",
+                    phoneNumber: phoneNumber ?? "",
+                    fullName: fullName ?? "",
+                    password: password ?? ""
+                }
+                const response = await register(registerData);
                 if (response.status === "200") {
                     toast.success("Đã gửi lại mã OTP!");
                     setCountdown(120);
@@ -72,7 +78,6 @@ export const OTP = ({from}: {from:string}) => {
         try {
             if (from === "register") {
                 // Handle registration OTP verification
-                console.log("data: ", data.otp, " email: ", email ?? "");
                 const response = await verifyEmail(email ?? "", data.otp);
                 if (response.status === "200") {
                     toast.success("Đăng ký thành công!");
@@ -82,8 +87,6 @@ export const OTP = ({from}: {from:string}) => {
             } else if (from === "forgot") {
                 // Handle forgot password OTP verification and reset password
                 const {email, password} = useAuthStore.getState();
-                console.log("Reset password - email:", email, "otp:", data.otp);
-
                 const response = await resetPassword({
                     otp: data.otp,
                     newPassword: password ?? "",

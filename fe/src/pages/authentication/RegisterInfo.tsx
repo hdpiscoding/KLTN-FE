@@ -32,9 +32,14 @@ export const RegisterInfo = () => {
     }) => {
         // handle next
         setIsLoading(true);
-        console.log(data);
         try {
-            await register(data.email, data.password, data.phoneNumber, data.fullName);
+            const register_data = {
+                email: data.email,
+                password: data.password,
+                phoneNumber: data.phoneNumber,
+                fullName: data.fullName,
+            }
+            await register(register_data);
             registerData(data.email, data.phoneNumber, data.fullName, data.password);
             navigate("/dang-ky/otp");
         }

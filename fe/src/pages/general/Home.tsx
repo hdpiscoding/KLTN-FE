@@ -1,4 +1,5 @@
 import React, {useEffect, useState, useCallback} from 'react';
+import { Helmet } from 'react-helmet-async';
 import { PropertyCardItem } from "@/components/card-item/property-card-item.tsx";
 import { DistrictCardItem } from "@/components/card-item/district-card-item.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
@@ -90,7 +91,6 @@ export const Home: React.FC = () => {
     // Request user location
     const requestUserLocation = () => {
         if (!navigator.geolocation) {
-            console.error('Geolocation is not supported by this browser');
             setLocationPermission('denied');
             setShowLocationNote(true);
             return;
@@ -104,8 +104,6 @@ export const Home: React.FC = () => {
                 });
                 setLocationPermission('granted');
                 setShowLocationNote(false);
-                // Will call getRecommendedProperties with location later
-                console.log('User location:', position.coords.latitude, position.coords.longitude);
             },
             (error) => {
                 console.error('Error getting location:', error);
@@ -232,9 +230,6 @@ export const Home: React.FC = () => {
                         userId: 0,
                         location: { type: 'Point', coordinates: [0, 0] },
                     }));
-
-                    console.log('Mapped recommended properties:', mappedProperties);
-
                     setRecommendedProperties(mappedProperties);
                     setShowLocationNote(false);
                 } else {
@@ -281,7 +276,6 @@ export const Home: React.FC = () => {
         } else {
             navigate(`/thue-nha?title_lk=${encodedValue}`)
         }
-        console.log('Searching for:', trimmedValue, 'Type:', searchType);
     }
 
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -300,6 +294,11 @@ export const Home: React.FC = () => {
 
     return (
         <div>
+            <Helmet>
+                <title>Trang chủ - timnha</title>
+                <meta name="description" content="Tìm kiếm bất động sản nhà đất mua bán và cho thuê nhanh chóng, dễ dàng trên timnha." />
+            </Helmet>
+
             {/* Hero Section */}
             <div className="relative h-[600px] w-screen">
                 {/* Background Image */}
@@ -426,7 +425,12 @@ export const Home: React.FC = () => {
                                             title={property.title}
                                             price={property.price}
                                             area={property.area}
-                                            address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
+                                            address={[
+                                                property.addressStreet,
+                                                property.addressWard,
+                                                property.addressDistrict,
+                                                property.addressCity,
+                                            ].filter(Boolean).join(", ")}
                                             imageUrl={property.imageUrls?.[0] || ""}
                                             createdAt={property.createdAt || ""}
                                             onFavoriteClick={(id) => console.log('Favorite clicked:', id)}

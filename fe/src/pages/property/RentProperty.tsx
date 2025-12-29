@@ -3,6 +3,7 @@ import React, {useState, useEffect, useCallback, useRef} from 'react';
 import { Search, MapIcon } from 'lucide-react';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
+import { Helmet } from "react-helmet-async";
 import {
     Select,
     SelectContent,
@@ -56,6 +57,7 @@ export const RentProperty: React.FC = () => {
     const [currentPage, setCurrentPage] = useState(1);
     const [totalPages, setTotalPages] = useState(1);
     const [isMapOpen, setIsMapOpen] = useState(false);
+    const [isMobileMapView, setIsMobileMapView] = useState(false); // For mobile full-screen map
     const [propertyList, setPropertyList] = useState<PropertyListing[]>([]);
     const [isLoading, setIsLoading] = useState(false);
     const [likedProperties, setLikedProperties] = useState<Set<string>>(new Set());
@@ -72,7 +74,6 @@ export const RentProperty: React.FC = () => {
     // Request user location
     const requestUserLocation = useCallback(() => {
         if (!navigator.geolocation) {
-            console.error('Geolocation is not supported by this browser');
             setLocationPermission('denied');
             return;
         }
@@ -85,7 +86,6 @@ export const RentProperty: React.FC = () => {
                 };
                 setUserLocation(location);
                 setLocationPermission('granted');
-                console.log('User location obtained:', position.coords.latitude, position.coords.longitude);
             },
             (error) => {
                 console.error('Error getting location:', error);
@@ -122,7 +122,6 @@ export const RentProperty: React.FC = () => {
         const trimmedValue = searchValue.trim();
         if (trimmedValue) {
             setFilter('title', 'lk', trimmedValue);
-            console.log('Searching for:', trimmedValue);
         } else {
             setFilter('title', 'lk', ''); // Xóa filter nếu rỗng
         }
@@ -130,6 +129,11 @@ export const RentProperty: React.FC = () => {
 
     const handleToggleMap = () => {
         setIsMapOpen(!isMapOpen);
+    };
+
+    // Toggle mobile map view (full screen)
+    const handleToggleMobileMap = () => {
+        setIsMobileMapView((prev) => !prev);
     };
 
     // Check liked status for all properties - defined early to be used in handleMapInteraction
@@ -566,7 +570,7 @@ export const RentProperty: React.FC = () => {
 
     // Effect to handle body overflow based on map state
     useEffect(() => {
-        if (isMapOpen) {
+        if (isMapOpen || isMobileMapView) {
             document.body.style.overflow = 'hidden';
         } else {
             document.body.style.overflow = '';
@@ -576,11 +580,92 @@ export const RentProperty: React.FC = () => {
         return () => {
             document.body.style.overflow = '';
         };
-    }, [isMapOpen]);
+    }, [isMapOpen, isMobileMapView]);
+
+    // Generate dynamic SEO based on filters
+    const generateSEOTitle = (): string => {
+        let title = "Cho thuê nhà đất";
+
+        // Add property type
+        const selectedPropertyType = PROPERTY_TYPES.find(pt => pt.id === propertyType);
+        if (selectedPropertyType && propertyType !== 'all') {
+            title = `Cho thuê ${selectedPropertyType.name.toLowerCase()}`;
+        }
+
+        // Add district
+        const selectedDistrict = DISTRICTS.find(d => d.id === district);
+        if (selectedDistrict && district !== 'all') {
+            title += ` ${selectedDistrict.name}`;
+        } else {
+            title += " TP.HCM";
+        }
+
+        // Add price range
+        const selectedPriceRange = PRICE_RANGES.find(pr => pr.id === priceRange);
+        if (selectedPriceRange && priceRange !== 'all') {
+            title += ` ${selectedPriceRange.title.toLowerCase()}`;
+        }
+
+        title += " | timnha";
+        return title;
+    };
+
+    const generateSEODescription = (): string => {
+        let description = "Tìm kiếm";
+
+        // Add property type
+        const selectedPropertyType = PROPERTY_TYPES.find(pt => pt.id === propertyType);
+        if (selectedPropertyType && propertyType !== 'all') {
+            description += ` ${selectedPropertyType.name.toLowerCase()}`;
+        } else {
+            description += " bất động sản";
+        }
+
+        description += " cho thuê";
+
+        // Add district
+        const selectedDistrict = DISTRICTS.find(d => d.id === district);
+        if (selectedDistrict && district !== 'all') {
+            description += ` tại ${selectedDistrict.name}`;
+        } else {
+            description += " tại TP.HCM";
+        }
+
+        // Add price range
+        const selectedPriceRange = PRICE_RANGES.find(pr => pr.id === priceRange);
+        if (selectedPriceRange && priceRange !== 'all') {
+            description += `, mức giá ${selectedPriceRange.title.toLowerCase()}`;
+        }
+
+        description += ". Thông tin cập nhật, đầy đủ pháp lý, hình ảnh rõ ràng. Tìm đúng nhà, sống đúng cách.";
+
+        return description;
+    };
 
     return (
         <div className={`min-h-screen bg-gray-50 ${isMapOpen ? 'h-screen overflow-hidden' : ''}`}>
-            <div className={isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}>
+            <Helmet>
+                <title>{generateSEOTitle()}</title>
+                <meta name="description" content={generateSEODescription()} />
+                <meta property="og:title" content={generateSEOTitle()} />
+                <meta property="og:description" content={generateSEODescription()} />
+                <meta property="og:type" content="website" />
+                <link rel="canonical" href="https://timnha.sonata.io.vn/thue-nha" />
+            </Helmet>
+
+            {/* Mobile Full Screen Map View */}
+            {isMobileMapView && (
+                <div className="fixed inset-0 z-50 md:hidden">
+                    <MultipleMarkerMap
+                        properties={propertyMarkers}
+                        defaultZoom={11}
+                        onMapInteraction={handleMapInteraction}
+                    />
+                </div>
+            )}
+
+            {/* Main Content - Hidden when mobile map is active */}
+            <div className={`${isMobileMapView ? "hidden md:block" : ""} ${isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}`}>
                 <div className="flex flex-col lg:flex-row lg:gap-6">
                     {/* Main Content - Dynamic width based on map state */}
                     <div className={isMapOpen ? "lg:w-[40%] overflow-y-auto px-4 py-6 h-screen" : "flex-1 lg:w-3/4"}>
@@ -604,10 +689,11 @@ export const RentProperty: React.FC = () => {
                                         <Search className="w-4 h-4 text-white" />
                                     </Button>
                                 </div>
+                                {/* Map Button - Hidden on mobile */}
                                 <Button
                                     onClick={handleToggleMap}
                                     variant="outline"
-                                    className="flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
+                                    className="hidden md:flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
                                 >
                                     <MapIcon className="w-4 h-4" />
                                     {isMapOpen ? 'Đóng bản đồ' : 'Mở bản đồ'}
@@ -786,7 +872,12 @@ export const RentProperty: React.FC = () => {
                                                                 title={property.title}
                                                                 price={property.price}
                                                                 area={property.area}
-                                                                address={`${property.addressStreet} ${property.addressWard} ${property.addressDistrict} ${property.addressCity}`}
+                                                                address={[
+                                                                    property.addressStreet,
+                                                                    property.addressWard,
+                                                                    property.addressDistrict,
+                                                                    property.addressCity,
+                                                                ].filter(Boolean).join(", ")}
                                                                 imageUrl={property.imageUrls?.[0] || ""}
                                                                 createdAt={property.createdAt || ""}
                                                                 onFavoriteClick={(id) => console.log('Favorite clicked:', id)}
@@ -827,6 +918,17 @@ export const RentProperty: React.FC = () => {
                     </aside>
                 </div>
             </div>
+
+            {/* Floating Map/List Toggle Button - Mobile Only */}
+            <Button
+                onClick={handleToggleMobileMap}
+                className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[1001] bg-[#008DDA] hover:bg-[#0072b0] text-white shadow-lg px-6 py-6 rounded-full flex items-center gap-2 cursor-pointer"
+            >
+                <MapIcon className="w-5 h-5" />
+                <span className="font-semibold">
+                    {isMobileMapView ? "Danh sách" : "Bản đồ"}
+                </span>
+            </Button>
         </div>
     );
 };

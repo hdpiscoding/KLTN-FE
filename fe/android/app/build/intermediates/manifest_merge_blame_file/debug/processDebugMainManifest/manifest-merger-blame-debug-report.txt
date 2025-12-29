@@ -9,46 +9,46 @@
 9        android:targetSdkVersion="36" />
 10    <!-- 1. Thêm các quyền truy cập vị trí và mạng -->
 11    <uses-permission android:name="android.permission.INTERNET" />
-11-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:4:5-67
-11-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:4:22-64
+11-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:4:5-67
+11-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:4:22-64
 12    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
-12-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:5:5-81
-12-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:5:22-78
+12-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:5:5-81
+12-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:5:22-78
 13    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-13-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:6:5-79
-13-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:6:22-76
+13-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:6:5-79
+13-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:6:22-76
 14    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-14-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:7:5-79
-14-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:7:22-76
+14-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:7:5-79
+14-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:7:22-76
 15
 16    <!-- 2. Quyền chạy nền quan trọng -->
 17    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
-17-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:10:5-77
-17-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:10:22-74
+17-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:10:5-77
+17-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:10:22-74
 18    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-18-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:11:5-13:5
-18-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:12:5-65
+18-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:11:5-13:5
+18-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:12:5-65
 19    <uses-permission android:name="android.permission.WAKE_LOCK" />
-19-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:14:5-68
-19-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:14:22-65
+19-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:14:5-68
+19-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:14:22-65
 20    <!--
 21    Android SDK 34+ additionally requires the FOREGROUND_SERVICE_LOCATION
 22    runtime permission to start a foreground service of type "location".
 23    -->
 24    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-24-->[:capacitor-community-background-geolocation] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:5-86
-24-->[:capacitor-community-background-geolocation] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:22-83
+24-->[:capacitor-community-background-geolocation] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:5-86
+24-->[:capacitor-community-background-geolocation] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:22-83
 25    <!--
 26    Android SDK 33+ requires the POST_NOTIFICATIONS runtime permission to
 27    display the foreground service notification.
 28    -->
 29    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-29-->[:capacitor-community-background-geolocation] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:19:5-77
-29-->[:capacitor-community-background-geolocation] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:19:22-74
+29-->[:capacitor-community-background-geolocation] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:19:5-77
+29-->[:capacitor-community-background-geolocation] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:19:22-74
 30
 31    <uses-feature android:name="android.hardware.location.gps" /> <!-- Required by older versions of Google Play services to create IID tokens -->
-31-->[:capacitor-community-background-geolocation] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:5-66
-31-->[:capacitor-community-background-geolocation] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:19-63
+31-->[:capacitor-community-background-geolocation] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:5-66
+31-->[:capacitor-community-background-geolocation] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-community/background-geolocation/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:21:19-63
 32    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 32-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:26:5-82
 32-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:26:22-79
@@ -65,88 +65,88 @@
 38-->[androidx.core:core:1.17.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:26:22-94
 39
 40    <application
-40-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:16:5-58:19
+40-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:16:5-58:19
 41        android:allowBackup="true"
-41-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:17:5-31
+41-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:17:5-31
 42        android:appComponentFactory="androidx.core.app.CoreComponentFactory"
 42-->[androidx.core:core:1.17.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/11094a199bb7945826b161d8a9c17beb/transformed/core-1.17.0/AndroidManifest.xml:28:18-86
 43        android:debuggable="true"
 44        android:extractNativeLibs="false"
 45        android:icon="@mipmap/ic_launcher"
-45-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:18:5-39
+45-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:18:5-39
 46        android:label="@string/app_name"
-46-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:19:5-37
+46-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:19:5-37
 47        android:roundIcon="@mipmap/ic_launcher_round"
-47-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:20:5-50
+47-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:20:5-50
 48        android:supportsRtl="true"
-48-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:21:5-31
+48-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:21:5-31
 49        android:theme="@style/AppTheme" >
-49-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:22:5-36
+49-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:22:5-36
 50        <activity
-50-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:24:9-36:20
+50-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:24:9-36:20
 51            android:name="com.uit.timnha.MainActivity"
-51-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:26:7-35
+51-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:26:7-35
 52            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-52-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:25:7-123
+52-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:25:7-123
 53            android:exported="true"
-53-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:30:7-30
+53-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:30:7-30
 54            android:label="@string/title_activity_main"
-54-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:27:7-50
+54-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:27:7-50
 55            android:launchMode="singleTask"
-55-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:29:7-38
+55-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:29:7-38
 56            android:theme="@style/AppTheme.NoActionBarLaunch" >
-56-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:28:7-56
+56-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:28:7-56
 57            <intent-filter>
-57-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:32:13-35:29
+57-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:32:13-35:29
 58                <action android:name="android.intent.action.MAIN" />
-58-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:33:17-69
-58-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:33:25-66
+58-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:33:17-69
+58-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:33:25-66
 59
 60                <category android:name="android.intent.category.LAUNCHER" />
-60-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:34:17-77
-60-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:34:27-74
+60-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:34:17-77
+60-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:34:27-74
 61            </intent-filter>
 62        </activity>
 63
 64        <provider
 65            android:name="androidx.core.content.FileProvider"
-65-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:39:7-56
+65-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:39:7-56
 66            android:authorities="com.uit.timnha.fileprovider"
-66-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:40:7-58
+66-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:40:7-58
 67            android:exported="false"
-67-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:41:7-31
+67-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:41:7-31
 68            android:grantUriPermissions="true" >
-68-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:42:7-41
+68-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:42:7-41
 69            <meta-data
-69-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:44:13-47:9
+69-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:44:13-47:9
 70                android:name="android.support.FILE_PROVIDER_PATHS"
-70-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:45:9-59
+70-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:45:9-59
 71                android:resource="@xml/file_paths" />
-71-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:46:9-43
+71-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:46:9-43
 72        </provider>
 73
 74        <!-- 3. Thêm Service chạy nền của Plugin tại đây -->
 75        <service
-75-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:51:9-56:7
+75-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:51:9-56:7
 76            android:name="com.equimaps.capacitor_background_geolocation.BackgroundGeolocationService"
-76-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:52:7-96
+76-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:52:7-96
 77            android:enabled="true"
-77-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:53:7-29
+77-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:53:7-29
 78            android:exported="true"
-78-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:54:7-30
+78-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:54:7-30
 79            android:foregroundServiceType="location|location" />
-79-->/home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:55:7-47
+79-->/home/haphuthinh/Personal/score-FE/fe/android/app/src/main/AndroidManifest.xml:55:7-47
 80        <service
-80-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:9-16:19
+80-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:9-16:19
 81            android:name="io.capawesome.capacitorjs.plugins.firebase.messaging.MessagingService"
-81-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-97
+81-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-97
 82            android:exported="false" >
-82-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-37
+82-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-37
 83            <intent-filter>
-83-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
+83-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
 84                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-84-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
-84-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
+84-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
+84-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
 85            </intent-filter>
 86        </service>
 87
@@ -185,10 +185,10 @@
 107            android:exported="false" >
 107-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:49:13-37
 108            <intent-filter android:priority="-500" >
-108-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
+108-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
 109                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-109-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
-109-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
+109-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
+109-->[:capacitor-firebase-messaging] /home/haphuthinh/Personal/score-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
 110            </intent-filter>
 111        </service>
 112        <service

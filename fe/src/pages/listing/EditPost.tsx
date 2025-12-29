@@ -277,7 +277,6 @@ export const EditPost: React.FC = () => {
                 // response.data contains PropertyListing
                 const propertyData: PropertyListing = response.data;
 
-                console.log('Loaded property data:', propertyData);
 
                 // Set demand type from listingType
                 setSelectedDemand(propertyData.listingType as DemandType);

@@ -7,8 +7,8 @@ import type {
   AmenityFilterState,
   SpecialIndicatorType,
 } from "@/types/amenity.d.ts";
-import { AMENITY_CATEGORIES } from "../constants/amenityConstants";
-import { ChevronDown, ChevronUp, Layers, Newspaper } from "lucide-react";
+import { AMENITY_CATEGORIES } from "@/components/map";
+import { ChevronDown, ChevronUp, Layers } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 interface AmenityFilterPanelProps {
@@ -27,9 +27,16 @@ export const AmenityFilterPanel: React.FC<AmenityFilterPanelProps> = ({
   activeIndicator,
   onIndicatorChange,
 }) => {
-  const [isExpanded, setIsExpanded] = React.useState(true);
+  const [isExpanded, setIsExpanded] = React.useState(false);
 
   const categories = Object.values(AMENITY_CATEGORIES);
+
+  // Calculate active filters count
+  const activeFiltersCount = React.useMemo(() => {
+    const amenityCount = Object.values(filterState).filter(Boolean).length;
+    const indicatorCount = activeIndicator ? 1 : 0;
+    return amenityCount + indicatorCount;
+  }, [filterState, activeIndicator]);
 
   const renderRadioItem = (
     value: SpecialIndicatorType | "none",
@@ -75,15 +82,20 @@ export const AmenityFilterPanel: React.FC<AmenityFilterPanelProps> = ({
   };
 
   return (
-    <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-20 overflow-hidden w-[280px]">
+    <div className="absolute top-2 md:top-16 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] overflow-hidden min-w-[280px]">
       {/* Header */}
       <div
-        className="px-4 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
+        className="min-h-12 px-4 py-3 border-b border-gray-200 flex items-center justify-between cursor-pointer hover:bg-gray-50 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center gap-2">
-          <Layers className="w-4 h-4 text-blue-600" />
+          <Layers className="w-4 h-4 text-[#008DDA]" />
           <h3 className="font-semibold text-sm text-gray-800">Lớp bản đồ</h3>
+          {activeFiltersCount > 0 && (
+            <span className="bg-[#008DDA] text-white text-xs font-semibold px-2 py-0.5 rounded-full">
+              {activeFiltersCount}
+            </span>
+          )}
         </div>
         {isExpanded ? (
           <ChevronUp className="w-4 h-4 text-gray-500" />
@@ -98,9 +110,8 @@ export const AmenityFilterPanel: React.FC<AmenityFilterPanelProps> = ({
           {/* Special Indicators Section */}
           <div className="p-3">
             <div className="flex items-center gap-2 mb-2 px-1">
-              <Newspaper className="w-3 h-3 text-purple-600" />
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                Chỉ số đặc biệt (Heatmap)
+                Chỉ số đặc biệt (Biểu đồ nhiệt)
               </span>
             </div>
 

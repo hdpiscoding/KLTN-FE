@@ -9,6 +9,8 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form.tsx";
+import {verifyPhoneNumberSendOtp, verifyPhoneNumberVerifyOtp} from "@/services/userServices.ts";
+
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import { Slider } from "@/components/ui/slider.tsx";
@@ -31,6 +33,8 @@ import {
   Music,
   Loader2,
   MapPin,
+  CheckCircle2,
+  AlertCircle,
 } from "lucide-react";
 import { PreferencePresetCard } from "@/components/card-item/preference-preset-card.tsx";
 import type { PreferencePreset } from "@/types/preference-preset";
@@ -39,13 +43,16 @@ import { uploadImage } from "@/services/mediaServices.ts";
 import { toast } from "react-toastify";
 import { useDebounce } from "use-debounce";
 import { getAllPreferencePresets } from "@/services/preferencePresetServices.ts";
-import type { PlacePrediction } from "@/types/place-prediction";
-import { placeAutocomplete } from "@/services/goongAPIServices.ts";
-import { cn } from "@/lib/utils.ts";
-import { useUserStore } from "@/store/userStore.ts";
 import { Capacitor } from "@capacitor/core";
 import { Switch } from "@/components/ui/switch";
 import { useBackgroundLocation } from "@/hooks/useBackgroundLocation";
+import type { PlacePrediction } from '@/types/place-prediction';
+import { placeAutocomplete } from '@/services/goongAPIServices.ts';
+import {useUserStore} from "@/store/userStore.ts";
+import { VerifyPhoneDialog } from '@/components/dialog/verify-phone-dialog.tsx';
+import { convertPhoneNumber } from '@/utils/generalFormat.ts';
+import {Spinner} from "@/components/ui/spinner.tsx";
+import { cn } from "@/lib/utils";
 
 type UserProfileFormData = {
   fullName: string;
@@ -65,42 +72,44 @@ type PreferenceFormData = {
 };
 
 export const UserProfile: React.FC = () => {
-  const navigate = useNavigate();
-  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
-  const [avatarFile, setAvatarFile] = useState<File | null>(null);
-  const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
-  const [presets, setPresets] = useState<PreferencePreset[]>([]);
-  const [isLoadingPresets, setIsLoadingPresets] = useState(true);
-  const [fullName, setFullName] = useState<string>("");
-  const [email, setEmail] = useState<string>("");
-  const [phoneNumber, setPhoneNumber] = useState<string>("");
-  const [address, setAddress] = useState<string>("");
-  const [preferences, setPreferences] = useState({
-    safety: 50,
-    healthcare: 50,
-    education: 50,
-    shopping: 50,
-    transportation: 50,
-    environment: 50,
-    entertainment: 50,
-  });
-  const setUserInfo = useUserStore((state) => state.setUserInfo);
-  const userId = useUserStore((state) => state.userId);
-
   // Tracking Hook
   const { isTracking, startTracking, stopTracking } = useBackgroundLocation();
+    const navigate = useNavigate();
+    const [isVerifyPhoneDialogOpen, setIsVerifyPhoneDialogOpen] = useState(false);
+    const [isLoadingProfile, setIsLoadingProfile] = useState(true);
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [selectedPresetId, setSelectedPresetId] = useState<string | null>(null);
+    const [presets, setPresets] = useState<PreferencePreset[]>([]);
+    const [isLoadingPresets, setIsLoadingPresets] = useState(true);
+    const [fullName, setFullName] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
+    const [phoneNumber, setPhoneNumber] = useState<string>('');
+    const [address, setAddress] = useState<string>('');
+    const [preferences, setPreferences] = useState({
+        safety: 50,
+        healthcare: 50,
+        education: 50,
+        shopping: 50,
+        transportation: 50,
+        environment: 50,
+        entertainment: 50,
+    })
+    const {setUserInfo, setPhoneVerificationStatus, verifiedPhone} = useUserStore();
+    const userId = useUserStore(state => state.userId);
 
   // Autocomplete states for address
-  const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
-  const [isLoadingAddress, setIsLoadingAddress] = useState(false);
-  const [showSuggestions, setShowSuggestions] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [hasUserInteracted, setHasUserInteracted] = useState(false);
-  const suggestionRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
-  const lastTrimmedAddressRef = useRef<string>("");
+    // Autocomplete states for address
+    const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
+    const [isLoadingAddress, setIsLoadingAddress] = useState(false);
+    const [isPhoneVerificationLoading, setIsPhoneVerificationLoading] = useState(false);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [selectedIndex, setSelectedIndex] = useState(-1);
+    const [hasUserInteracted, setHasUserInteracted] = useState(false);
+    const suggestionRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const lastTrimmedAddressRef = useRef<string>('');
 
   // Flag to prevent clearing preset selection during preset update
   const isUpdatingPresetRef = useRef(false);
@@ -165,7 +174,6 @@ export const UserProfile: React.FC = () => {
       setUserInfo(
         userId,
         response?.data.avatarUrl,
-        response?.data.becomeSellerApproveStatus
       );
 
       // Convert decimal values (0-1) from API to percentage values (0-100) for display
@@ -490,6 +498,46 @@ export const UserProfile: React.FC = () => {
     });
   };
 
+      // Handle phone verification
+    const handleVerifyPhone = async (otp: string) => {
+        try {
+            const currentPhone = form.getValues('phoneNumber');
+            // Call API to verify phone with OTP
+            await verifyPhoneNumberVerifyOtp(convertPhoneNumber(currentPhone), otp);
+            // Update verification status in store
+            setPhoneVerificationStatus(true);
+            toast.success('Xác thực số điện thoại thành công!');
+            // Dialog will close automatically via onOpenChange in the dialog component
+        } catch (error: any) {
+            console.error('Phone verification failed:', error);
+            const errorMessage = error?.response?.data?.error?.message || 'Xác thực thất bại. Vui lòng thử lại!';
+            toast.error(errorMessage);
+            throw error; // Re-throw to keep dialog open
+        }
+    };
+
+    const handleOpenVerifyDialog = async () => {
+        const currentPhone = form.getValues('phoneNumber');
+        if (!currentPhone || currentPhone.length !== 10) {
+            toast.error('Vui lòng nhập số điện thoại hợp lệ (10 chữ số)');
+            return;
+        }
+        setIsPhoneVerificationLoading(true);
+        try {
+            // Call API to send OTP to phone number
+            await verifyPhoneNumberSendOtp(convertPhoneNumber(currentPhone));
+            toast.success('Mã OTP đã được gửi đến số điện thoại của bạn!');
+            setIsVerifyPhoneDialogOpen(true);
+        } catch (error: any) {
+            console.error('Failed to send OTP:', error);
+            const errorMessage = error?.response?.data?.error?.message || 'Không thể gửi mã OTP. Vui lòng thử lại!';
+            toast.error(errorMessage);
+        }
+        finally {
+            setIsPhoneVerificationLoading(false);
+        }
+    };
+
   // Combined submit handler for both profile and preferences
   const handleSaveAll = async () => {
     try {
@@ -512,19 +560,20 @@ export const UserProfile: React.FC = () => {
         }
       }
 
-      await updateMyProfile({
-        fullName: profileData.fullName,
-        avatarUrl: avatarUrl,
-        liveAddress: profileData.address,
-        preferencePresetId: selectedPresetId ? Number(selectedPresetId) : null,
-        preferenceSafety: preferenceData.safety / 100,
-        preferenceHealthcare: preferenceData.healthcare / 100,
-        preferenceEducation: preferenceData.education / 100,
-        preferenceShopping: preferenceData.shopping / 100,
-        preferenceTransportation: preferenceData.transportation / 100,
-        preferenceEnvironment: preferenceData.environment / 100,
-        preferenceEntertainment: preferenceData.entertainment / 100,
-      });
+            await updateMyProfile({
+                fullName: profileData.fullName,
+                avatarUrl: avatarUrl,
+                liveAddress: profileData.address,
+                phoneNumber: profileData.phoneNumber,
+                preferencePresetId: selectedPresetId ? Number(selectedPresetId) : null,
+                preferenceSafety: preferenceData.safety / 100,
+                preferenceHealthcare: preferenceData.healthcare / 100,
+                preferenceEducation: preferenceData.education / 100,
+                preferenceShopping: preferenceData.shopping / 100,
+                preferenceTransportation: preferenceData.transportation / 100,
+                preferenceEnvironment: preferenceData.environment / 100,
+                preferenceEntertainment: preferenceData.entertainment / 100,
+            });
 
       toast.success("Cập nhật thông tin thành công!");
 
@@ -681,32 +730,64 @@ export const UserProfile: React.FC = () => {
                 )}
               />
 
-              {/* Phone Number */}
-              <FormField
-                control={form.control}
-                name="phoneNumber"
-                rules={{
-                  pattern: {
-                    value: /^[0-9]{10}$/,
-                    message: "Số điện thoại phải gồm đúng 10 chữ số",
-                  },
-                }}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Số điện thoại</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="tel"
-                        disabled={true}
-                        className="focus-visible:ring-[#008DDA] cursor-not-allowed"
-                        maxLength={10}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                            {/* Phone Number */}
+                            <FormField
+                                control={form.control}
+                                name="phoneNumber"
+                                rules={{
+                                    required: "Số điện thoại không được để trống!",
+                                    pattern: {
+                                        value: /^[0-9]{10}$/,
+                                        message: "Số điện thoại phải có 10 chữ số!",
+                                    },
+                                }}
+                                render={({ field }) => (
+                                    <FormItem>
+                                        <FormLabel className="flex items-center gap-2">
+                                            Số điện thoại
+                                            {phoneNumber
+                                                ?
+                                                (verifiedPhone ? (
+                                                    <span className="flex items-center gap-1 text-xs text-green-600 font-normal">
+                                                    <CheckCircle2 className="w-4 h-4" />
+                                                    Đã xác thực
+                                                </span>
+                                                ) : (
+                                                    <span className="flex items-center gap-1 text-xs text-orange-600 font-normal">
+                                                    <AlertCircle className="w-4 h-4" />
+                                                    Chưa xác thực
+                                                </span>
+                                                ))
+                                                :
+                                                <div></div>}
+                                        </FormLabel>
+                                        <FormControl>
+                                            <div className="flex gap-2">
+                                                <Input
+                                                    type="tel"
+                                                    className="focus-visible:ring-[#008DDA] flex-1"
+                                                    maxLength={10}
+                                                    {...field}
+                                                />
+                                                {phoneNumber && !verifiedPhone && (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        className={`transition-colors text-white hover:text-white whitespace-nowrap duration-200 ${
+                                                            isPhoneVerificationLoading ? "bg-[#0064A6]" : "bg-[#008DDA] cursor-pointer"
+                                                        } hover:bg-[#0064A6] `}
+                                                        onClick={handleOpenVerifyDialog}
+                                                    >
+                                                        {isPhoneVerificationLoading ? <Spinner /> : null}
+                                                        Xác thực
+                                                    </Button>
+                                                )}
+                                            </div>
+                                        </FormControl>
+                                        <FormMessage />
+                                    </FormItem>
+                                )}
+                            />
 
               <FormField
                 control={form.control}
@@ -867,36 +948,26 @@ export const UserProfile: React.FC = () => {
                 </p>
               </div>
 
-              {/* Preset Cards Grid */}
-              {presets.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {presets.map((preset) => {
-                    const isSelected = selectedPresetId === preset.id;
-                    console.log(
-                      "Comparing preset.id:",
-                      preset.id,
-                      "with selectedPresetId:",
-                      selectedPresetId,
-                      "Result:",
-                      isSelected
-                    );
-                    return (
-                      <PreferencePresetCard
-                        key={preset.id}
-                        preset={preset}
-                        isSelected={isSelected}
-                        onSelect={() => handlePresetSelect(preset.id)}
-                      />
-                    );
-                  })}
-                </div>
-              ) : (
-                <div className="text-center py-12">
-                  <p className="text-gray-500">
-                    Không có bộ ưu tiên nào được tìm thấy.
-                  </p>
-                </div>
-              )}
+                            {/* Preset Cards Grid */}
+                            {presets.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {presets.map((preset) => {
+                                        const isSelected = selectedPresetId === preset.id;
+                                        return (
+                                            <PreferencePresetCard
+                                                key={preset.id}
+                                                preset={preset}
+                                                isSelected={isSelected}
+                                                onSelect={() => handlePresetSelect(preset.id)}
+                                            />
+                                        );
+                                    })}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12">
+                                    <p className="text-gray-500">Không có bộ ưu tiên nào được tìm thấy.</p>
+                                </div>
+                            )}
 
               {/* Selected Indicator */}
               {selectedPresetId && (
@@ -1262,26 +1333,34 @@ export const UserProfile: React.FC = () => {
         )}
       </div>
 
-      {/* Global Save Button */}
-      {!isLoadingProfile && (
-        <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 sticky bottom-0 lg:flex lg:justify-end md:flex md:justify-end">
-          <Button
-            type="button"
-            onClick={handleSaveAll}
-            disabled={isSubmitting}
-            className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] text-base px-8 py-6 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
-                Đang lưu...
-              </>
-            ) : (
-              "Lưu thay đổi"
+            {/* Global Save Button */}
+            {!isLoadingProfile && (
+                <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 sticky bottom-0 lg:flex lg:justify-end md:flex md:justify-end">
+                    <Button
+                        type="button"
+                        onClick={handleSaveAll}
+                        disabled={isSubmitting}
+                        className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] text-base px-8 py-6 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        {isSubmitting ? (
+                            <>
+                                <Loader2 className="w-5 h-5 mr-2 animate-spin inline" />
+                                Đang lưu...
+                            </>
+                        ) : (
+                            'Lưu thay đổi'
+                        )}
+                    </Button>
+                </div>
             )}
-          </Button>
+
+            {/* Verify Phone Dialog */}
+            <VerifyPhoneDialog
+                open={isVerifyPhoneDialogOpen}
+                onOpenChange={setIsVerifyPhoneDialogOpen}
+                phoneNumber={phoneNumber}
+                onVerify={handleVerifyPhone}
+            />
         </div>
-      )}
-    </div>
-  );
+    );
 };
