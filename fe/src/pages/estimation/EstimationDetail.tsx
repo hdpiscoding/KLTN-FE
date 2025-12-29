@@ -13,44 +13,47 @@ import { PROPERTY_FURNITURE } from "@/constants/propertyFurniture.ts";
 import { useChatContext, useLoadChatHistory } from "@/hooks/chat";
 import { useChatStore } from "@/store/chatStore";
 import { toast } from "react-toastify";
+import { getPredictionById } from "@/services/propertyServices";
 
-// Mock data for testing
-const mockPredictionData = {
-    prediction_id: "2f8e6e9e-d419-4117-badf-d4f1a506ce6b",
-    created_at: "2025-12-16T10:34:06.164523Z",
-    address_district: "123/45 Lý Thái Tổ, Phường 2, Quận 3, TP. Hồ Chí Minh",
-    area: 50.0,
-    property_type: "alley_house",
-    predicted_price_billions: 5.07,
-    livability_score: 58.72508293725,
-    ai_insight: "Chào bạn, với vai trò chuyên gia định giá bất động sản, tôi xin phân tích mức giá dự đoán 5.07 tỷ VNĐ cho căn nhà bạn cung cấp như sau:\n\nMức giá **5.07 tỷ VNĐ** cho căn nhà hẻm (alley_house) tại Quận 4, với diện tích 50m2, 4 tầng, 4 phòng ngủ, 5 phòng vệ sinh, mặt tiền 8m và đường trước nhà 7m, có thể được xem là **khá hợp lý, thậm chí có phần nhỉnh** so với các tiêu chuẩn thông thường cho nhà hẻm.\n\nCác yếu tố \"đắt giá\" nhất của bất động sản này bao gồm:\n\n*   **Vị trí đắc địa tại Quận 4:** Mặc dù là nhà hẻm, Quận 4 là khu vực trung tâm sầm uất, có kết nối giao thông thuận tiện với các quận khác, mang lại tiềm năng tăng giá và cho thuê tốt.\n*   **Chỉ số \"Y tế\" vượt trội (90.1/100):** Gần các cơ sở y tế quan trọng như Nhà Thuốc Số 48 - Công Ty DP Khánh Hội (148m) là một điểm cộng lớn về tiện ích cuộc sống, đặc biệt với những gia đình có người già hoặc trẻ nhỏ.\n*   **Đường trước nhà rộng 7m, mặt tiền 8m:** Đây là một lợi thế đáng kể cho nhà hẻm, giúp việc ra vào thuận tiện, dễ dàng đỗ xe và tạo cảm giác thông thoáng hơn so với các con hẻm nhỏ hẹp thông thường.\n*   **Nội thất đầy đủ:** Giảm thiểu chi phí ban đầu cho người mua về việc trang bị nội thất.\n\nTuy nhiên, căn nhà vẫn còn một vài điểm trừ cần cân nhắc:\n\n*   **Chỉ số \"Tiện ích\" khá thấp (6.67/100):** Dù có tiện ích y tế tốt, chỉ số này cho thấy các tiện ích khác như mua sắm, giải trí, dịch vụ có thể chưa đa dạng hoặc ở xa, ảnh hưởng đến trải nghiệm sống hàng ngày.\n*   **Chỉ số \"An ninh\" là None:** Việc thiếu thông tin về chỉ số an ninh là một điểm trừ, bởi an ninh là yếu tố được nhiều người mua quan tâm hàng đầu khi chọn nhà.\n\nNhìn chung, mức giá này phản ánh sự cân bằng giữa lợi thế vị trí, kết cấu nhà và tiện ích y tế nổi bật, bù đắp phần nào cho những hạn chế về tiện ích khác và sự thiếu vắng dữ liệu an ninh.",
-    longitude: 106.71599746,
-    latitude: 10.75791036,
-    num_bedrooms: 4.0,
-    num_bathrooms: 5.0,
-    num_floors: 4.0,
-    facade_width_m: 8.0,
-    road_width_m: 7.0,
-    legal_status: "Sổ đỏ/Sổ hồng",
-    house_direction: "Đông",
-    balcony_direction: "Nam",
-    furniture_status: "Đầy đủ",
-    component_scores: {
-        score_healthcare: 90.10018488333333,
-        score_education: 69.686503351,
-        score_transportation: 99.087717426,
-        score_environment: 50.95948058799999,
-        score_public_safety: 0.0,
-        score_shopping: 6.666666666666667,
-        score_entertainment: 75.0
-    }
-};
+interface PropertyPredictionResponse {
+    prediction_id: string;
+    created_at: string;
+    address_district: string;
+    area: number;
+    property_type: string;
+    predicted_price_billions: number;
+    livability_score: number;
+    ai_insight: string;
+    longitude: number;
+    latitude: number;
+    full_address: string | null;
+    num_bedrooms: number | null;
+    num_bathrooms: number | null;
+    num_floors: number | null;
+    facade_width_m: number | null;
+    road_width_m: number | null;
+    legal_status: string | null;
+    house_direction: string | null;
+    balcony_direction: string | null;
+    furniture_status: string | null;
+    component_scores: ComponentScores;
+}
+
+interface ComponentScores {
+    score_healthcare: number;
+    score_education: number;
+    score_transportation: number;
+    score_environment: number;
+    score_public_safety: number;
+    score_shopping: number;
+    score_entertainment: number;
+}
 
 export default function EstimationDetail() {
     const navigate = useNavigate();
-    const { id } = useParams();
+    const { id } = useParams<{ id: string }>();
     const [isLoading, setIsLoading] = useState(true);
-    const [predictionData, setPredictionData] = useState<typeof mockPredictionData | null>(null);
+    const [predictionData, setPredictionData] = useState<PropertyPredictionResponse>();
 
     // Chat hooks
     const { switchToPrediction } = useChatContext();
@@ -58,19 +61,24 @@ export default function EstimationDetail() {
     const setIsOpen = useChatStore((state) => state.setIsOpen);
 
     useEffect(() => {
-        // Simulate API call
         const fetchPredictionDetail = async () => {
+            if (!id) {
+                setIsLoading(false);
+                return;
+            }
+
             try {
                 setIsLoading(true);
-                // TODO: Replace with actual API call
-                // const response = await getPredictionDetail(id);
-                // setPredictionData(response.data);
+                const response = await getPredictionById(id);
 
-                // Simulate delay
-                await new Promise(resolve => setTimeout(resolve, 1000));
-                setPredictionData(mockPredictionData);
+                if (response.status === "200" && response.data) {
+                    setPredictionData(response.data);
+                } else {
+                    toast.error("Không thể tải thông tin định giá");
+                }
             } catch (error) {
-                console.error("Error fetching prediction detail:", error);
+                console.error("Failed to fetch prediction details:", error);
+                toast.error("Đã xảy ra lỗi khi tải thông tin định giá");
             } finally {
                 setIsLoading(false);
             }

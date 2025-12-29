@@ -50,7 +50,7 @@ export const useLoadChatHistory = () => {
                         if (!targetMetadata.predictionId) {
                             throw new Error("predictionId is required for prediction context");
                         }
-                        response = await getPredictionChatHistory(Number(targetMetadata.predictionId));
+                        response = await getPredictionChatHistory(targetMetadata.predictionId);
                         break;
                     default:
                         throw new Error(`Unknown context: ${targetContext}`);
