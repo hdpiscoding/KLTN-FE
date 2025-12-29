@@ -16,6 +16,7 @@ interface EstimationState {
     num_floors?: number;
     facade_width_m?: number;
     road_width_m?: number;
+    fullAddress?: string;
     setEstimationData: (data: Partial<EstimationState>) => void;
     clearEstimationData: () => void;
 }
@@ -28,6 +29,7 @@ export const useEstimationStore = create<EstimationState>()(
             area: 0,
             propertyType: "",
             address_district: "",
+            fullAddress: "",
             setEstimationData: (data) => set((state) => ({ ...state, ...data })),
             clearEstimationData: () => set({
                 latitude: 0,
@@ -35,6 +37,7 @@ export const useEstimationStore = create<EstimationState>()(
                 area: 0,
                 propertyType: "",
                 address_district: "",
+                fullAddress: "",
                 legal_status: undefined,
                 house_direction: undefined,
                 balcony_direction: undefined,

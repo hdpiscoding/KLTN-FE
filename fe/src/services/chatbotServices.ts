@@ -82,7 +82,7 @@ export const getGeneralChatHistory = async () => {
     return response.data;
 }
 
-export const getPredictionChatHistory = async (predictionId: number) => {
+export const getPredictionChatHistory = async (predictionId: string) => {
     const response = await instance.get(`recommendation/prediction/property/chat/history/${predictionId}`);
     return response.data;
 }

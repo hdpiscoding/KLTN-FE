@@ -113,6 +113,11 @@ export const getPredictionHistory = async () => {
   return response.data;
 };
 
+export const getPredictionById = async (predictionId: string) => {
+  const response = await instance.get(`recommendation/prediction/property/${predictionId}`);
+  return response.data;
+}
+
 export const getRecommendedProperties = async (
   lat: number,
   lng: number,

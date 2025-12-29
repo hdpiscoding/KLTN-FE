@@ -5,19 +5,26 @@ import { useEstimationStore } from "@/store/estimationStore.ts";
 import { predictPropertyPrice } from "@/services/propertyServices.ts";
 import { CircularProgress } from "@/components/ui/circular-progress.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
-import { Loader2, TrendingUp, Shield, GraduationCap, ShoppingBag, Car, Leaf, Music, Heart } from 'lucide-react';
+import { Loader2, TrendingUp, Shield, GraduationCap, ShoppingBag, Car, Leaf, Music, Heart, MessageCircle } from 'lucide-react';
 import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
 import type {PredictionData} from "@/types/prediction-data";
 import {formatPrice} from "@/utils/generalFormat.ts";
+import { useChatContext, useLoadChatHistory } from "@/hooks/chat";
+import { useChatStore } from "@/store/chatStore";
 
 export const EstimatePropertyPrice: React.FC = () => {
     const navigate = useNavigate();
     const [params] = useSearchParams();
-    const { clearEstimationData, latitude, longitude, area, propertyType, address_district, legal_status, house_direction, balcony_direction, furniture_status, num_bedrooms, num_bathrooms, num_floors, facade_width_m, road_width_m } = useEstimationStore();
+    const { clearEstimationData, latitude, longitude, area, propertyType, address_district, fullAddress, legal_status, house_direction, balcony_direction, furniture_status, num_bedrooms, num_bathrooms, num_floors, facade_width_m, road_width_m } = useEstimationStore();
 
     const [isLoading, setIsLoading] = useState(true);
     const [predictionData, setPredictionData] = useState<PredictionData | null>(null);
+
+    // Chat hooks
+    const { switchToPrediction } = useChatContext();
+    const { loadHistory } = useLoadChatHistory();
+    const setIsOpen = useChatStore((state) => state.setIsOpen);
 
 
     useEffect(() => {
@@ -29,6 +36,7 @@ export const EstimatePropertyPrice: React.FC = () => {
                     latitude: number;
                     longitude: number;
                     address_district: string;
+                    full_address?: string;
                     area: number;
                     property_type: string;
                     num_bedrooms?: number;
@@ -44,6 +52,7 @@ export const EstimatePropertyPrice: React.FC = () => {
                     latitude,
                     longitude,
                     address_district,
+                    full_address: fullAddress,
                     area,
                     property_type: propertyType,
                 };
@@ -74,11 +83,27 @@ export const EstimatePropertyPrice: React.FC = () => {
         };
 
         fetchPrediction();
-    }, [latitude, longitude, area, propertyType, address_district, legal_status, house_direction, balcony_direction, furniture_status, num_bedrooms, num_bathrooms, num_floors, facade_width_m, road_width_m]);
+    }, [latitude, longitude, area, propertyType, address_district, fullAddress, legal_status, house_direction, balcony_direction, furniture_status, num_bedrooms, num_bathrooms, num_floors, facade_width_m, road_width_m]);
 
     const handleContinue = () => {
         clearEstimationData();
         navigate("/dinh-gia-nha/dia-chi");
+    };
+
+    const handleContinueChat = async () => {
+        if (!predictionData?.prediction_id) {
+            toast.error("Không tìm thấy thông tin định giá");
+            return;
+        }
+
+        try {
+            switchToPrediction(predictionData.prediction_id);
+            await loadHistory("prediction", { predictionId: predictionData.prediction_id });
+            setIsOpen(true);
+        } catch (error) {
+            console.error("Failed to open chat:", error);
+            toast.error("Không thể mở chat. Vui lòng thử lại.");
+        }
     };
 
     const componentScoreLabels = [
@@ -202,6 +227,17 @@ export const EstimatePropertyPrice: React.FC = () => {
                         >
                             {predictionData.ai_insight}
                         </ReactMarkdown>
+                    </div>
+
+                    {/* Continue Chat Button */}
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                        <Button
+                            onClick={handleContinueChat}
+                            className="cursor-pointer w-full h-12 bg-gradient-to-r from-[#008DDA] to-[#0064A6] hover:from-[#0064A6] hover:to-[#004d7a] text-white font-semibold text-base shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-[1.02]"
+                        >
+                            <MessageCircle className="w-5 h-5 mr-2" />
+                            Tiếp tục trò chuyện với AI
+                        </Button>
                     </div>
                 </div>
 

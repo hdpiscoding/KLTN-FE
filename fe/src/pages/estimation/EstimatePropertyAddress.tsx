@@ -35,7 +35,7 @@ interface EstimateFormData {
 
 export const EstimatePropertyAddress: React.FC = () => {
     const navigate = useNavigate();
-    const { setEstimationData } = useEstimationStore();
+    const { setEstimationData, clearEstimationData } = useEstimationStore();
     const [lat, setLat] = useState<number | null>(null);
     const [lon, setLon] = useState<number | null>(null);
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
@@ -182,6 +182,10 @@ export const EstimatePropertyAddress: React.FC = () => {
         }
     };
 
+    useEffect(() => {
+        clearEstimationData();
+    }, [clearEstimationData]);
+
     const onSubmit = async (data: EstimateFormData) => {
         if (!lat || !lon) {
             toast.error('Vui lòng chọn địa chỉ chính xác');
@@ -197,6 +201,7 @@ export const EstimatePropertyAddress: React.FC = () => {
             area: parseFloat(data.area),
             propertyType: data.propertyType,
             address_district: districtPart || "",
+            fullAddress: data.address,
             legal_status: data.legal_status || undefined,
             house_direction: data.house_direction || undefined,
             balcony_direction: data.balcony_direction || undefined,
