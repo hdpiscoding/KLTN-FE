@@ -315,7 +315,7 @@ export const PropertyDetail: React.FC = () => {
                     listingType: 'for_sale',
                     propertyType: 'house',
                     approvalStatus: 'APPROVED',
-                    createdAt: new Date().toISOString(),
+                    createdAt: "",
                     updatedAt: new Date().toISOString(),
                     userId: 0,
                     location: {type: 'Point', coordinates: [0, 0]},
