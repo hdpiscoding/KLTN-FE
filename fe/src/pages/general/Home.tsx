@@ -1,7 +1,8 @@
-import React, {useEffect, useState, useCallback} from 'react';
+import React, {useEffect, useState, useCallback, useRef} from 'react';
 import { Helmet } from 'react-helmet-async';
 import { PropertyCardItem } from "@/components/card-item/property-card-item.tsx";
 import { DistrictCardItem } from "@/components/card-item/district-card-item.tsx";
+import { PropertySuggestionItem } from "@/components/list-item/property-suggestion-item.tsx";
 import { Skeleton } from "@/components/ui/skeleton.tsx";
 import { Alert, AlertDescription } from "@/components/ui/alert.tsx";
 import homeBackground from "@/assets/timnha-home-background.png";
@@ -20,6 +21,7 @@ import {useNavigate} from "react-router-dom";
 import type {PropertyListing} from "@/types/property-listing";
 import {searchProperties, getRecommendedProperties} from "@/services/propertyServices.ts";
 import {useUserStore} from "@/store/userStore.ts";
+import { useDebounce } from 'use-debounce';
 
 interface RecommendedPropertyItem {
     id: number;
@@ -43,6 +45,13 @@ export const Home: React.FC = () => {
     const [saleProperties, setSaleProperties] = useState<PropertyListing[]>([]);
     const [rentProperties, setRentProperties] = useState<PropertyListing[]>([]);
     const [recommendedProperties, setRecommendedProperties] = useState<PropertyListing[]>([]);
+
+    // Autocomplete states
+    const [suggestions, setSuggestions] = useState<PropertyListing[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
+    const [debouncedSearchValue] = useDebounce(searchValue, 300);
+    const searchContainerRef = useRef<HTMLDivElement>(null);
 
     // Location states
     const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -253,6 +262,90 @@ export const Home: React.FC = () => {
         navigate(`/mua-nha?addressDistrict_eq=${encodeURIComponent(districtId)}`)
     }
 
+    // Fetch suggestions for autocomplete
+    const fetchSuggestions = useCallback(async (query: string, type: 'for_sale' | 'for_rent') => {
+        if (!query.trim() || query.trim().length < 2) {
+            setSuggestions([]);
+            setShowSuggestions(false);
+            return;
+        }
+
+        try {
+            setIsLoadingSuggestions(true);
+            const response = await searchProperties({
+                filters: [
+                    {
+                        key: "listingType",
+                        operator: "equal",
+                        value: type
+                    },
+                    {
+                        key: 'approvalStatus',
+                        operator: 'equal',
+                        value: 'APPROVED'
+                    },
+                    {
+                        key: "title",
+                        operator: "like",
+                        value: query
+                    }
+                ],
+                sorts: [
+                    {
+                        key: "createdAt",
+                        type: "DESC"
+                    }
+                ],
+                rpp: 7,
+                page: 1
+            });
+
+            if (response.status === "200" && response.data?.items) {
+                setSuggestions(response.data.items);
+                setShowSuggestions(true);
+            } else {
+                setSuggestions([]);
+                setShowSuggestions(false);
+            }
+        } catch (error) {
+            console.error('Error fetching suggestions:', error);
+            setSuggestions([]);
+            setShowSuggestions(false);
+        } finally {
+            setIsLoadingSuggestions(false);
+        }
+    }, []);
+
+    // Handle click outside to close suggestions
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (searchContainerRef.current && !searchContainerRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, []);
+
+    // Fetch suggestions when debounced search value changes
+    useEffect(() => {
+        if (debouncedSearchValue) {
+            fetchSuggestions(debouncedSearchValue, searchType);
+        } else {
+            setSuggestions([]);
+            setShowSuggestions(false);
+        }
+    }, [debouncedSearchValue, searchType, fetchSuggestions]);
+
+    const handleSuggestionClick = (propertyId: number) => {
+        setShowSuggestions(false);
+        setSearchValue('');
+        navigate(`/bat-dong-san/${propertyId}`);
+    };
+
     useEffect(() => {
         // Request user location on mount
         requestUserLocation();
@@ -270,6 +363,7 @@ export const Home: React.FC = () => {
     const executeSearch = () => {
         const trimmedValue = searchValue.trim();
         if (!trimmedValue) return;
+        setShowSuggestions(false);
         const encodedValue = encodeURIComponent(trimmedValue);
         if (searchType === 'for_sale') {
             navigate(`/mua-nha?title_lk=${encodedValue}`)
@@ -338,13 +432,18 @@ export const Home: React.FC = () => {
                         </div>
 
                         {/* Search Box */}
-                        <div className="w-full">
+                        <div className="w-full relative isolate" ref={searchContainerRef} style={{ zIndex: 10000 }}>
                             <div className="flex w-full">
                                 <Input
                                     type="text"
                                     value={searchValue}
                                     onChange={(e) => setSearchValue(e.target.value)}
                                     onKeyDown={handleSearch}
+                                    onFocus={() => {
+                                        if (suggestions.length > 0) {
+                                            setShowSuggestions(true);
+                                        }
+                                    }}
                                     placeholder={`Tìm kiếm ${searchType === 'for_sale' ? 'nhà để mua' : 'nhà để thuê'}...`}
                                     className="h-[52px] bg-white text-gray-600 text-base sm:text-lg w-full rounded-r-none border-r-0 focus-visible:ring-[#008DDA] focus-visible:ring-2 focus-visible:ring-offset-0"
                                 />
@@ -356,6 +455,41 @@ export const Home: React.FC = () => {
                                     <Search className="w-5 h-5 text-white" />
                                 </Button>
                             </div>
+
+                            {/* Autocomplete Suggestions Dropdown */}
+                            {showSuggestions && (searchValue.trim().length >= 2) && (
+                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-lg shadow-2xl border border-gray-200 overflow-hidden max-h-[320px] overflow-y-auto" style={{ zIndex: 9999, boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+                                    {isLoadingSuggestions ? (
+                                        <div className="p-4 text-center text-gray-500">
+                                            <div className="flex items-center justify-center gap-2">
+                                                <div className="w-4 h-4 border-2 border-[#008DDA] border-t-transparent rounded-full animate-spin"></div>
+                                                <span>Đang tìm kiếm...</span>
+                                            </div>
+                                        </div>
+                                    ) : suggestions.length > 0 ? (
+                                        <>
+                                            {suggestions.map((property) => (
+                                                <PropertySuggestionItem
+                                                    key={property.id}
+                                                    id={property.id!}
+                                                    title={property.title || ''}
+                                                    price={property.price || 0}
+                                                    priceUnit={property.priceUnit || 'VND'}
+                                                    area={property.area || 0}
+                                                    addressDistrict={property.addressDistrict || ''}
+                                                    addressStreet={property.addressStreet || ''}
+                                                    imageUrls={property.imageUrls || []}
+                                                    onClick={() => handleSuggestionClick(property.id!)}
+                                                />
+                                            ))}
+                                        </>
+                                    ) : (
+                                        <div className="p-4 text-center text-gray-500">
+                                            Không tìm thấy kết quả phù hợp
+                                        </div>
+                                    )}
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

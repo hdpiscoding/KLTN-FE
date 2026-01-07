@@ -467,6 +467,18 @@ export const RentProperty: React.FC = () => {
         }
     }, [filters]);
 
+    // Sync search input value with URL title filter
+    useEffect(() => {
+        const titleFilter = filters.find(
+            (f) => f.key === "title" && f.operator === "lk"
+        );
+        if (titleFilter && titleFilter.value) {
+            setSearchValue(titleFilter.value);
+        } else {
+            setSearchValue("");
+        }
+    }, [filters]);
+
     // Reset về trang 1 khi filters thay đổi
     useEffect(() => {
         setCurrentPage(1);
