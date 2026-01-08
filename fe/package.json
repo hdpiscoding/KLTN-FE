@@ -10,12 +10,6 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@capacitor-community/background-geolocation": "^1.2.26",
-    "@capacitor-firebase/messaging": "^8.0.1",
-    "@capacitor/android": "^8.0.0",
-    "@capacitor/app": "^8.0.0",
-    "@capacitor/core": "^8.0.0",
-    "@capacitor/status-bar": "^8.0.0",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@goongmaps/goong-map-react": "^1.1.2",
     "@hookform/resolvers": "^5.2.2",
@@ -38,7 +32,6 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "embla-carousel-react": "^8.6.0",
-    "firebase": "^12.7.0",
     "lucide-react": "^0.552.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
@@ -55,8 +48,6 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
-    "@capacitor/assets": "^3.0.5",
-    "@capacitor/cli": "^8.0.0",
     "@eslint/js": "^9.36.0",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^24.10.0",

@@ -1,7 +1,7 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Search, MapIcon, X, List } from "lucide-react"; // Thêm icon X và List
+import { Helmet } from "react-helmet-async";
+import { Search, MapIcon } from "lucide-react";
 import { Input } from "@/components/ui/input.tsx";
 import { Button } from "@/components/ui/button.tsx";
 import {
@@ -19,7 +19,14 @@ import { PropertyListItem } from "@/components/list-item/property-list-item.tsx"
 import { PropertyTypeFilter } from "@/components/general/property-type-filter.tsx";
 import { PropertyDistrictFilter } from "@/components/general/property-district-filter.tsx";
 import { ControlledPagination } from "@/components/ui/controlled-pagination.tsx";
-
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel.tsx";
+import { PropertyCardItem } from "@/components/card-item/property-card-item.tsx";
 import MultipleMarkerMap from "@/components/map/multiple-marker-map";
 import type { PropertyListing } from "@/types/property-listing";
 import { useSearchFilters } from "@/hooks/use-search-filters.ts";
@@ -43,9 +50,7 @@ import {
 import { useUserStore } from "@/store/userStore.ts";
 import { useDebounce } from "use-debounce";
 import type { PropertyMarker } from "@/types/property-marker";
-import { Capacitor } from "@capacitor/core"; // Import Capacitor
 
-// ... (Giữ nguyên các interface RecommendedPropertyItem và MapBounds)
 interface RecommendedPropertyItem {
   id: number;
   title: string;
@@ -69,7 +74,6 @@ type MapBounds = {
 };
 
 export const BuyProperty: React.FC = () => {
-  // ... (Giữ nguyên toàn bộ State và Logic Hook)
   const [searchValue, setSearchValue] = useState("");
   const [district, setDistrict] = useState("all");
   const [propertyType, setPropertyType] = useState("all");
@@ -78,6 +82,7 @@ export const BuyProperty: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [isMobileMapView, setIsMobileMapView] = useState(false); // For mobile full-screen map
   const [propertyList, setPropertyList] = useState<PropertyListing[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const { filters, setFilter } = useSearchFilters();
@@ -86,6 +91,7 @@ export const BuyProperty: React.FC = () => {
     new Set()
   );
 
+  // Location and recommended properties states
   const { userId, isLoggedIn } = useUserStore();
   const [userLocation, setUserLocation] = useState<{
     lat: number;
@@ -94,17 +100,19 @@ export const BuyProperty: React.FC = () => {
   const [locationPermission, setLocationPermission] = useState<
     "granted" | "denied" | "prompt" | null
   >(null);
-  const [, setRecommendedProperties] = useState<PropertyListing[]>([]);
-  const [, setIsLoadingRecommended] = useState(false);
+  const [recommendedProperties, setRecommendedProperties] = useState<
+    PropertyListing[]
+  >([]);
+  const [isLoadingRecommended, setIsLoadingRecommended] = useState(false);
 
+  // Optimization Refs
   const allFetchedProperties = useRef<Map<number, PropertyListing>>(new Map());
   const fetchedRegions = useRef<MapBounds[]>([]);
   const checkedLikedIds = useRef<Set<number>>(new Set());
 
-  // ... (Giữ nguyên các hàm requestUserLocation, propertyMarkers, handleSearchKeyDown, executeSearch, checkLikedStatus)
+  // Request user location
   const requestUserLocation = useCallback(() => {
     if (!navigator.geolocation) {
-      console.error("Geolocation is not supported by this browser");
       setLocationPermission("denied");
       return;
     }
@@ -117,11 +125,6 @@ export const BuyProperty: React.FC = () => {
         };
         setUserLocation(location);
         setLocationPermission("granted");
-        console.log(
-          "User location obtained:",
-          position.coords.latitude,
-          position.coords.longitude
-        );
       },
       (error) => {
         console.error("Error getting location:", error);
@@ -130,8 +133,9 @@ export const BuyProperty: React.FC = () => {
     );
   }, []);
 
+  // Convert propertyList to propertyMarkers for map display
   const propertyMarkers: PropertyMarker[] = propertyList
-    .filter((property) => property.location?.coordinates)
+    .filter((property) => property.location?.coordinates) // Only include properties with valid location
     .map((property) => ({
       id: String(property.id),
       location: {
@@ -157,21 +161,31 @@ export const BuyProperty: React.FC = () => {
     if (trimmedValue) {
       setFilter("title", "lk", trimmedValue);
     } else {
-      setFilter("title", "lk", "");
+      setFilter("title", "lk", ""); // Xóa filter nếu rỗng
     }
   };
 
   const checkLikedStatus = useCallback(
     async (properties: PropertyListing[]) => {
-      if (!userId || !isLoggedIn) return;
+      if (!userId || !isLoggedIn) {
+        return;
+      }
+
+      // Filter out properties that have already been checked
       const uncheckedProperties = properties.filter(
         (p) => !checkedLikedIds.current.has(p.id!)
       );
+
       if (uncheckedProperties.length === 0) return;
 
       try {
+        // Add to checked set immediately to prevent double checking
         uncheckedProperties.forEach((p) => checkedLikedIds.current.add(p.id!));
+
         const newLikedIds = new Set<string>();
+
+        // Optimization: checking in parallel with limit or batch if backend supports
+        // For now keeping Promise.all but only for unchecked ones
         await Promise.all(
           uncheckedProperties.map(async (property) => {
             try {
@@ -180,10 +194,16 @@ export const BuyProperty: React.FC = () => {
                 newLikedIds.add(String(property.id));
               }
             } catch (error) {
+              console.error(
+                `Error checking liked status for property ${property.id}:`,
+                error
+              );
+              // If failed, remove from checked so we can retry later if needed
               checkedLikedIds.current.delete(property.id!);
             }
           })
         );
+
         setLikedProperties((prev) => {
           const next = new Set(prev);
           newLikedIds.forEach((id) => next.add(id));
@@ -200,7 +220,12 @@ export const BuyProperty: React.FC = () => {
     setIsMapOpen(!isMapOpen);
   };
 
-  // ... (Giữ nguyên các hàm helper Cache, Map Interaction)
+  // Toggle mobile map view (full screen)
+  const handleToggleMobileMap = () => {
+    setIsMobileMapView((prev) => !prev);
+  };
+
+  // Helper: Check if region is cached
   const isRegionCached = (bounds: MapBounds): boolean => {
     return fetchedRegions.current.some(
       (cached) =>
@@ -211,6 +236,7 @@ export const BuyProperty: React.FC = () => {
     );
   };
 
+  // Helper: Filter properties locally from cache
   const filterPropertiesFromCache = (bounds: MapBounds) => {
     const visibleProperties: PropertyListing[] = [];
     allFetchedProperties.current.forEach((property) => {
@@ -227,6 +253,7 @@ export const BuyProperty: React.FC = () => {
     return visibleProperties;
   };
 
+  // Handle map interaction (zoom or drag end) - OPTIMIZED
   const handleMapInteractionCore = useCallback(
     async (bounds: {
       minLat: number;
@@ -235,17 +262,24 @@ export const BuyProperty: React.FC = () => {
       maxLng: number;
       zoom: number;
     }) => {
-      if (bounds.zoom < 10) return;
+      // Only call API if zoom is high enough
+      if (bounds.zoom < 10) {
+        return;
+      }
+
+      // 1. Check Cache
       if (isRegionCached(bounds)) {
         const cachedProps = filterPropertiesFromCache(bounds);
         setPropertyList(cachedProps);
         setTotalPages(1);
+        // Check liked status for cached properties (if any new ones somehow)
         await checkLikedStatus(cachedProps);
         return;
       }
 
       try {
-        const buffer = 0.01;
+        // Buffer to fetch larger area
+        const buffer = 0.01; // ~1km buffer
         const fetchBounds = {
           minLat: bounds.minLat - buffer,
           minLng: bounds.minLng - buffer,
@@ -261,6 +295,7 @@ export const BuyProperty: React.FC = () => {
         );
 
         if (response.status === "200" && response.data) {
+          // Map response
           const mappedProperties: PropertyListing[] = response.data
             .filter((item: any) => {
               const listingType = item.listingType || item.listing_type;
@@ -304,17 +339,20 @@ export const BuyProperty: React.FC = () => {
                 item.updatedAt || item.updated_at || new Date().toISOString(),
             }));
 
+          // Update Cache
           mappedProperties.forEach((p) => {
             allFetchedProperties.current.set(p.id!, p);
           });
-          fetchedRegions.current.push({ ...bounds, ...fetchBounds });
+          fetchedRegions.current.push({ ...bounds, ...fetchBounds }); // Cache the larger fetched area
 
+          // Update UI with properties in current view
+          // We filter from the newly updated cache to ensure consistency
           const visibleProps = filterPropertiesFromCache(bounds);
           setPropertyList(visibleProps);
           setTotalPages(1);
 
           if (userId) {
-            await checkLikedStatus(mappedProperties);
+            await checkLikedStatus(mappedProperties); // Check status for all fetched
           }
         }
       } catch (error) {
@@ -324,19 +362,26 @@ export const BuyProperty: React.FC = () => {
     [userId, checkLikedStatus]
   );
 
+  // Debounced version - wait 500ms after last interaction
   const [debouncedHandleMapInteraction] = useDebounce(
     handleMapInteractionCore,
     500
   );
 
+  // Wrapper to use debounced version
   const handleMapInteraction = useCallback(
-    (bounds: any) => {
+    (bounds: {
+      minLat: number;
+      minLng: number;
+      maxLat: number;
+      maxLng: number;
+      zoom: number;
+    }) => {
       debouncedHandleMapInteraction(bounds);
     },
     [debouncedHandleMapInteraction]
   );
 
-  // ... (Giữ nguyên handleFavoriteClick, handleDistrictChange, getRecommendedPropertiesData, handlePropertyTypeChange, handleSortChange, handlePriceRangeChange, handlePageChange, các useEffect)
   const handleFavoriteClick = async (
     id: string,
     currentLikedState: boolean
@@ -375,6 +420,7 @@ export const BuyProperty: React.FC = () => {
     try {
       setIsLoadingRecommended(true);
 
+      // Only fetch if user has granted location permission and we have coordinates
       if (locationPermission === "granted" && userLocation) {
         let response;
         if (userId) {
@@ -395,6 +441,7 @@ export const BuyProperty: React.FC = () => {
         }
 
         if (response.status === "200" && response.data?.items) {
+          // Map response from getRecommendedProperties format to PropertyListing format
           const mappedProperties: PropertyListing[] = response.data.items.map(
             (item: RecommendedPropertyItem) => ({
               id: item.id,
@@ -402,6 +449,7 @@ export const BuyProperty: React.FC = () => {
               price: item.price,
               priceUnit: item.price_unit,
               area: item.area,
+              // Parse address string to get district
               addressDistrict:
                 item.address
                   .split(",")
@@ -409,6 +457,7 @@ export const BuyProperty: React.FC = () => {
                   .find(
                     (s: string) => s.includes("Quận") || s.includes("Huyện")
                   ) || "",
+              // Use full address as street for display
               addressStreet: item.address.split(",")[0]?.trim() || "",
               addressWard:
                 item.address
@@ -421,6 +470,7 @@ export const BuyProperty: React.FC = () => {
               numBedrooms: item.num_bedrooms,
               numBathrooms: item.num_bathrooms,
               imageUrls: item.thumbnail_url ? [item.thumbnail_url] : [],
+              // Set other required fields with defaults
               listingType: "for_sale",
               propertyType: "house",
               approvalStatus: "APPROVED",
@@ -433,9 +483,11 @@ export const BuyProperty: React.FC = () => {
 
           setRecommendedProperties(mappedProperties);
         } else {
+          // Clear recommendations if API fails
           setRecommendedProperties([]);
         }
       } else {
+        // No location permission - clear properties
         setRecommendedProperties([]);
       }
     } catch (error) {
@@ -455,6 +507,7 @@ export const BuyProperty: React.FC = () => {
     }
   };
 
+  // Handle sort criteria change
   const handleSortChange = (value: string) => {
     setSortCriteria(value);
     const params = new URLSearchParams(searchParams);
@@ -466,6 +519,7 @@ export const BuyProperty: React.FC = () => {
     setSearchParams(params);
   };
 
+  // Handle price range select change
   const handlePriceRangeChange = (value: string) => {
     setPriceRange(value);
     if (value === "all") {
@@ -478,16 +532,20 @@ export const BuyProperty: React.FC = () => {
     }
   };
 
+  // Handle page change
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    // Scroll to top when page changes
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
+  // Sync district state with URL filters
   useEffect(() => {
     const districtFilter = filters.find(
       (f) => f.key === "addressDistrict" && f.operator === "eq"
     );
     if (districtFilter) {
+      // Filter có district name, cần tìm id tương ứng
       const districtId = DISTRICTS.find(
         (d) => d.name === districtFilter.value
       )?.id;
@@ -499,6 +557,7 @@ export const BuyProperty: React.FC = () => {
     }
   }, [filters]);
 
+  // Sync property type state with URL filters
   useEffect(() => {
     const propertyTypeFilter = filters.find(
       (f) => f.key === "propertyType" && f.operator === "eq"
@@ -510,6 +569,7 @@ export const BuyProperty: React.FC = () => {
     }
   }, [filters]);
 
+  // Sync sort criteria state with URL
   useEffect(() => {
     const sortParam = searchParams.get("sort");
     if (sortParam) {
@@ -519,11 +579,13 @@ export const BuyProperty: React.FC = () => {
     }
   }, [searchParams]);
 
+  // Sync price range state with URL filters
   useEffect(() => {
     const priceFilter = filters.find(
       (f) => f.key === "price" && f.operator === "rng"
     );
     if (priceFilter) {
+      // Filter có min-max value, cần tìm id tương ứng
       const rangeId = getPriceRangeId(priceFilter.value);
       if (rangeId) {
         setPriceRange(rangeId);
@@ -550,10 +612,13 @@ export const BuyProperty: React.FC = () => {
     setCurrentPage(1);
   }, [filters]);
 
+  // Fetch properties based on filters from URL
   useEffect(() => {
     const fetchProperties = async () => {
       try {
         setIsLoading(true);
+
+        // Convert filters from URL to API format
         const apiFilters = filters.map((filter) => ({
           key: filter.key,
           operator:
@@ -575,6 +640,7 @@ export const BuyProperty: React.FC = () => {
           value: filter.value,
         }));
 
+        // Always add listingType filter for buy properties
         const filtersWithType = [
           ...apiFilters,
           {
@@ -589,7 +655,14 @@ export const BuyProperty: React.FC = () => {
           },
         ];
 
-        let sorts = [{ key: "createdAt", type: "DESC" }];
+        // Determine sorts based on sort criteria from URL
+        let sorts = [
+          {
+            key: "createdAt",
+            type: "DESC",
+          },
+        ];
+
         const sortParam = searchParams.get("sort");
         if (sortParam && sortParam !== "default") {
           const sortValue = getSortCriteriaValue(sortParam);
@@ -617,170 +690,277 @@ export const BuyProperty: React.FC = () => {
     fetchProperties();
   }, [filters, currentPage, searchParams]);
 
+  // Fetch recommended properties when component mounts or location changes
   useEffect(() => {
     getRecommendedPropertiesData();
   }, [getRecommendedPropertiesData]);
 
+  // Request user location on mount if not already obtained
   useEffect(() => {
     if (locationPermission === null) {
       requestUserLocation();
     }
   }, [locationPermission, requestUserLocation]);
 
+  // Check liked status for properties when they are loaded
   useEffect(() => {
     if (propertyList.length > 0) {
       checkLikedStatus(propertyList);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [propertyList]);
 
+  // Cleanup effect: Reset body overflow when component unmounts
   useEffect(() => {
-    if (isMapOpen) {
+    return () => {
+      // Always reset body overflow when leaving this page
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  // Effect to handle body overflow based on map state
+  useEffect(() => {
+    if (isMapOpen || isMobileMapView) {
       document.body.style.overflow = "hidden";
     } else {
       document.body.style.overflow = "";
     }
+
+    // Cleanup when effect re-runs or component unmounts
     return () => {
       document.body.style.overflow = "";
     };
-  }, [isMapOpen]);
+  }, [isMapOpen, isMobileMapView]);
 
-  // --- RENDER ---
+  // Generate dynamic SEO based on filters
+  const generateSEOTitle = (): string => {
+    let title = "Mua bán nhà đất";
+
+    // Add property type
+    const selectedPropertyType = PROPERTY_TYPES.find(pt => pt.id === propertyType);
+    if (selectedPropertyType && propertyType !== 'all') {
+      title = `Mua bán ${selectedPropertyType.name.toLowerCase()}`;
+    }
+
+    // Add district
+    const selectedDistrict = DISTRICTS.find(d => d.id === district);
+    if (selectedDistrict && district !== 'all') {
+      title += ` ${selectedDistrict.name}`;
+    } else {
+      title += " TP.HCM";
+    }
+
+    // Add price range
+    const selectedPriceRange = PRICE_RANGES.find(pr => pr.id === priceRange);
+    if (selectedPriceRange && priceRange !== 'all') {
+      title += ` ${selectedPriceRange.title.toLowerCase()}`;
+    }
+
+    title += " | timnha";
+    return title;
+  };
+
+  const generateSEODescription = (): string => {
+    let description = "Tìm kiếm";
+
+    // Add property type
+    const selectedPropertyType = PROPERTY_TYPES.find(pt => pt.id === propertyType);
+    if (selectedPropertyType && propertyType !== 'all') {
+      description += ` ${selectedPropertyType.name.toLowerCase()}`;
+    } else {
+      description += " bất động sản";
+    }
+
+    description += " mua bán";
+
+    // Add district
+    const selectedDistrict = DISTRICTS.find(d => d.id === district);
+    if (selectedDistrict && district !== 'all') {
+      description += ` tại ${selectedDistrict.name}`;
+    } else {
+      description += " tại TP.HCM";
+    }
+
+    // Add price range
+    const selectedPriceRange = PRICE_RANGES.find(pr => pr.id === priceRange);
+    if (selectedPriceRange && priceRange !== 'all') {
+      description += `, mức giá ${selectedPriceRange.title.toLowerCase()}`;
+    }
+
+    description += ". Thông tin cập nhật, đầy đủ pháp lý, hình ảnh rõ ràng. Tìm đúng nhà, sống đúng cách.";
+
+    return description;
+  };
+
   return (
     <div
-      className={`min-h-screen bg-gray-50 flex flex-col ${
-        Capacitor.isNativePlatform() ? "pt-[var(--sat)]" : ""
+      className={`min-h-screen bg-gray-50 ${
+        isMapOpen ? "h-screen overflow-hidden" : ""
       }`}
     >
-      {/* LAYOUT CHÍNH:
-         Trên Mobile: 1 cột (Map đè lên tất cả khi mở)
-         Trên Desktop: 2 cột (List 40% - 60% Map hoặc 75% List - 25% Sidebar)
-      */}
-      <div className="flex-1 flex flex-col lg:flex-row lg:gap-6 max-w-7xl mx-auto w-full relative">
-        {/* === CỘT TRÁI: LIST & SEARCH === */}
-        {/* Ẩn cột này trên Mobile nếu Map đang mở để Map chiếm full màn hình */}
-        <div
-          className={`
-            flex-1 flex flex-col h-full
-            ${
+      <Helmet>
+        <title>{generateSEOTitle()}</title>
+        <meta name="description" content={generateSEODescription()} />
+        <meta property="og:title" content={generateSEOTitle()} />
+        <meta property="og:description" content={generateSEODescription()} />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="https://timnha.sonata.io.vn/mua-nha" />
+      </Helmet>
+
+      {/* Mobile Full Screen Map View */}
+      {isMobileMapView && (
+        <div className="fixed inset-0 z-50 md:hidden">
+          <MultipleMarkerMap
+            properties={propertyMarkers}
+            defaultZoom={11}
+            onMapInteraction={handleMapInteraction}
+          />
+        </div>
+      )}
+
+      {/* Main Content - Hidden when mobile map is active */}
+      <div className={`${isMobileMapView ? "hidden md:block" : ""} ${isMapOpen ? "w-full" : "max-w-7xl mx-auto px-4 py-6"}`}>
+        <div className="flex flex-col lg:flex-row lg:gap-6">
+          {/* Main Content - Dynamic width based on map state */}
+          <div
+            className={
               isMapOpen
-                ? "hidden lg:flex lg:w-[40%] h-screen overflow-y-auto"
-                : "w-full lg:w-3/4"
+                ? "lg:w-[40%] overflow-y-auto px-4 py-6 h-screen"
+                : "flex-1 lg:w-3/4"
             }
-            px-4 py-4 lg:py-6
-          `}
-        >
-          {/* Search Bar */}
-          <div className="bg-white p-3 lg:p-4 rounded-lg shadow-sm mb-4 sticky top-0 z-10">
-            <div className="flex flex-col sm:flex-row gap-3 items-stretch">
-              <div className="flex flex-1 relative">
-                <Input
-                  type="text"
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyDown={handleSearchKeyDown}
-                  placeholder="Tìm kiếm địa điểm, dự án..."
-                  className="h-10 lg:h-12 bg-white flex-1 rounded-r-none border-r-0 focus-visible:ring-[#008DDA]"
-                />
+          >
+            {/* Search and Map Button */}
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+              <div className="flex flex-col sm:flex-row gap-3 items-center">
+                <div className="flex flex-1">
+                  <Input
+                    type="text"
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    onKeyDown={handleSearchKeyDown}
+                    placeholder="Tìm kiếm theo địa điểm, dự án..."
+                    className="h-[48px] bg-white text-gray-600 flex-1 rounded-r-none border-r-0 focus-visible:ring-[#008DDA] focus-visible:ring-2 focus-visible:ring-offset-0"
+                  />
+                  <Button
+                    type="button"
+                    onClick={executeSearch}
+                    className="h-[48px] rounded-l-none px-3 bg-[#008DDA] hover:bg-[#0072b0] cursor-pointer"
+                  >
+                    <Search className="w-4 h-4 text-white" />
+                  </Button>
+                </div>
+                  {/*Map Button - Hidden on mobile */}
                 <Button
-                  type="button"
-                  onClick={executeSearch}
-                  className="h-10 lg:h-12 rounded-l-none px-4 bg-[#008DDA] hover:bg-[#0072b0]"
+                  onClick={handleToggleMap}
+                  variant="outline"
+                  className="hidden md:flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white transition-colors cursor-pointer"
                 >
-                  <Search className="w-4 h-4 text-white" />
+                  <MapIcon className="w-4 h-4" />
+                  {isMapOpen ? "Đóng bản đồ" : "Mở bản đồ"}
                 </Button>
               </div>
-
-              {/* Nút mở Map */}
-              <Button
-                onClick={handleToggleMap}
-                variant="outline"
-                className="h-10 lg:h-12 flex items-center justify-center gap-2 border-[#008DDA] text-[#008DDA] hover:bg-[#008DDA] hover:text-white"
-              >
-                {isMapOpen ? (
-                  <List className="w-4 h-4" />
-                ) : (
-                  <MapIcon className="w-4 h-4" />
-                )}
-                <span className="hidden sm:inline">
-                  {isMapOpen ? "Danh sách" : "Bản đồ"}
-                </span>
-                <span className="sm:hidden">{isMapOpen ? "List" : "Map"}</span>
-              </Button>
             </div>
-          </div>
 
-          {/* Filters - Responsive Grid */}
-          <div className="bg-white p-3 lg:p-4 rounded-lg shadow-sm mb-4">
-            <div className="grid grid-cols-2 lg:grid-cols-3 gap-2 lg:gap-3">
-              <Select value={district} onValueChange={handleDistrictChange}>
-                <SelectTrigger className="w-full h-9 lg:h-10 text-sm">
-                  <SelectValue placeholder="Khu vực" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả khu vực</SelectItem>
-                  {DISTRICTS.map((d) => (
-                    <SelectItem key={d.id} value={d.id}>
-                      {d.name}
+            {/* Filters */}
+            <div className="bg-white p-4 rounded-lg shadow-sm mb-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {/* District Filter */}
+                <Select value={district} onValueChange={handleDistrictChange}>
+                  <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                    <SelectValue placeholder="Khu vực" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem className="cursor-pointer" value="all">
+                      Tất cả khu vực
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {DISTRICTS.map((DISTRICT) => (
+                      <SelectItem
+                        key={DISTRICT.id}
+                        value={DISTRICT.id}
+                        className="cursor-pointer"
+                      >
+                        {DISTRICT.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              <Select
-                value={propertyType}
-                onValueChange={handlePropertyTypeChange}
-              >
-                <SelectTrigger className="w-full h-9 lg:h-10 text-sm">
-                  <SelectValue placeholder="Loại BĐS" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Tất cả loại</SelectItem>
-                  {PROPERTY_TYPES.map((t) => (
-                    <SelectItem key={t.id} value={t.id}>
-                      {t.name}
+                {/* Property Type Filter */}
+                <Select
+                  value={propertyType}
+                  onValueChange={handlePropertyTypeChange}
+                >
+                  <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                    <SelectValue placeholder="Loại bất động sản" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem className="cursor-pointer" value="all">
+                      Tất cả loại
                     </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    {PROPERTY_TYPES.map((PROPERTY_TYPE) => (
+                      <SelectItem
+                        key={PROPERTY_TYPE.id}
+                        value={PROPERTY_TYPE.id}
+                        className="cursor-pointer"
+                      >
+                        {PROPERTY_TYPE.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
 
-              {/* Price Range - Chiếm 2 cột trên mobile nếu lẻ */}
-              <div className="col-span-2 lg:col-span-1">
+                {/* Price Range Filter */}
                 <Select
                   value={priceRange}
                   onValueChange={handlePriceRangeChange}
                 >
-                  <SelectTrigger className="w-full h-9 lg:h-10 text-sm">
-                    <SelectValue placeholder="Mức giá" />
+                  <SelectTrigger className="w-full focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                    <SelectValue placeholder="Giá bán" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Tất cả mức giá</SelectItem>
-                    {PRICE_RANGES.map((r) => (
-                      <SelectItem key={r.id} value={r.id}>
-                        {r.title}
+                    <SelectItem value="all" className="cursor-pointer">
+                      Tất cả
+                    </SelectItem>
+                    {PRICE_RANGES.map((PRICE_RANGE) => (
+                      <SelectItem
+                        key={PRICE_RANGE.id}
+                        value={PRICE_RANGE.id}
+                        className="cursor-pointer"
+                      >
+                        {PRICE_RANGE.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-          </div>
 
-          {/* List Content */}
-          <div className="flex-1">
+            {/* Title */}
+            <h2 className="text-2xl font-semibold text-gray-900 my-8">
+              Mua bán nhà đất ở Thành phố Hồ Chí Minh
+            </h2>
+
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-lg lg:text-2xl font-semibold text-gray-900 truncate pr-2">
-                Mua bán nhà đất HCM
-              </h2>
-              <div className="w-[120px] lg:w-[150px] flex-shrink-0">
+              <p className="text-gray-600 text-sm">
+                Hiện có {propertyList.length} bất động sản
+              </p>
+
+              <div className="flex items-center lg:w-1/3">
                 <Select value={sortCriteria} onValueChange={handleSortChange}>
-                  <SelectTrigger className="w-full h-8 lg:h-10 text-xs lg:text-sm">
-                    <SelectValue placeholder="Sắp xếp" />
+                  <SelectTrigger className="w-full bg-white focus:ring-[#008DDA] focus:ring-2 focus:ring-offset-0 cursor-pointer">
+                    <SelectValue placeholder="Mặc định" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="default">Mặc định</SelectItem>
-                    {PROPERTY_SORT_CRITERIAS.map((s) => (
-                      <SelectItem key={s.id} value={s.id}>
-                        {s.title}
+                    <SelectItem value="default" className="cursor-pointer">
+                      Mặc định
+                    </SelectItem>
+                    {PROPERTY_SORT_CRITERIAS.map((PROPERTY_SORT_CRITERIA) => (
+                      <SelectItem
+                        key={PROPERTY_SORT_CRITERIA.id}
+                        value={PROPERTY_SORT_CRITERIA.id}
+                        className="cursor-pointer"
+                      >
+                        {PROPERTY_SORT_CRITERIA.title}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -788,13 +968,29 @@ export const BuyProperty: React.FC = () => {
               </div>
             </div>
 
-            {/* Items List */}
+            {/* Property List */}
             <div className="space-y-4 mb-6">
               {isLoading ? (
-                // Skeleton...
-                [...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-32 w-full rounded-lg" />
-                ))
+                <>
+                  {[...Array(5)].map((_, index) => (
+                    <div
+                      key={index}
+                      className="bg-white rounded-lg shadow-sm p-4 flex gap-4"
+                    >
+                      <Skeleton className="w-64 h-48 rounded-lg flex-shrink-0" />
+                      <div className="flex-1 space-y-3">
+                        <Skeleton className="h-6 w-3/4" />
+                        <Skeleton className="h-4 w-1/2" />
+                        <Skeleton className="h-4 w-1/3" />
+                        <Skeleton className="h-4 w-1/4" />
+                        <div className="flex justify-between items-center mt-4">
+                          <Skeleton className="h-4 w-24" />
+                          <Skeleton className="h-8 w-8 rounded-full" />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </>
               ) : propertyList.length > 0 ? (
                 propertyList.map((property) => (
                   <PropertyListItem
@@ -803,7 +999,7 @@ export const BuyProperty: React.FC = () => {
                     title={property.title}
                     price={property.price}
                     area={property.area}
-                    address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}`}
+                    address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
                     imageUrl={property.imageUrls?.[0] || ""}
                     createdAt={property.createdAt || ""}
                     isLiked={likedProperties.has(String(property.id))}
@@ -811,15 +1007,17 @@ export const BuyProperty: React.FC = () => {
                   />
                 ))
               ) : (
-                <div className="text-center py-12 text-gray-500">
-                  Không tìm thấy BĐS nào
+                <div className="text-center py-8">
+                  <p className="text-gray-500">
+                    Không tìm thấy bất động sản nào
+                  </p>
                 </div>
               )}
             </div>
 
             {/* Pagination */}
             {!isLoading && propertyList.length > 0 && (
-              <div className="flex justify-center mb-8 pb-10 lg:pb-0">
+              <div className="flex justify-center mb-6">
                 <ControlledPagination
                   currentPage={currentPage}
                   onPageChange={handlePageChange}
@@ -827,49 +1025,124 @@ export const BuyProperty: React.FC = () => {
                 />
               </div>
             )}
-          </div>
-        </div>
 
-        {/* === CỘT PHẢI: MAP hoặc SIDEBAR === */}
-        {/* Mobile: Nếu isMapOpen -> Fixed Fullscreen, đè lên tất cả.
-           Desktop: Luôn hiển thị (block) ở cột bên phải.
-        */}
-        <aside
-          className={`
-            ${
-              isMapOpen
-                ? "fixed inset-0 z-50 bg-white pt-[var(--sat)] pb-[var(--sab)]" // Mobile Fullscreen
-                : "hidden" // Mobile Hidden
-            }
-            lg:static lg:block lg:pt-0 lg:pb-0
-            ${isMapOpen ? "lg:w-[60%]" : "lg:w-1/4"}
-          `}
-        >
-          {isMapOpen ? (
-            <div className="w-full h-full relative">
-              {/* Nút đóng Map trên Mobile */}
-              <Button
-                onClick={handleToggleMap}
-                className="lg:hidden absolute top-4 right-4 z-[60] rounded-full w-10 h-10 p-0 shadow-lg bg-white text-black hover:bg-gray-100"
+            {/* Suggested Properties - Show only if location is granted */}
+            {locationPermission === "granted" && userLocation && (
+              <section
+                className={isMapOpen ? "py-8" : "py-12 px-4 max-w-7xl mx-auto"}
               >
-                <X className="w-5 h-5" />
-              </Button>
+                <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-8">
+                  Bất động sản gợi ý
+                </h2>
 
-              <MultipleMarkerMap
-                properties={propertyMarkers}
-                defaultZoom={11}
-                onMapInteraction={handleMapInteraction}
-              />
-            </div>
-          ) : (
-            /* Sidebar Quick Filter (Chỉ hiện trên Desktop) */
-            <div className="hidden lg:block space-y-4 mt-6">
-              <PropertyTypeFilter />
-              <PropertyDistrictFilter />
-            </div>
-          )}
-        </aside>
+                {isLoadingRecommended ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[...Array(4)].map((_, index) => (
+                      <div key={index} className="space-y-3">
+                        <Skeleton className="h-48 w-full rounded-lg" />
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-4 w-full" />
+                        <div className="flex justify-between">
+                          <Skeleton className="h-4 w-1/3" />
+                          <Skeleton className="h-4 w-1/3" />
+                        </div>
+                        <Skeleton className="h-4 w-1/2" />
+                      </div>
+                    ))}
+                  </div>
+                ) : recommendedProperties.length > 0 ? (
+                  <Carousel
+                    opts={{
+                      align: "start",
+                      loop: true,
+                    }}
+                    className="w-full"
+                  >
+                    <div className="relative">
+                      <CarouselContent className="-ml-2 md:-ml-4">
+                        {recommendedProperties.map((property) => (
+                          <CarouselItem
+                            key={property.id}
+                            className={`pl-2 md:pl-4 ${
+                              isMapOpen
+                                ? "basis-full md:basis-1/2 lg:basis-1/2"
+                                : "sm:basis-1/2 md:basis-1/2 lg:basis-1/3"
+                            }`}
+                          >
+                            <div className="h-[420px]">
+                              <PropertyCardItem
+                                id={String(property.id)}
+                                title={property.title}
+                                price={property.price}
+                                area={property.area}
+                                address={[
+                                    property.addressStreet,
+                                    property.addressWard,
+                                    property.addressDistrict,
+                                    property.addressCity,
+                                ].filter(Boolean).join(", ")}
+                                imageUrl={property.imageUrls?.[0] || ""}
+                                createdAt={property.createdAt || ""}
+                                onFavoriteClick={(id) =>
+                                  console.log("Favorite clicked:", id)
+                                }
+                              />
+                            </div>
+                          </CarouselItem>
+                        ))}
+                      </CarouselContent>
+                      <div className="hidden sm:block">
+                        <CarouselPrevious className="-left-4 sm:-left-5 lg:-left-6 cursor-pointer" />
+                        <CarouselNext className="-right-4 sm:-right-5 lg:-right-6 cursor-pointer" />
+                      </div>
+                    </div>
+                  </Carousel>
+                ) : null}
+              </section>
+            )}
+          </div>
+
+          {/* Right Sidebar - Conditional: Map (60%) or Quick Filters (25%) */}
+          <aside
+            className={
+              isMapOpen
+                ? "lg:w-[60%] hidden md:block"
+                : "lg:w-1/4 hidden md:block"
+            }
+          >
+            {isMapOpen ? (
+              /* Map View - Fixed full height on right side */
+              <div
+                className="fixed top-0 right-0 h-screen"
+                style={{ width: "60%" }}
+              >
+                <MultipleMarkerMap
+                  properties={propertyMarkers}
+                  defaultZoom={11}
+                  onMapInteraction={handleMapInteraction}
+                />
+              </div>
+            ) : (
+              /* Quick Filter Sidebar */
+              <div className="space-y-4">
+                <PropertyTypeFilter />
+                <PropertyDistrictFilter />
+              </div>
+            )}
+          </aside>
+        </div>
       </div>
+
+      {/* Floating Map/List Toggle Button - Mobile Only */}
+      <Button
+        onClick={handleToggleMobileMap}
+        className="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-[1001] bg-[#008DDA] hover:bg-[#0072b0] text-white shadow-lg px-6 py-6 rounded-full flex items-center gap-2 cursor-pointer"
+      >
+        <MapIcon className="w-5 h-5" />
+        <span className="font-semibold">
+          {isMobileMapView ? "Danh sách" : "Bản đồ"}
+        </span>
+      </Button>
     </div>
   );
 };

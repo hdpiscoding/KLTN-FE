@@ -1,3 +1,0 @@
-com.uit.timnha.test
-style WhiteBackgroundDialogTheme
-style WhiteBackgroundTheme
