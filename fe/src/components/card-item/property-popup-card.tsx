@@ -5,6 +5,7 @@ import { formatPrice, formatArea } from '@/utils/generalFormat.ts';
 export interface PropertyPopupCardProps {
     id: string;
     title: string;
+    listingType?: string;
     image: string;
     address?: string;
     price: number;
@@ -15,6 +16,7 @@ export interface PropertyPopupCardProps {
 export const PropertyPopupCard: React.FC<PropertyPopupCardProps> = ({
     id,
     title,
+    listingType,
     image,
     address,
     price,
@@ -90,6 +92,9 @@ export const PropertyPopupCard: React.FC<PropertyPopupCardProps> = ({
                         <div className="flex-1 min-w-0">
                             <p className="text-xs sm:text-sm font-bold text-[#008DDA] truncate">
                                 {formatPrice(price)}
+                                {
+                                    listingType === "for_rent" && "/tháng"
+                                }
                             </p>
                         </div>
                         <div className="flex items-center gap-0.5 sm:gap-1 text-gray-700 flex-shrink-0">

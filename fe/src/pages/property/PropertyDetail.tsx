@@ -587,6 +587,11 @@ export const PropertyDetail: React.FC = () => {
                                         <p className="text-sm text-gray-500 mb-1">Mức giá</p>
                                         <p className="text-3xl font-bold text-[#008DDA]">
                                             {formatPrice(property.price)}
+                                            {
+                                                property.listingType === "for_rent"
+                                                &&
+                                                "/tháng"
+                                            }
                                         </p>
                                     </div>
                                     <div className="h-12 w-px bg-gray-200"></div>
@@ -994,6 +999,7 @@ export const PropertyDetail: React.FC = () => {
                                                     key={item.id}
                                                     id={String(item.id)}
                                                     title={item.title}
+                                                    listingType={item.listingType}
                                                     price={item.price}
                                                     area={item.area}
                                                     address={[
@@ -1025,6 +1031,7 @@ export const PropertyDetail: React.FC = () => {
                                                         <PropertyCardItem
                                                             id={String(item.id)}
                                                             title={item.title}
+                                                            listingType={item.listingType}
                                                             price={item.price}
                                                             area={item.area}
                                                             address={[

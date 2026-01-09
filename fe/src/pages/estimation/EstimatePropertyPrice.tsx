@@ -241,16 +241,20 @@ export const EstimatePropertyPrice: React.FC = () => {
                     </div>
                 </div>
 
-                {/* Continue Button */}
-                <div className="bg-white rounded-lg shadow-lg p-6">
-                    <Button className="w-full h-11" variant="outline">
-                        Xem lịch sử định giá
+                {/* Action Buttons */}
+                <div className="bg-white rounded-lg shadow-lg p-6 space-y-3">
+                    <Button
+                        onClick={() => navigate('/dinh-gia-nha/lich-su')}
+                        className="w-full h-11 cursor-pointer"
+                        variant="outline"
+                    >
+                        Quay lại lịch sử
                     </Button>
                     <Button
-                        onClick={handleContinue}
+                        onClick={() => navigate('/dinh-gia-nha/dia-chi')}
                         className="w-full h-11 transition-colors duration-200 bg-[#008DDA] cursor-pointer hover:bg-[#0064A6] text-base"
                     >
-                        Tiếp tục định giá
+                        Định giá mới
                     </Button>
                 </div>
             </div>
