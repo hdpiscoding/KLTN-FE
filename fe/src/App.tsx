@@ -31,6 +31,7 @@ import {EditPost} from "@/pages/listing/EditPost.tsx";
 import '@goongmaps/goong-js/dist/goong-js.css';
 import {RentProperty} from "@/pages/property/RentProperty.tsx";
 import {PrivateRoute} from "@/components/general/private-route.tsx";
+import {Settings} from "@/pages/general/Settings.tsx";
 
 function App() {
 
@@ -77,6 +78,7 @@ function App() {
                       <Route path="/tin-yeu-thich" element={<FavoritePosts/>}/>
                       <Route path="/thong-tin-ca-nhan" element={<UserProfile/>}/>
                       <Route path="/doi-mat-khau" element={<ChangePassword/>}/>
+                      <Route path="/cai-dat" element={<Settings/>}/>
                       <Route path="/dinh-gia-nha/lich-su" element={<EstimationHistory/>}/>
                       <Route path="/dinh-gia-nha/ket-qua/:id" element={<EstimationDetail/>}/>
                   </Route>
