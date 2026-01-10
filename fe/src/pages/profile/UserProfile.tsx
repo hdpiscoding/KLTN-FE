@@ -578,6 +578,23 @@ export const UserProfile: React.FC = () => {
                 </Button>
             </div>
 
+            {/* Section: Settings (Mobile Only) */}
+            <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 sm:hidden">
+                <h2 className="text-2xl font-semibold mb-4 flex items-center gap-2">
+                    Cài đặt độ ưu tiên
+                </h2>
+                <p className="text-sm text-gray-500 mb-6">
+                    Tùy chỉnh độ ưu tiên của bạn
+                </p>
+                <Button
+                    type="button"
+                    onClick={() => navigate('/cai-dat')}
+                    className="cursor-pointer w-full transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6]"
+                >
+                    Cài đặt
+                </Button>
+            </div>
+
             {/* Save Button */}
             {!isLoadingProfile && (
                 <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 sticky bottom-0 lg:flex lg:justify-end md:flex md:justify-end">
