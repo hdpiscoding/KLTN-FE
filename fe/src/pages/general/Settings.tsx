@@ -226,9 +226,7 @@ export const Settings: React.FC = () => {
       <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
         <h1 className="text-3xl font-bold mb-2">Cài đặt ưu tiên</h1>
         <p className="text-gray-600">
-          Hãy cho chúng tôi biết điều gì là quan trọng nhất với bạn. Hệ thống sẽ
-          sử dụng các ưu tiên này để tính toán 'Chỉ số sống' cho mỗi bất động
-          sản.
+          Hãy cho chúng tôi biết điều gì là quan trọng nhất với bạn.
         </p>
       </div>
 
