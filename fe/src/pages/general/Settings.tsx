@@ -299,7 +299,7 @@ export const Settings: React.FC = () => {
                       className="w-full"
                     />
                     <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">{pref.value}%</span>
+                      <span className="text-gray-500">{pref.value}</span>
                       <span
                         className="font-medium"
                         style={{ color: pref.color }}
