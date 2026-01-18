@@ -18,14 +18,21 @@ import {MAX_DISTANCE_METERS} from "@/constants/mapConstants.ts";
 import {calculateDistance} from "@/utils/calculateDistance.ts";
 import type {PlacePrediction} from "@/types/place-prediction";
 import {placeAutocomplete, getPlaceDetails} from "@/services/goongAPIServices.ts";
+import {parseAddress} from "@/utils/addressParser.ts";
 import {NoneSellerView} from "@/components/view/none-seller-view.tsx";
 import {PendingSellerView} from "@/components/view/pending-seller-view.tsx";
 import {useUserStore} from "@/store/userStore.ts";
 import type {PropertyListing} from "@/types/property-listing";
-import {createPropertyListing} from "@/services/propertyServices.ts";
+import {createPropertyListing, predictPropertyPrice} from "@/services/propertyServices.ts";
 import {uploadImage} from "@/services/mediaServices.ts";
 import {toast} from "react-toastify";
 import {useNavigate} from "react-router-dom";
+import type {PredictionData} from "@/types/prediction-data";
+import {formatPrice} from "@/utils/generalFormat.ts";
+import {CircularProgress} from "@/components/ui/circular-progress.tsx";
+import {Progress} from "@/components/ui/progress.tsx";
+import {TrendingUp, Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music, Sparkles} from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
 
 type DemandType = 'for_sale' | 'for_rent';
 
@@ -36,6 +43,10 @@ export const CreatePost: React.FC = () => {
     const [originalLocation, setOriginalLocation] = useState<Location | null>(null);
     const [imagePreviews, setImagePreviews] = useState<string[]>([]);
     const [isSubmitting, setIsSubmitting] = useState(false);
+
+    // Price prediction states
+    const [predictionData, setPredictionData] = useState<PredictionData | null>(null);
+    const [isPredicting, setIsPredicting] = useState(false);
 
     // Autocomplete states
     const [suggestions, setSuggestions] = useState<PlacePrediction[]>([]);
@@ -313,6 +324,105 @@ export const CreatePost: React.FC = () => {
 
         form.setValue('images', updatedImages);
         setImagePreviews(updatedPreviews);
+    };
+
+    const handlePredictPrice = async () => {
+        try {
+            // Validate required fields
+            const addressInput = form.getValues('addressInput');
+            const area = form.getValues('area');
+            const propertyType = form.getValues('propertyType');
+
+            if (!mapLocation) {
+                toast.error('Vui lòng chọn vị trí trên bản đồ');
+                return;
+            }
+
+            if (!addressInput) {
+                toast.error('Vui lòng nhập địa chỉ');
+                return;
+            }
+
+            if (!area) {
+                toast.error('Vui lòng nhập diện tích');
+                return;
+            }
+
+            if (!propertyType) {
+                toast.error('Vui lòng chọn loại bất động sản');
+                return;
+            }
+
+            // Parse address to extract district
+            const parsedAddress = parseAddress(addressInput);
+            if (!parsedAddress.district) {
+                toast.error('Không thể xác định quận/huyện từ địa chỉ');
+                return;
+            }
+
+            setIsPredicting(true);
+
+            // Build request data
+            const requestData: {
+                latitude: number;
+                longitude: number;
+                address_district: string;
+                full_address: string;
+                area: number;
+                property_type: string;
+                num_bedrooms?: number;
+                num_bathrooms?: number;
+                num_floors?: number;
+                facade_width_m?: number;
+                road_width_m?: number;
+                legal_status?: string;
+                house_direction?: string;
+                balcony_direction?: string;
+                furniture_status?: string;
+            } = {
+                latitude: mapLocation.latitude,
+                longitude: mapLocation.longitude,
+                address_district: parsedAddress.district,
+                full_address: addressInput,
+                area: area,
+                property_type: propertyType,
+            };
+
+            // Add optional fields if they exist
+            const numBedrooms = form.getValues('numBedrooms');
+            const numBathrooms = form.getValues('numBathrooms');
+            const numFloors = form.getValues('numFloors');
+            const facadeWidthM = form.getValues('facadeWidthM');
+            const roadWidthM = form.getValues('roadWidthM');
+            const legalStatus = form.getValues('legalStatus');
+            const houseDirection = form.getValues('houseDirection');
+            const balconyDirection = form.getValues('balconyDirection');
+            const furnitureStatus = form.getValues('furnitureStatus');
+
+            if (numBedrooms) requestData.num_bedrooms = numBedrooms;
+            if (numBathrooms) requestData.num_bathrooms = numBathrooms;
+            if (numFloors) requestData.num_floors = numFloors;
+            if (facadeWidthM) requestData.facade_width_m = facadeWidthM;
+            if (roadWidthM) requestData.road_width_m = roadWidthM;
+            if (legalStatus && legalStatus !== 'Không xác định') requestData.legal_status = legalStatus;
+            if (houseDirection && houseDirection !== 'Không xác định') requestData.house_direction = houseDirection;
+            if (balconyDirection && balconyDirection !== 'Không xác định') requestData.balcony_direction = balconyDirection;
+            if (furnitureStatus && furnitureStatus !== 'Không có') requestData.furniture_status = furnitureStatus;
+
+            const response = await predictPropertyPrice(requestData);
+
+            if (response.status === "200" && response.data) {
+                setPredictionData(response.data);
+                toast.success('Dự đoán giá thành công!');
+            } else {
+                toast.error("Không thể dự đoán giá bất động sản");
+            }
+        } catch (error) {
+            console.error("Error predicting price:", error);
+            toast.error('Có lỗi xảy ra khi dự đoán giá. Vui lòng thử lại!');
+        } finally {
+            setIsPredicting(false);
+        }
     };
 
     const onSubmit = async (data: CreatePostForm) => {
@@ -707,7 +817,7 @@ export const CreatePost: React.FC = () => {
                                                         </FormControl>
                                                         <div
                                                             className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 text-sm font-medium">
-                                                            VND
+                                                            VND{form.getValues('listingType') === "for_rent" && "/tháng"}
                                                         </div>
                                                     </div>
                                                     <FormMessage/>
@@ -1084,7 +1194,126 @@ export const CreatePost: React.FC = () => {
                                 </div>
                             </div>
 
-                            {/* Section 5: Images (Hình ảnh) */}
+                            {/* Section 5: Price Prediction (Dự đoán giá) */}
+                            <div className="bg-white rounded-lg shadow-md p-6">
+                                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-4">
+                                    <div>
+                                        <h2 className="text-xl font-semibold mb-1">Dự đoán giá bất động sản</h2>
+                                        <p className="text-sm text-gray-500">
+                                            Sử dụng AI để ước tính giá trị bất động sản của bạn
+                                        </p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        onClick={handlePredictPrice}
+                                        disabled={isPredicting}
+                                        className="cursor-pointer bg-gradient-to-r from-[#008DDA] to-[#0064A6] hover:from-[#0064A6] hover:to-[#004d7a] text-white whitespace-nowrap"
+                                    >
+                                        {isPredicting ? (
+                                            <>
+                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                Đang dự đoán...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                Dự đoán giá BĐS
+                                            </>
+                                        )}
+                                    </Button>
+                                </div>
+
+                                {predictionData && (
+                                    <div className="space-y-6 mt-6">
+                                        {/* Price and Livability Score */}
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-lg">
+                                            {/* Estimated Price */}
+                                            <div className="text-center">
+                                                <div className="flex items-center justify-center gap-2 mb-3">
+                                                    <TrendingUp className="w-5 h-5 text-[#008DDA]" />
+                                                    <p className="text-sm sm:text-base text-gray-600 font-medium">
+                                                        Giá ước tính
+                                                    </p>
+                                                </div>
+                                                <p className="text-4xl sm:text-5xl font-bold text-[#008DDA] mb-2">
+                                                    {predictionData.predicted_price_billions.toFixed(2)} tỷ VNĐ
+                                                </p>
+                                                {form.getValues('area') && (
+                                                    <p className="text-sm text-gray-500">
+                                                        ≈ {formatPrice(predictionData.predicted_price / form.getValues('area')!)}/m²
+                                                    </p>
+                                                )}
+                                            </div>
+
+                                            {/* Livability Score */}
+                                            <div className="flex flex-col items-center">
+                                                <p className="text-sm sm:text-base text-gray-600 font-medium mb-4">
+                                                    Chỉ số sống
+                                                </p>
+                                                <CircularProgress value={predictionData.livability_score} size={140} strokeWidth={10} />
+                                            </div>
+                                        </div>
+
+                                        {/* Component Scores */}
+                                        <div className="p-6 bg-gray-50 rounded-lg">
+                                            <h3 className="text-lg font-semibold mb-4">Các chỉ số chi tiết</h3>
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                {[
+                                                    {key: 'score_safety', label: 'An ninh', icon: Shield, color: '#F97316'},
+                                                    {key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444'},
+                                                    {key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#A855F7'},
+                                                    {key: 'score_shopping', label: 'Mua sắm', icon: ShoppingBag, color: '#22C55E'},
+                                                    {key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308'},
+                                                    {key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6'},
+                                                    {key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899'},
+                                                ].map(({ key, label, icon: Icon, color }) => {
+                                                    const score = predictionData.component_scores[key as keyof typeof predictionData.component_scores];
+                                                    return (
+                                                        <div key={key} className="space-y-2">
+                                                            <div className="flex items-center justify-between">
+                                                                <div className="flex items-center gap-2">
+                                                                    <Icon className="w-4 h-4" style={{ color }} />
+                                                                    <span className="text-sm font-medium text-gray-700">{label}</span>
+                                                                </div>
+                                                                <span className="text-sm font-semibold" style={{ color }}>
+                                                                    {score.toFixed(1)}
+                                                                </span>
+                                                            </div>
+                                                            <Progress
+                                                                value={score}
+                                                                className="h-2"
+                                                                indicatorColor={color}
+                                                            />
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+
+                                        {/* AI Insight */}
+                                        <div className="p-6 bg-white border border-gray-200 rounded-lg">
+                                            <h3 className="text-lg font-semibold mb-3">Phân tích chi tiết từ AI</h3>
+                                            <div className="prose prose-sm max-w-none text-gray-700">
+                                                <ReactMarkdown
+                                                    components={{
+                                                        h2: ({ children }) => <h2 className="text-base font-semibold mt-3 mb-2">{children}</h2>,
+                                                        h3: ({ children }) => <h3 className="text-sm font-semibold mt-2 mb-1">{children}</h3>,
+                                                        p: ({ children }) => <p className="mb-2 leading-relaxed text-sm">{children}</p>,
+                                                        strong: ({ children }) => <strong className="font-semibold text-gray-900">{children}</strong>,
+                                                        ul: ({ children }) => <ul className="list-disc list-inside mb-2 space-y-1">{children}</ul>,
+                                                        ol: ({ children }) => <ol className="list-decimal list-inside mb-2 space-y-1">{children}</ol>,
+                                                        li: ({ children }) => <li className="ml-2 text-sm">{children}</li>,
+                                                    }}
+                                                >
+                                                    {predictionData.ai_insight}
+                                                </ReactMarkdown>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Section 6: Images (Hình ảnh) */}
                             <div className="bg-white rounded-lg shadow-md p-6">
                                 <h2 className="text-xl font-semibold mb-4">
                                     Hình ảnh <span className="text-red-500">*</span>

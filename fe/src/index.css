@@ -22,7 +22,7 @@
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: #008dda;
+  --primary: #008DDA;
   --primary-foreground: #ffffff;
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -47,31 +47,21 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
-
-  /* Định nghĩa biến an toàn */
-  --sat: env(safe-area-inset-top);
-  --sab: env(safe-area-inset-bottom);
-  --sal: env(safe-area-inset-left);
-  --sar: env(safe-area-inset-right);
 }
 
 * {
-  box-sizing: border-box;
+    box-sizing: border-box;
 }
 
-html,
-body {
-  max-width: 100%;
-  padding: 0;
+html, body {
+    max-width: 100%;
+    padding: 0;
 }
 
 body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-
-  /* Đảm bảo app không bị kéo dãn khi có bàn phím ảo */
-  overscroll-behavior: none;
 }
 
 h1 {
@@ -137,7 +127,7 @@ h1 {
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
   --popover-foreground: oklch(0.985 0 0);
-  --primary: #008dda;
+  --primary: #008DDA;
   --primary-foreground: #ffffff;
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
@@ -171,21 +161,4 @@ h1 {
   body {
     @apply bg-background text-foreground;
   }
-}
-
-#root {
-  /* QUAN TRỌNG: Đẩy nội dung xuống khỏi Status Bar */
-  padding-top: var(--sat);
-
-  /* Đẩy nội dung lên khỏi thanh vuốt Home (nếu có) */
-  padding-bottom: var(--sab);
-
-  /* Tránh bị lẹm vào tai thỏ khi xoay ngang */
-  padding-left: var(--sal);
-  padding-right: var(--sar);
-
-  /* Đảm bảo chiều cao full màn hình */
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
 }
