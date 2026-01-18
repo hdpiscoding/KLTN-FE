@@ -1,74 +1,103 @@
 import React from 'react';
 import { Shield, Heart, GraduationCap, ShoppingBag, Car, Leaf, Music } from 'lucide-react';
 import { cn } from '@/lib/utils.ts';
-import type {PreferencePreset} from "@/types/preference-preset";
 
 export interface PreferencePresetCardProps {
-    preset: PreferencePreset;
+    id: number;
+    name: string;
+    imageUrl: string;
+    description: string;
+    preferenceSafety: number;
+    preferenceEducation: number;
+    preferenceShopping: number;
+    preferenceTransportation: number;
+    preferenceEnvironment: number;
+    preferenceEntertainment: number;
+    preferenceHealthcare: number;
     isSelected?: boolean;
-    onSelect?: () => void;
+    onSelect?: (id: number) => void;
 }
 
 const preferenceConfig = [
     {
-        key: 'preferenceSafety' as keyof PreferencePreset,
+        key: 'preferenceSafety',
         label: 'An ninh',
         icon: Shield,
-        color: 'bg-orange-100 text-orange-600',
+        color: 'bg-orange-100 text-orange-500',
         barColor: 'bg-orange-500'
     },
     {
-        key: 'preferenceHealthcare' as keyof PreferencePreset,
+        key: 'preferenceHealthcare',
         label: 'Y tế',
         icon: Heart,
-        color: 'bg-red-100 text-red-600',
+        color: 'bg-red-100 text-red-500',
         barColor: 'bg-red-500'
     },
     {
-        key: 'preferenceEducation' as keyof PreferencePreset,
+        key: 'preferenceEducation',
         label: 'Giáo dục',
         icon: GraduationCap,
-        color: 'bg-purple-100 text-purple-600',
+        color: 'bg-purple-100 text-purple-500',
         barColor: 'bg-purple-500'
     },
     {
-        key: 'preferenceShopping' as keyof PreferencePreset,
-        label: 'Tiện ích',
+        key: 'preferenceShopping',
+        label: 'Mua sắm',
         icon: ShoppingBag,
-        color: 'bg-green-100 text-green-600',
+        color: 'bg-green-100 text-green-500',
         barColor: 'bg-green-500'
     },
     {
-        key: 'preferenceTransportation' as keyof PreferencePreset,
+        key: 'preferenceTransportation',
         label: 'Giao thông',
         icon: Car,
-        color: 'bg-yellow-100 text-yellow-600',
+        color: 'bg-yellow-100 text-yellow-500',
         barColor: 'bg-yellow-500'
     },
     {
-        key: 'preferenceEnvironment' as keyof PreferencePreset,
+        key: 'preferenceEnvironment',
         label: 'Môi trường',
         icon: Leaf,
-        color: 'bg-teal-100 text-teal-600',
+        color: 'bg-teal-100 text-teal-500',
         barColor: 'bg-teal-500'
     },
     {
-        key: 'preferenceEntertainment' as keyof PreferencePreset,
+        key: 'preferenceEntertainment',
         label: 'Giải trí',
         icon: Music,
-        color: 'bg-pink-100 text-pink-600',
+        color: 'bg-pink-100 text-pink-500',
         barColor: 'bg-pink-500'
     },
 ];
 
 export const PreferencePresetCard: React.FC<PreferencePresetCardProps> = ({
-    preset,
+    id,
+    name,
+    imageUrl,
+    description,
+    preferenceSafety,
+    preferenceEducation,
+    preferenceShopping,
+    preferenceTransportation,
+    preferenceEnvironment,
+    preferenceEntertainment,
+    preferenceHealthcare,
     isSelected = false,
     onSelect,
 }) => {
+    const preferences = {
+        preferenceSafety,
+        preferenceHealthcare,
+        preferenceEducation,
+        preferenceShopping,
+        preferenceTransportation,
+        preferenceEnvironment,
+        preferenceEntertainment,
+    };
+
     return (
         <div
-            onClick={onSelect}
+            onClick={() => onSelect?.(id)}
             className={cn(
                 "bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 cursor-pointer group",
                 "hover:shadow-xl hover:-translate-y-1",
@@ -78,8 +107,8 @@ export const PreferencePresetCard: React.FC<PreferencePresetCardProps> = ({
             {/* Header with Image */}
             <div className="relative h-40 overflow-hidden">
                 <img
-                    src={preset.image}
-                    alt={preset.name}
+                    src={imageUrl}
+                    alt={name}
                     className="w-full h-full object-cover"
                 />
                 {/* Overlay gradient */}
@@ -88,7 +117,7 @@ export const PreferencePresetCard: React.FC<PreferencePresetCardProps> = ({
                 {/* Preset Name */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
                     <h3 className="text-xl font-bold text-white drop-shadow-lg">
-                        {preset.name}
+                        {name}
                     </h3>
                 </div>
 
@@ -104,7 +133,7 @@ export const PreferencePresetCard: React.FC<PreferencePresetCardProps> = ({
             <div className="p-5 space-y-4">
                 {/* Description */}
                 <p className="text-sm text-gray-600 leading-relaxed min-h-[60px]">
-                    {preset.description}
+                    {description}
                 </p>
 
                 {/* Preferences Overview */}
@@ -114,11 +143,11 @@ export const PreferencePresetCard: React.FC<PreferencePresetCardProps> = ({
                     </h4>
 
                     {preferenceConfig.map((config) => {
-                        const value = preset[config.key] as number;
+                        const value = preferences[config.key as keyof typeof preferences] as number;
                         const Icon = config.icon;
 
                         return (
-                            <div key={config.key} className="space-y-1.5">
+                            <div key={String(config.key)} className="space-y-1.5">
                                 {/* Label and Value */}
                                 <div className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
@@ -130,7 +159,7 @@ export const PreferencePresetCard: React.FC<PreferencePresetCardProps> = ({
                                         </span>
                                     </div>
                                     <span className="text-xs font-semibold text-gray-500">
-                                        {value}%
+                                        {value}
                                     </span>
                                 </div>
 
