@@ -52,6 +52,7 @@ export const MyPosts: React.FC = () => {
     type MyProperty = {
         id: string;
         title: string;
+        listingType?: string;
         price: number;
         area: number;
         address: string;
@@ -198,6 +199,7 @@ export const MyPosts: React.FC = () => {
     const mappedProperties: MyProperty[] = myProperties.map((property) => ({
         id: String(property.id),
         title: property.title,
+        listingType: property.listingType,
         price: property.price,
         area: property.area,
         address: `${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`,
@@ -355,6 +357,7 @@ export const MyPosts: React.FC = () => {
                                     key={property.id}
                                     id={property.id}
                                     title={property.title}
+                                    listingType={property.listingType}
                                     price={property.price}
                                     area={property.area}
                                     address={property.address}

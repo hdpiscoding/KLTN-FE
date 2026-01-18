@@ -107,6 +107,7 @@ export const FavoritePosts: React.FC = () => {
                             key={property.id}
                             id={String(property.id)}
                             title={property.title}
+                            listingType={property.listingType}
                             price={property.price}
                             area={property.area}
                             address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
