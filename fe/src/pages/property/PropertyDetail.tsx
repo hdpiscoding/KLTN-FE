@@ -23,7 +23,7 @@ import {
     Car,
     Leaf,
     Music,
-    MessageCircle, CloudRain, AlertTriangle, Milestone
+    MessageCircle
 } from 'lucide-react';
 import {cn} from '@/lib/utils.ts';
 import {formatPrice, formatArea, formatPhoneNumber} from '@/utils/generalFormat.ts';
@@ -268,16 +268,13 @@ export const PropertyDetail: React.FC = () => {
 
     // Component score labels - matching EstimatePropertyPrice
     const componentScoreLabels = [
-        {key: 'score_safety', label: 'An ninh', icon: Shield, color: '#F97316'},
+        {key: 'score_safety', label: 'An ninh', icon: Shield, color: '#3b82f6'},
         {key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444'},
-        {key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#A855F7'},
-        {key: 'score_shopping', label: 'Mua sắm', icon: ShoppingBag, color: '#22C55E'},
+        {key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#8b5cf6'},
+        {key: 'score_shopping', label: 'Tiện ích', icon: ShoppingBag, color: '#22c55e'},
         {key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308'},
         {key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6'},
         {key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899'},
-        { key: 'flood_impact_score', label: 'Ngập lụt', icon: CloudRain, color: '#6366F1'},
-        { key: 'accident_impact_score', label: 'Tai nạn', icon: AlertTriangle, color: '#F43F5E'},
-        { key: 'future_project_score', label: 'Tiềm năng', icon: Milestone, color: '#06B6D4'},
     ];
 
     // Get property type name from ID
@@ -590,11 +587,6 @@ export const PropertyDetail: React.FC = () => {
                                         <p className="text-sm text-gray-500 mb-1">Mức giá</p>
                                         <p className="text-3xl font-bold text-[#008DDA]">
                                             {formatPrice(property.price)}
-                                            {
-                                                property.listingType === "for_rent"
-                                                &&
-                                                "/tháng"
-                                            }
                                         </p>
                                     </div>
                                     <div className="h-12 w-px bg-gray-200"></div>
@@ -868,7 +860,7 @@ export const PropertyDetail: React.FC = () => {
                                                 const rawLabel = key.replace('dist_', '').replace('count_', '');
 
                                                 const labelMap: Record<string, string> = {
-                                                    'healthcare': 'tiện ích y tế',
+                                                    'healthcare': 'bệnh viện',
                                                     'education': 'trường học',
                                                     'shopping': 'mua sắm',
                                                     'transportation': 'giao thông',
@@ -1002,7 +994,6 @@ export const PropertyDetail: React.FC = () => {
                                                     key={item.id}
                                                     id={String(item.id)}
                                                     title={item.title}
-                                                    listingType={item.listingType}
                                                     price={item.price}
                                                     area={item.area}
                                                     address={[
@@ -1034,7 +1025,6 @@ export const PropertyDetail: React.FC = () => {
                                                         <PropertyCardItem
                                                             id={String(item.id)}
                                                             title={item.title}
-                                                            listingType={item.listingType}
                                                             price={item.price}
                                                             area={item.area}
                                                             address={[
