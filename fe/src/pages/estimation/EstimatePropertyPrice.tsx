@@ -109,8 +109,8 @@ export const EstimatePropertyPrice: React.FC = () => {
     const componentScoreLabels = [
         { key: 'score_public_safety', label: 'An ninh', icon: Shield, color: '#f97316', bgColor: 'bg-blue-500' },
         { key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444', bgColor: 'bg-red-500' },
-        { key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#8b5cf6', bgColor: 'bg-purple-500' },
-        { key: 'score_shopping', label: 'Tiện ích', icon: ShoppingBag, color: '#22c55e', bgColor: 'bg-green-500' },
+        { key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#A855F7', bgColor: 'bg-purple-500' },
+        { key: 'score_shopping', label: 'Mua sắm', icon: ShoppingBag, color: '#22c55e', bgColor: 'bg-green-500' },
         { key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308', bgColor: 'bg-yellow-500' },
         { key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6', bgColor: 'bg-teal-500' },
         { key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899', bgColor: 'bg-pink-500' },

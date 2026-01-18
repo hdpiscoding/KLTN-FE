@@ -9,13 +9,13 @@ import { updateMyProfile, getMyProfile } from "@/services/userServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "react-toastify";
 import {
-  Heart,
-  GraduationCap,
-  ShoppingCart,
-  Bus,
-  Trees,
-  Laugh,
-  Shield,
+    Heart,
+    GraduationCap,
+    Shield,
+    Music,
+    Leaf,
+    Car,
+    ShoppingBag,
 } from "lucide-react";
 
 interface PreferencePreset {
@@ -154,7 +154,7 @@ export const Settings: React.FC = () => {
       description: "Mức độ an toàn của khu vực",
       value: preferenceSafety,
       setValue: setPreferenceSafety,
-      color: "#EF4444",
+      color: "#F97316",
     },
     {
       icon: Heart,
@@ -162,7 +162,7 @@ export const Settings: React.FC = () => {
       description: "Tiếp cận dịch vụ y tế",
       value: preferenceHealthcare,
       setValue: setPreferenceHealthcare,
-      color: "#EC4899",
+      color: "#ef4444",
     },
     {
       icon: GraduationCap,
@@ -170,39 +170,39 @@ export const Settings: React.FC = () => {
       description: "Trường học và cơ sở giáo dục",
       value: preferenceEducation,
       setValue: setPreferenceEducation,
-      color: "#8B5CF6",
+      color: "#A855F7",
     },
     {
-      icon: ShoppingCart,
-      label: "Tiện ích",
+      icon: ShoppingBag,
+      label: "Mua sắm",
       description: "Cửa hàng và dịch vụ",
       value: preferenceShopping,
       setValue: setPreferenceShopping,
-      color: "#F59E0B",
+      color: "#22C55E",
     },
     {
-      icon: Bus,
+      icon: Car,
       label: "Giao thông",
       description: "Kết nối đi lại",
       value: preferenceTransportation,
       setValue: setPreferenceTransportation,
-      color: "#3B82F6",
+      color: "#eab308",
     },
     {
-      icon: Trees,
+      icon: Leaf,
       label: "Môi trường",
       description: "Công viên và không gian xanh",
       value: preferenceEnvironment,
       setValue: setPreferenceEnvironment,
-      color: "#10B981",
+      color: "#14b8a6",
     },
     {
-      icon: Laugh,
+      icon: Music,
       label: "Giải trí",
       description: "Hoạt động vui chơi giải trí",
       value: preferenceEntertainment,
       setValue: setPreferenceEntertainment,
-      color: "#06B6D4",
+      color: "#ec4899",
     },
   ];
 
