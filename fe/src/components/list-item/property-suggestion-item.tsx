@@ -7,7 +7,6 @@ interface PropertySuggestionItemProps {
     id: number;
     title: string;
     price: number;
-    listingType: string;
     priceUnit: string;
     area: number;
     addressDistrict: string;
@@ -19,7 +18,6 @@ interface PropertySuggestionItemProps {
 export const PropertySuggestionItem: React.FC<PropertySuggestionItemProps> = ({
     title,
     price,
-    listingType,
     area,
     addressDistrict,
     addressStreet,
@@ -54,9 +52,6 @@ export const PropertySuggestionItem: React.FC<PropertySuggestionItemProps> = ({
                 <div className="flex items-center gap-2 text-sm mb-1">
                     <span className="font-semibold text-[#008DDA]">
                         {formatPrice(price)}
-                        {
-                            listingType === "for_rent" && "/tháng"
-                        }
                     </span>
                     <span className="text-gray-400">•</span>
                     <span className="text-gray-600">

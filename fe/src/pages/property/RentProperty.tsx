@@ -104,7 +104,6 @@ export const RentProperty: React.FC = () => {
                 longitude: property.location.coordinates[0],
                 address: `${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`
             },
-            listingType: property.listingType,
             title: property.title,
             image: property.imageUrls?.[0] || '',
             price: property.price,
@@ -817,7 +816,6 @@ export const RentProperty: React.FC = () => {
                                         key={property.id}
                                         id={String(property.id)}
                                         title={property.title}
-                                        listingType={property.listingType}
                                         price={property.price}
                                         area={property.area}
                                         address={`${property.addressStreet}, ${property.addressWard}, ${property.addressDistrict}, ${property.addressCity}`}
@@ -884,7 +882,6 @@ export const RentProperty: React.FC = () => {
                                                             <PropertyCardItem
                                                                 id={String(property.id)}
                                                                 title={property.title}
-                                                                listingType={property.listingType}
                                                                 price={property.price}
                                                                 area={property.area}
                                                                 address={[
