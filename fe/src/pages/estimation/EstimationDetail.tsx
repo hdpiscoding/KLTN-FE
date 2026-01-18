@@ -3,7 +3,28 @@ import { Button } from "@/components/ui/button.tsx";
 import { useNavigate, useParams } from "react-router-dom";
 import { CircularProgress } from "@/components/ui/circular-progress.tsx";
 import { Progress } from "@/components/ui/progress.tsx";
-import { Loader2, TrendingUp, Shield, GraduationCap, ShoppingBag, Car, Leaf, Music, Heart, Home, Bed, Bath, Layers, ArrowLeftRight, FileText, Compass, Wind, Sofa, MessageCircle } from 'lucide-react';
+import {
+    Loader2,
+    TrendingUp,
+    Shield,
+    GraduationCap,
+    ShoppingBag,
+    Car,
+    Leaf,
+    Music,
+    Heart,
+    Home,
+    Bed,
+    Bath,
+    Layers,
+    ArrowLeftRight,
+    FileText,
+    Compass,
+    Wind,
+    Sofa,
+    MessageCircle,
+    CloudRain, AlertTriangle, Milestone
+} from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { formatPrice } from "@/utils/generalFormat.ts";
 import { PROPERTY_TYPES } from "@/constants/propertyTypes.ts";
@@ -44,7 +65,7 @@ interface ComponentScores {
     score_education: number;
     score_transportation: number;
     score_environment: number;
-    score_public_safety: number;
+    score_safety: number;
     score_shopping: number;
     score_entertainment: number;
 }
@@ -122,13 +143,16 @@ export default function EstimationDetail() {
     };
 
     const componentScoreLabels = [
-        { key: 'score_public_safety', label: 'An ninh', icon: Shield, color: '#f97316', bgColor: 'bg-blue-500' },
+        { key: 'score_safety', label: 'An ninh', icon: Shield, color: '#f97316', bgColor: 'bg-blue-500' },
         { key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444', bgColor: 'bg-red-500' },
         { key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#A855F7', bgColor: 'bg-purple-500' },
         { key: 'score_shopping', label: 'Mua sắm', icon: ShoppingBag, color: '#22c55e', bgColor: 'bg-green-500' },
         { key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308', bgColor: 'bg-yellow-500' },
         { key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6', bgColor: 'bg-teal-500' },
         { key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899', bgColor: 'bg-pink-500' },
+        { key: 'flood_impact_score', label: 'Ngập lụt', icon: CloudRain, color: '#6366F1', bgColor: 'bg-indigo-500' },
+        { key: 'accident_impact_score', label: 'Tai nạn', icon: AlertTriangle, color: '#F43F5E', bgColor: 'bg-rose-500' },
+        { key: 'future_project_score', label: 'Tiềm năng', icon: Milestone, color: '#06B6D4', bgColor: 'bg-cyan-500' },
     ];
 
     if (isLoading) {
@@ -314,7 +338,7 @@ export default function EstimationDetail() {
                                             <span className="text-sm font-medium text-gray-700">{label}</span>
                                         </div>
                                         <span className="text-sm font-semibold" style={{ color }}>
-                                            {score.toFixed(1)}
+                                            {score?.toFixed(1) || '0.0'}
                                         </span>
                                     </div>
                                     <Progress
