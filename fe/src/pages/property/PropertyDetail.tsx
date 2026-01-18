@@ -23,7 +23,7 @@ import {
     Car,
     Leaf,
     Music,
-    MessageCircle
+    MessageCircle, CloudRain, AlertTriangle, Milestone
 } from 'lucide-react';
 import {cn} from '@/lib/utils.ts';
 import {formatPrice, formatArea, formatPhoneNumber} from '@/utils/generalFormat.ts';
@@ -275,6 +275,9 @@ export const PropertyDetail: React.FC = () => {
         {key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308'},
         {key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6'},
         {key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899'},
+        { key: 'flood_impact_score', label: 'Ngập lụt', icon: CloudRain, color: '#6366F1'},
+        { key: 'accident_impact_score', label: 'Tai nạn', icon: AlertTriangle, color: '#F43F5E'},
+        { key: 'future_project_score', label: 'Tiềm năng', icon: Milestone, color: '#06B6D4'},
     ];
 
     // Get property type name from ID
@@ -865,7 +868,7 @@ export const PropertyDetail: React.FC = () => {
                                                 const rawLabel = key.replace('dist_', '').replace('count_', '');
 
                                                 const labelMap: Record<string, string> = {
-                                                    'healthcare': 'bệnh viện',
+                                                    'healthcare': 'tiện ích y tế',
                                                     'education': 'trường học',
                                                     'shopping': 'mua sắm',
                                                     'transportation': 'giao thông',
