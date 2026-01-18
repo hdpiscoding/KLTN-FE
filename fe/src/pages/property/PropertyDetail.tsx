@@ -268,10 +268,10 @@ export const PropertyDetail: React.FC = () => {
 
     // Component score labels - matching EstimatePropertyPrice
     const componentScoreLabels = [
-        {key: 'score_safety', label: 'An ninh', icon: Shield, color: '#3b82f6'},
+        {key: 'score_safety', label: 'An ninh', icon: Shield, color: '#F97316'},
         {key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444'},
-        {key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#8b5cf6'},
-        {key: 'score_shopping', label: 'Tiện ích', icon: ShoppingBag, color: '#22c55e'},
+        {key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#A855F7'},
+        {key: 'score_shopping', label: 'Mua sắm', icon: ShoppingBag, color: '#22C55E'},
         {key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308'},
         {key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6'},
         {key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899'},

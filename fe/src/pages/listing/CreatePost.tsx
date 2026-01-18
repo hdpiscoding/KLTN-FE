@@ -1259,13 +1259,13 @@ export const CreatePost: React.FC = () => {
                                             <h3 className="text-lg font-semibold mb-4">Các chỉ số chi tiết</h3>
                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 {[
-                                                    { key: 'score_public_safety', label: 'An ninh', icon: Shield, color: '#f97316' },
-                                                    { key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444' },
-                                                    { key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#8b5cf6' },
-                                                    { key: 'score_shopping', label: 'Tiện ích', icon: ShoppingBag, color: '#22c55e' },
-                                                    { key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308' },
-                                                    { key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6' },
-                                                    { key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899' },
+                                                    {key: 'score_safety', label: 'An ninh', icon: Shield, color: '#F97316'},
+                                                    {key: 'score_healthcare', label: 'Y tế', icon: Heart, color: '#ef4444'},
+                                                    {key: 'score_education', label: 'Giáo dục', icon: GraduationCap, color: '#A855F7'},
+                                                    {key: 'score_shopping', label: 'Mua sắm', icon: ShoppingBag, color: '#22C55E'},
+                                                    {key: 'score_transportation', label: 'Giao thông', icon: Car, color: '#eab308'},
+                                                    {key: 'score_environment', label: 'Môi trường', icon: Leaf, color: '#14b8a6'},
+                                                    {key: 'score_entertainment', label: 'Giải trí', icon: Music, color: '#ec4899'},
                                                 ].map(({ key, label, icon: Icon, color }) => {
                                                     const score = predictionData.component_scores[key as keyof typeof predictionData.component_scores];
                                                     return (
