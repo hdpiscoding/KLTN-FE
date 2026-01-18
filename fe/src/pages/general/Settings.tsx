@@ -9,13 +9,13 @@ import { updateMyProfile, getMyProfile } from "@/services/userServices";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "react-toastify";
 import {
-    Heart,
-    GraduationCap,
-    Shield,
-    Music,
-    Leaf,
-    Car,
-    ShoppingBag,
+  Heart,
+  GraduationCap,
+  Shield,
+  Music,
+  Leaf,
+  Car,
+  ShoppingBag,
 } from "lucide-react";
 
 interface PreferencePreset {
@@ -59,31 +59,61 @@ export const Settings: React.FC = () => {
 
         if (presetsResponse?.data) {
           // Convert decimal values (0-1) from API to percentage values (0-100) for display
-          const presetsWithPercentages = presetsResponse.data.map((preset: PreferencePreset) => ({
-            id: preset.id,
-            name: preset.name,
-            image: preset.image,
-            description: preset.description,
-            preferenceSafety: Math.round((preset.preferenceSafety ?? 0.5) * 100),
-            preferenceHealthcare: Math.round((preset.preferenceHealthcare ?? 0.5) * 100),
-            preferenceEducation: Math.round((preset.preferenceEducation ?? 0.5) * 100),
-            preferenceShopping: Math.round((preset.preferenceShopping ?? 0.5) * 100),
-            preferenceTransportation: Math.round((preset.preferenceTransportation ?? 0.5) * 100),
-            preferenceEnvironment: Math.round((preset.preferenceEnvironment ?? 0.5) * 100),
-            preferenceEntertainment: Math.round((preset.preferenceEntertainment ?? 0.5) * 100),
-          }));
+          const presetsWithPercentages = presetsResponse.data.map(
+            (preset: PreferencePreset) => ({
+              id: preset.id,
+              name: preset.name,
+              image: preset.image,
+              description: preset.description,
+              preferenceSafety: Math.round(
+                (preset.preferenceSafety ?? 0.5) * 100,
+              ),
+              preferenceHealthcare: Math.round(
+                (preset.preferenceHealthcare ?? 0.5) * 100,
+              ),
+              preferenceEducation: Math.round(
+                (preset.preferenceEducation ?? 0.5) * 100,
+              ),
+              preferenceShopping: Math.round(
+                (preset.preferenceShopping ?? 0.5) * 100,
+              ),
+              preferenceTransportation: Math.round(
+                (preset.preferenceTransportation ?? 0.5) * 100,
+              ),
+              preferenceEnvironment: Math.round(
+                (preset.preferenceEnvironment ?? 0.5) * 100,
+              ),
+              preferenceEntertainment: Math.round(
+                (preset.preferenceEntertainment ?? 0.5) * 100,
+              ),
+            }),
+          );
           setPresets(presetsWithPercentages);
         }
 
         if (profileResponse?.data) {
           const profile = profileResponse.data;
-          setPreferenceSafety(Math.round((profile.preferenceSafety ?? 0.5) * 100));
-          setPreferenceEducation(Math.round((profile.preferenceEducation ?? 0.5) * 100));
-          setPreferenceShopping(Math.round((profile.preferenceShopping ?? 0.5) * 100));
-          setPreferenceTransportation(Math.round((profile.preferenceTransportation ?? 0.5) * 100));
-          setPreferenceEnvironment(Math.round((profile.preferenceEnvironment ?? 0.5) * 100));
-          setPreferenceEntertainment(Math.round((profile.preferenceEntertainment ?? 0.5) * 100));
-          setPreferenceHealthcare(Math.round((profile.preferenceHealthcare ?? 0.5) * 100));
+          setPreferenceSafety(
+            Math.round((profile.preferenceSafety ?? 0.5) * 100),
+          );
+          setPreferenceEducation(
+            Math.round((profile.preferenceEducation ?? 0.5) * 100),
+          );
+          setPreferenceShopping(
+            Math.round((profile.preferenceShopping ?? 0.5) * 100),
+          );
+          setPreferenceTransportation(
+            Math.round((profile.preferenceTransportation ?? 0.5) * 100),
+          );
+          setPreferenceEnvironment(
+            Math.round((profile.preferenceEnvironment ?? 0.5) * 100),
+          );
+          setPreferenceEntertainment(
+            Math.round((profile.preferenceEntertainment ?? 0.5) * 100),
+          );
+          setPreferenceHealthcare(
+            Math.round((profile.preferenceHealthcare ?? 0.5) * 100),
+          );
           setSelectedPresetId(profile.preferencePresetId || null);
         }
       } catch (error) {
@@ -233,92 +263,101 @@ export const Settings: React.FC = () => {
       {/* Main Content Section */}
       <div className="bg-white rounded-lg shadow-md p-6 sm:p-8">
         <Tabs defaultValue="presets" className="space-y-6">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="presets" className="cursor-pointer">Bộ có sẵn</TabsTrigger>
-          <TabsTrigger value="custom" className="cursor-pointer">Tùy chọn</TabsTrigger>
-        </TabsList>
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="presets" className="cursor-pointer">
+              Bộ có sẵn
+            </TabsTrigger>
+            <TabsTrigger value="custom" className="cursor-pointer">
+              Tùy chọn
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="presets" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {presets.map((preset) => (
-              <PreferencePresetCard
-                key={preset.id}
-                id={preset.id}
-                name={preset.name}
-                imageUrl={preset.image}
-                description={preset.description}
-                preferenceSafety={preset.preferenceSafety}
-                preferenceEducation={preset.preferenceEducation}
-                preferenceShopping={preset.preferenceShopping}
-                preferenceTransportation={preset.preferenceTransportation}
-                preferenceEnvironment={preset.preferenceEnvironment}
-                preferenceEntertainment={preset.preferenceEntertainment}
-                preferenceHealthcare={preset.preferenceHealthcare}
-                isSelected={selectedPresetId === preset.id}
-                onSelect={handlePresetSelect}
-              />
-            ))}
-          </div>
-        </TabsContent>
+          <TabsContent value="presets" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {presets.map((preset) => (
+                <PreferencePresetCard
+                  key={preset.id}
+                  id={preset.id}
+                  name={preset.name}
+                  imageUrl={preset.image}
+                  description={preset.description}
+                  preferenceSafety={preset.preferenceSafety}
+                  preferenceEducation={preset.preferenceEducation}
+                  preferenceShopping={preset.preferenceShopping}
+                  preferenceTransportation={preset.preferenceTransportation}
+                  preferenceEnvironment={preset.preferenceEnvironment}
+                  preferenceEntertainment={preset.preferenceEntertainment}
+                  preferenceHealthcare={preset.preferenceHealthcare}
+                  isSelected={selectedPresetId === preset.id}
+                  onSelect={handlePresetSelect}
+                />
+              ))}
+            </div>
+          </TabsContent>
 
-        <TabsContent value="custom" className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {preferenceConfig.map((pref) => {
-              const Icon = pref.icon;
-              return (
-                <div
-                  key={pref.label}
-                  className="space-y-4 p-6 border rounded-lg bg-gray-50 shadow-sm"
-                >
-                  <div className="flex items-start gap-3">
-                    <div
-                      className="p-2 rounded-lg"
-                      style={{ backgroundColor: `${pref.color}15` }}
-                    >
-                      <Icon style={{ color: pref.color }} size={24} />
-                    </div>
-                    <div className="flex-1">
-                      <Label className="text-base font-semibold">
-                        {pref.label}
-                      </Label>
-                      <p className="text-sm text-gray-500">
-                        {pref.description}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <Slider
-                      value={[pref.value]}
-                      onValueChange={(value) => {
-                        pref.setValue(value[0]);
-                        handleSliderChange();
-                      }}
-                      max={100}
-                      step={1}
-                      className="w-full"
-                    />
-                    <div className="flex justify-between items-center text-sm">
-                      <span className="text-gray-500">{pref.value}</span>
-                      <span
-                        className="font-medium"
-                        style={{ color: pref.color }}
+          <TabsContent value="custom" className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {preferenceConfig.map((pref) => {
+                const Icon = pref.icon;
+                return (
+                  <div
+                    key={pref.label}
+                    className="space-y-4 p-6 border rounded-lg bg-gray-50 shadow-sm"
+                  >
+                    <div className="flex items-start gap-3">
+                      <div
+                        className="p-2 rounded-lg"
+                        style={{ backgroundColor: `${pref.color}15` }}
                       >
-                        {getPreferenceLabel(pref.value)}
-                      </span>
+                        <Icon style={{ color: pref.color }} size={24} />
+                      </div>
+                      <div className="flex-1">
+                        <Label className="text-base font-semibold">
+                          {pref.label}
+                        </Label>
+                        <p className="text-sm text-gray-500">
+                          {pref.description}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <Slider
+                        value={[pref.value]}
+                        onValueChange={(value) => {
+                          pref.setValue(value[0]);
+                          handleSliderChange();
+                        }}
+                        max={100}
+                        step={1}
+                        className="w-full"
+                      />
+                      <div className="flex justify-between items-center text-sm">
+                        <span className="text-gray-500">{pref.value}</span>
+                        <span
+                          className="font-medium"
+                          style={{ color: pref.color }}
+                        >
+                          {getPreferenceLabel(pref.value)}
+                        </span>
+                      </div>
                     </div>
                   </div>
-                </div>
-              );
-            })}
-          </div>
-        </TabsContent>
-      </Tabs>
+                );
+              })}
+            </div>
+          </TabsContent>
+        </Tabs>
       </div>
 
       {/* Save Button Section */}
       <div className="bg-white rounded-lg shadow-md p-6 sm:p-8 sticky bottom-0 flex justify-end">
-        <Button onClick={handleSave} disabled={isSaving} size="lg" className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] disabled:opacity-50 disabled:cursor-not-allowed">
+        <Button
+          onClick={handleSave}
+          disabled={isSaving}
+          size="lg"
+          className="cursor-pointer w-full sm:w-auto transition-colors duration-200 bg-[#008DDA] hover:bg-[#0064A6] disabled:opacity-50 disabled:cursor-not-allowed"
+        >
           {isSaving ? "Đang lưu..." : "Lưu thay đổi"}
         </Button>
       </div>

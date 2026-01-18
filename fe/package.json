@@ -10,11 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "firebase": "^12.7.0",
     "@capacitor-community/background-geolocation": "^1.2.26",
     "@capacitor-firebase/messaging": "^8.0.1",
     "@capacitor/android": "^8.0.0",
     "@capacitor/app": "^8.0.0",
     "@capacitor/core": "^8.0.0",
+    "@capacitor/push-notifications": "^8.0.0",
     "@capacitor/status-bar": "^8.0.0",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@goongmaps/goong-map-react": "^1.1.2",

@@ -25,22 +25,6 @@
 <item name="android:fadingEdge">none</item>
 <item name="android:windowBackground">@android:color/white</item>
 <item name="android:windowAnimationStyle">@null</item>
-</style></file><file path="/home/haphuthinh/.gradle/caches/8.14.3/transforms/f3c8c5ab594c56ca9009b89515fbb52f/transformed/core-1.7.0/res/values-v21/values.xml" qualifiers="v21"><style name="WhiteBackgroundDialogTheme" parent="@android:style/Theme.Holo.Dialog.NoActionBar">
-<item name="android:windowNoTitle">true</item>
-<item name="android:windowFullscreen">false</item>
-<item name="android:windowOverscan">true</item>
-<item name="android:fadingEdge">none</item>
-<item name="android:windowBackground">@android:color/white</item>
-<item name="android:windowContentTransitions">false</item>
-<item name="android:windowAnimationStyle">@null</item>
-</style><style name="WhiteBackgroundTheme" parent="@android:style/Theme.Holo.NoActionBar.Fullscreen">
-<item name="android:windowNoTitle">true</item>
-<item name="android:windowFullscreen">false</item>
-<item name="android:windowOverscan">true</item>
-<item name="android:fadingEdge">none</item>
-<item name="android:windowBackground">@android:color/white</item>
-<item name="android:windowContentTransitions">false</item>
-<item name="android:windowAnimationStyle">@null</item>
 </style></file><file path="/home/haphuthinh/.gradle/caches/8.14.3/transforms/f3c8c5ab594c56ca9009b89515fbb52f/transformed/core-1.7.0/res/values-v28/values.xml" qualifiers="v28"><style name="WhiteBackgroundDialogTheme" parent="@android:style/Theme.Material.Dialog.NoActionBar">
 <item name="android:windowNoTitle">true</item>
 <item name="android:windowFullscreen">false</item>
@@ -57,4 +41,20 @@
 <item name="android:windowBackground">@android:color/white</item>
 <item name="android:windowContentTransitions">false</item>
 <item name="android:windowAnimationStyle">@null</item>
-</style></file></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTest$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/haphuthinh/Personal/score-FE/fe/android/app/src/androidTest/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTest" generated-set="androidTest$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="/home/haphuthinh/Personal/score-FE/fe/android/app/src/androidTest/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTestDebug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/haphuthinh/Personal/score-FE/fe/android/app/src/androidTestDebug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTestDebug" generated-set="androidTestDebug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="/home/haphuthinh/Personal/score-FE/fe/android/app/src/androidTestDebug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/haphuthinh/Personal/score-FE/fe/android/app/build/generated/res/resValues/androidTest/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="/home/haphuthinh/Personal/score-FE/fe/android/app/build/generated/res/resValues/androidTest/debug"/></dataSet><mergedItems/></merger>
+</style></file><file path="/home/haphuthinh/.gradle/caches/8.14.3/transforms/f3c8c5ab594c56ca9009b89515fbb52f/transformed/core-1.7.0/res/values-v21/values.xml" qualifiers="v21"><style name="WhiteBackgroundDialogTheme" parent="@android:style/Theme.Holo.Dialog.NoActionBar">
+<item name="android:windowNoTitle">true</item>
+<item name="android:windowFullscreen">false</item>
+<item name="android:windowOverscan">true</item>
+<item name="android:fadingEdge">none</item>
+<item name="android:windowBackground">@android:color/white</item>
+<item name="android:windowContentTransitions">false</item>
+<item name="android:windowAnimationStyle">@null</item>
+</style><style name="WhiteBackgroundTheme" parent="@android:style/Theme.Holo.NoActionBar.Fullscreen">
+<item name="android:windowNoTitle">true</item>
+<item name="android:windowFullscreen">false</item>
+<item name="android:windowOverscan">true</item>
+<item name="android:fadingEdge">none</item>
+<item name="android:windowBackground">@android:color/white</item>
+<item name="android:windowContentTransitions">false</item>
+<item name="android:windowAnimationStyle">@null</item>
+</style></file></source></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTest$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/androidTest/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTest" generated-set="androidTest$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/androidTest/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTestDebug$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/androidTestDebug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="androidTestDebug" generated-set="androidTestDebug$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/androidTestDebug/res"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated$Generated" generated="true" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~"><source path="/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/build/generated/res/resValues/androidTest/debug"/></dataSet><dataSet aapt-namespace="http://schemas.android.com/apk/res-auto" config="generated" generated-set="generated$Generated" ignore_pattern="!.svn:!.git:!.ds_store:!*.scc:.*:&lt;dir>_*:!CVS:!thumbs.db:!picasa.ini:!*~:!&lt;dir>navigation"><source path="/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/build/generated/res/resValues/androidTest/debug"/></dataSet><mergedItems/></merger>
