@@ -89,7 +89,6 @@ export const predictPropertyPrice = async (data: {
   latitude: number;
   longitude: number;
   address_district: string;
-  full_address?: string;
   area: number;
   property_type: string;
   num_bedrooms?: number;

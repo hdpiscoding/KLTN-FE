@@ -9,7 +9,6 @@ import {toast} from "react-toastify";
 interface PropertyCardItemProps {
     id: string;
     title: string;
-    listingType?: string;
     price: number;
     area: number;
     address: string;
@@ -22,7 +21,6 @@ interface PropertyCardItemProps {
 export const PropertyCardItem = ({
     id,
     title,
-    listingType,
     price,
     area,
     address,
@@ -114,9 +112,6 @@ export const PropertyCardItem = ({
                 <div className="flex items-center justify-between mb-2">
                     <span className="text-[#008DDA] font-bold text-lg">
                         {formatPrice(price)}
-                        {
-                            listingType === "for_rent" && "/tháng"
-                        }
                     </span>
                     <span className="text-gray-600 text-sm">
                         {formatArea(area)}

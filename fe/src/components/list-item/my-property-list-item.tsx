@@ -9,7 +9,6 @@ type PropertyStatus = "Đang hiển thị" | "Chờ duyệt" | "Đã gỡ" | "Kh
 interface MyPropertyListItemProps {
     id: string;
     title: string;
-    listingType?: string;
     price: number;
     area: number;
     address: string;
@@ -37,7 +36,6 @@ const getStatusStyles = (status: PropertyStatus) => {
 export const MyPropertyListItem = ({
     id,
     title,
-    listingType,
     price,
     area,
     address,
@@ -114,12 +112,7 @@ export const MyPropertyListItem = ({
 
                 {/* Price & Area on same line */}
                 <div className="flex items-center gap-5 text-sm mb-2">
-                    <span className="text-[#008DDA] font-bold text-lg">
-                        {formatPrice(price)}
-                        {
-                            listingType === "for_rent" && "/tháng"
-                        }
-                    </span>
+                    <span className="text-[#008DDA] font-bold text-lg">{formatPrice(price)}</span>
                     <span className="text-gray-600">{formatArea(area)}</span>
                 </div>
 
