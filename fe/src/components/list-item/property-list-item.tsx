@@ -7,7 +7,6 @@ import {useUserStore} from "@/store/userStore.ts";
 interface PropertyListItemProps {
     id: string;
     title: string;
-    listingType?: string;
     price: number;
     area: number;
     address: string;
@@ -20,7 +19,6 @@ interface PropertyListItemProps {
 export const PropertyListItem = ({
     id,
     title,
-    listingType,
     price,
     area,
     address,
@@ -91,9 +89,6 @@ export const PropertyListItem = ({
                 {/* Price */}
                 <div className="text-[#008DDA] font-bold text-xl mb-auto">
                     {formatPrice(price)}
-                    {
-                        listingType === "for_rent" && "/tháng"
-                    }
                 </div>
 
                 {/* Time and Favorite - Bottom row */}

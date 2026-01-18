@@ -206,7 +206,7 @@ export const DistrictLayer: React.FC<DistrictLayerProps> = ({
                               : "bg-gray-100 text-gray-700"
                           }`}
                         >
-                          Ảnh hưởng: {article.impact_score}
+                          Impact: {article.impact_score}
                         </span>
                       </div>
                     </div>

@@ -17,7 +17,6 @@ interface PredictionHistoryItem {
 interface ApiPredictionItem {
     prediction_id: string;
     address_district: string;
-    full_address?: string;
     predicted_price_billions: number;
     livability_score: number;
     area: number;
@@ -39,7 +38,7 @@ export default function EstimationHistory() {
                     // Map API response to component props
                     const mappedPredictions = response.data.items.map((item: ApiPredictionItem) => ({
                         predictionId: item.prediction_id,
-                        fullAddress: item.full_address || item.address_district || "Địa chỉ không xác định",
+                        fullAddress: item.address_district || "Địa chỉ không xác định", // Tạm thời dùng address_district
                         predictedPriceBillions: item.predicted_price_billions,
                         livabilityScore: Math.round(item.livability_score), // Round to integer
                         area: item.area,
