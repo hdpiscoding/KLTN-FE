@@ -117,18 +117,23 @@ export const useSendMessage = () => {
         // Call appropriate API based on context
         switch (targetContext) {
           case "general": {
-            // Get user location from localStorage or default to null
-            const userLocation = localStorage.getItem("userLocation");
+            // Get user location from browser geolocation or default to null
             let latitude = null;
             let longitude = null;
 
-            if (userLocation) {
+            // Try to get current location from browser
+            if (navigator.geolocation) {
               try {
-                const location = JSON.parse(userLocation);
-                latitude = location.latitude;
-                longitude = location.longitude;
+                const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+                  navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    timeout: 5000,
+                    maximumAge: 300000, // Cache for 5 minutes
+                  });
+                });
+                latitude = position.coords.latitude;
+                longitude = position.coords.longitude;
               } catch {
-                // Ignore parse errors
+                // If geolocation fails, latitude and longitude remain null
               }
             }
 
