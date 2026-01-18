@@ -10,62 +10,65 @@ export const usePushNotifications = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Chỉ chạy trên thiết bị thật (Android/iOS)
     if (!Capacitor.isNativePlatform()) return;
 
+    // 1. Định nghĩa Listener riêng biệt
+    const addListeners = async () => {
+      // XÓA DÒNG removeAllListeners() ĐI NHÉ! NÓ LÀ THỦ PHẠM.
+
+      // Lắng nghe sự kiện CLICK vào thông báo
+      await FirebaseMessaging.addListener(
+        "notificationActionPerformed",
+        (event) => {
+          console.log("🔔 User clicked push notification:", event);
+          const data = event.notification.data;
+
+          // Kiểm tra kỹ data trước khi điều hướng
+          if (data && (data as unknown as any).property_id) {
+            console.log(
+              "🚀 Navigating to property:",
+              (data as unknown as any).property_id,
+            );
+            // Dùng setTimeout để đảm bảo Router đã sẵn sàng
+            setTimeout(() => {
+              navigate(`/bat-dong-san/${(data as unknown as any).property_id}`);
+            }, 500);
+          }
+        },
+      );
+
+      // Lắng nghe thông báo khi App đang mở
+      await FirebaseMessaging.addListener("notificationReceived", (event) => {
+        console.log("🔔 Push received foreground:", event);
+        toast.info(`🔔 ${event.notification.title}`);
+      });
+
+      // Lắng nghe Token thay đổi
+      await FirebaseMessaging.addListener("tokenReceived", async (event) => {
+        await saveFCMTokenToBackend(event.token);
+      });
+    };
+
+    // 2. Hàm khởi tạo quyền và token
     const initFCM = async () => {
       try {
-        // 1. Xin quyền thông báo
+        await addListeners(); // Đăng ký lắng nghe NGAY LẬP TỨC
+
         const result = await FirebaseMessaging.requestPermissions();
-
         if (result.receive === "granted") {
-          // 2. Lấy FCM Token hiện tại
           const { token } = await FirebaseMessaging.getToken();
-          if (token) {
-            // Gửi lên server
-            await saveFCMTokenToBackend(token);
-          }
-        } else {
-          console.warn("User từ chối quyền nhận thông báo");
+          if (token) await saveFCMTokenToBackend(token);
         }
-
-        // 3. Lắng nghe sự kiện Token thay đổi (refresh)
-        await FirebaseMessaging.removeAllListeners();
-
-        await FirebaseMessaging.addListener("tokenReceived", async (event) => {
-          console.log("New FCM Token received");
-          await saveFCMTokenToBackend(event.token);
-        });
-
-        // 4. Lắng nghe thông báo khi App đang mở (Foreground)
-        await FirebaseMessaging.addListener("notificationReceived", (event) => {
-          console.log("Push received:", event);
-          // Hiển thị Toast hoặc Popup nhỏ
-          toast.info(
-            `🔔 ${event.notification.title}: ${event.notification.body}`
-          );
-        });
-
-        // 5. Lắng nghe khi user BẤM vào thông báo (Background/Terminated)
-        await FirebaseMessaging.addListener(
-          "notificationActionPerformed",
-          (event) => {
-            console.log("Push action:", event);
-            const data = event.notification.data;
-
-            // Logic điều hướng dựa trên data gửi từ Backend Golang
-            // Backend gửi: "type": "NEARBY_ALERT", "property_id": "123"
-            if (data && (data as unknown as any).property_id) {
-              // Điều hướng đến trang chi tiết BĐS
-              navigate(`/bat-dong-san/${(data as unknown as any).property_id}`);
-            }
-          }
-        );
       } catch (error) {
         console.error("FCM Init Error:", error);
       }
     };
 
     initFCM();
-  }, [navigate]); // Thêm dependencies nếu cần
+
+    // Cleanup: Chỉ remove khi component unmount hẳn (ví dụ tắt app)
+    return () => {
+      FirebaseMessaging.removeAllListeners();
+    };
+  }, [navigate]);
 };

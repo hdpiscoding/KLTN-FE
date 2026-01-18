@@ -48,11 +48,12 @@ import { PushNotifications } from "@capacitor/push-notifications";
 
 const createNotificationChannel = async () => {
   if (Capacitor.getPlatform() === "android") {
+    // Chỉ tạo kênh, không đăng ký listener nào từ PushNotifications ở đây!
     await PushNotifications.createChannel({
-      id: "real_estate_alerts", // KHỚP VỚI BACKEND
+      id: "real_estate_alerts",
       name: "Thông báo BĐS",
       description: "Nhận thông báo khi có nhà phù hợp",
-      importance: 5, // 5 = High (Hiện popup trôi xuống), 4 = Default
+      importance: 5,
       visibility: 1,
       sound: "default",
       vibration: true,
@@ -64,10 +65,13 @@ function AppRoutes() {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // Kích hoạt lắng nghe thông báo
+  // 1. Gọi hook lắng nghe (Logic chính nằm ở đây)
   usePushNotifications();
 
-  createNotificationChannel();
+  // 2. Tạo kênh channel PHẢI nằm trong useEffect
+  useEffect(() => {
+    createNotificationChannel();
+  }, []); // Chỉ chạy 1 lần khi app mở
 
   // Xử lý nút Back trên Android
   useEffect(() => {

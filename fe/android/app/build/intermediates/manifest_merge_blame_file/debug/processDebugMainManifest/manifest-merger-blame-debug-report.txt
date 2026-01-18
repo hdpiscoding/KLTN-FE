@@ -80,313 +80,314 @@
 47-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:20:5-50
 48        android:supportsRtl="true"
 48-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:21:5-31
-49        android:theme="@style/AppTheme" >
-49-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:22:5-36
-50        <activity
-50-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:24:9-36:20
-51            android:name="com.uit.timnha.MainActivity"
-51-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:26:7-35
-52            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
-52-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:25:7-123
-53            android:exported="true"
-53-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:30:7-30
-54            android:label="@string/title_activity_main"
-54-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:27:7-50
-55            android:launchMode="singleTask"
-55-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:29:7-38
-56            android:theme="@style/AppTheme.NoActionBarLaunch" >
-56-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:28:7-56
-57            <intent-filter>
-57-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:32:13-35:29
-58                <action android:name="android.intent.action.MAIN" />
-58-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:33:17-69
-58-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:33:25-66
-59
-60                <category android:name="android.intent.category.LAUNCHER" />
-60-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:34:17-77
-60-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:34:27-74
-61            </intent-filter>
-62        </activity>
-63
-64        <provider
-65            android:name="androidx.core.content.FileProvider"
-65-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:39:7-56
-66            android:authorities="com.uit.timnha.fileprovider"
-66-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:40:7-58
-67            android:exported="false"
-67-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:41:7-31
-68            android:grantUriPermissions="true" >
-68-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:42:7-41
-69            <meta-data
-69-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:44:13-47:9
-70                android:name="android.support.FILE_PROVIDER_PATHS"
-70-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:45:9-59
-71                android:resource="@xml/file_paths" />
-71-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:46:9-43
-72        </provider>
-73
-74        <!-- 3. Thêm Service chạy nền của Plugin tại đây -->
-75        <service
-75-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:51:9-56:7
-76            android:name="com.equimaps.capacitor_background_geolocation.BackgroundGeolocationService"
-76-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:52:7-96
-77            android:enabled="true"
-77-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:53:7-29
-78            android:exported="true"
-78-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:54:7-30
-79            android:foregroundServiceType="location|location" />
-79-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:55:7-47
-80
-81        <meta-data
-81-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:58:5-61:7
-82            android:name="com.google.firebase.messaging.default_notification_icon"
-82-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:59:7-77
-83            android:resource="@mipmap/ic_launcher" />
-83-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:60:7-45
-84        <meta-data
-84-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:63:5-66:7
-85            android:name="com.google.firebase.messaging.default_notification_channel_id"
-85-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:64:7-83
-86            android:value="real_estate_alerts" />
-86-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:65:7-41
-87
-88        <service
-88-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:9-16:19
-89            android:name="io.capawesome.capacitorjs.plugins.firebase.messaging.MessagingService"
-89-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-97
-90            android:exported="false" >
-90-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-37
-91            <intent-filter>
-91-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
-92                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-92-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
-92-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
-93            </intent-filter>
-94        </service>
-95        <service
-95-->[:capacitor-push-notifications] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor/push-notifications/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:9-14:19
-96            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
-96-->[:capacitor-push-notifications] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor/push-notifications/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:13-86
-97            android:exported="false" >
-97-->[:capacitor-push-notifications] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor/push-notifications/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:13-37
-98            <intent-filter>
-98-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
-99                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-99-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
-99-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
-100            </intent-filter>
-101        </service>
-102
-103        <receiver
-103-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:29:9-40:20
-104            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
-104-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:30:13-78
-105            android:exported="true"
-105-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:31:13-36
-106            android:permission="com.google.android.c2dm.permission.SEND" >
-106-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:32:13-73
-107            <intent-filter>
-107-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:33:13-35:29
-108                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-108-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:34:17-81
-108-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:34:25-78
-109            </intent-filter>
-110
-111            <meta-data
-111-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:37:13-39:40
-112                android:name="com.google.android.gms.cloudmessaging.FINISHED_AFTER_HANDLED"
-112-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:38:17-92
-113                android:value="true" />
-113-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:39:17-37
-114        </receiver>
-115        <!--
-116             FirebaseMessagingService performs security checks at runtime,
-117             but set to not exported to explicitly avoid allowing another app to call it.
-118        -->
-119        <service
-119-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:46:9-53:19
-120            android:name="com.google.firebase.messaging.FirebaseMessagingService"
-120-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:47:13-82
-121            android:directBootAware="true"
-121-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:48:13-43
-122            android:exported="false" >
-122-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:49:13-37
-123            <intent-filter android:priority="-500" >
-123-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
-124                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-124-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
-124-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
-125            </intent-filter>
-126        </service>
-127        <service
-127-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:54:9-63:19
-128            android:name="com.google.firebase.components.ComponentDiscoveryService"
-128-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:55:13-84
-129            android:directBootAware="true"
-129-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:32:13-43
-130            android:exported="false" >
-130-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:56:13-37
-131            <meta-data
-131-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:57:13-59:85
-132                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingKtxRegistrar"
-132-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:58:17-122
-133                android:value="com.google.firebase.components.ComponentRegistrar" />
-133-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:59:17-82
-134            <meta-data
-134-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:60:13-62:85
-135                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar"
-135-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:61:17-119
-136                android:value="com.google.firebase.components.ComponentRegistrar" />
-136-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:62:17-82
-137            <meta-data
-137-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:15:13-17:85
-138                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsKtxRegistrar"
-138-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:16:17-130
-139                android:value="com.google.firebase.components.ComponentRegistrar" />
-139-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:17:17-82
-140            <meta-data
-140-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:18:13-20:85
-141                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar"
-141-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:19:17-127
-142                android:value="com.google.firebase.components.ComponentRegistrar" />
-142-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:20:17-82
-143            <meta-data
-143-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:35:13-37:85
-144                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
-144-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:36:17-109
-145                android:value="com.google.firebase.components.ComponentRegistrar" />
-145-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:37:17-82
-146            <meta-data
-146-->[com.google.firebase:firebase-datatransport:18.2.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/37804962654ec3e9f031e2012e83e63f/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:25:13-27:85
-147                android:name="com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar"
-147-->[com.google.firebase:firebase-datatransport:18.2.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/37804962654ec3e9f031e2012e83e63f/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:26:17-115
-148                android:value="com.google.firebase.components.ComponentRegistrar" />
-148-->[com.google.firebase:firebase-datatransport:18.2.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/37804962654ec3e9f031e2012e83e63f/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:27:17-82
-149        </service>
-150
-151        <activity
-151-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
-152            android:name="com.google.android.gms.common.api.GoogleApiActivity"
-152-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:19-85
-153            android:exported="false"
-153-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:22:19-43
-154            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
-154-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:21:19-78
-155
-156        <provider
-156-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:23:9-28:39
-157            android:name="com.google.firebase.provider.FirebaseInitProvider"
-157-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:24:13-77
-158            android:authorities="com.uit.timnha.firebaseinitprovider"
-158-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:25:13-72
-159            android:directBootAware="true"
-159-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:26:13-43
-160            android:exported="false"
-160-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:27:13-37
-161            android:initOrder="100" />
-161-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:28:13-36
-162        <provider
-162-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
-163            android:name="androidx.startup.InitializationProvider"
-163-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
-164            android:authorities="com.uit.timnha.androidx-startup"
-164-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
-165            android:exported="false" >
-165-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
-166            <meta-data
-166-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
-167                android:name="androidx.emoji2.text.EmojiCompatInitializer"
-167-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
-168                android:value="androidx.startup" />
-168-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
-169            <meta-data
-169-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/haphuthinh/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
-170                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
-170-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/haphuthinh/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
-171                android:value="androidx.startup" />
-171-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/haphuthinh/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
-172            <meta-data
-172-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
-173                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
-173-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:30:17-85
-174                android:value="androidx.startup" />
-174-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:31:17-49
-175        </provider>
-176
-177        <meta-data
-177-->[com.google.android.gms:play-services-basement:18.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/114baedee36b8bdac268f5386a7e6897/transformed/play-services-basement-18.3.0/AndroidManifest.xml:21:9-23:69
-178            android:name="com.google.android.gms.version"
-178-->[com.google.android.gms:play-services-basement:18.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/114baedee36b8bdac268f5386a7e6897/transformed/play-services-basement-18.3.0/AndroidManifest.xml:22:13-58
-179            android:value="@integer/google_play_services_version" />
-179-->[com.google.android.gms:play-services-basement:18.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/114baedee36b8bdac268f5386a7e6897/transformed/play-services-basement-18.3.0/AndroidManifest.xml:23:13-66
-180
-181        <receiver
-181-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:34:9-52:20
-182            android:name="androidx.profileinstaller.ProfileInstallReceiver"
-182-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:35:13-76
-183            android:directBootAware="false"
-183-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:36:13-44
-184            android:enabled="true"
-184-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:37:13-35
-185            android:exported="true"
-185-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:38:13-36
-186            android:permission="android.permission.DUMP" >
-186-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:39:13-57
-187            <intent-filter>
-187-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:40:13-42:29
-188                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
-188-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:17-91
-188-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:25-88
-189            </intent-filter>
-190            <intent-filter>
-190-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:43:13-45:29
-191                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
-191-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:17-85
-191-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:25-82
-192            </intent-filter>
-193            <intent-filter>
-193-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:46:13-48:29
-194                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
-194-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:17-88
-194-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:25-85
-195            </intent-filter>
-196            <intent-filter>
-196-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:49:13-51:29
-197                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
-197-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
-197-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
-198            </intent-filter>
-199        </receiver>
-200
-201        <service
-201-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:28:9-34:19
-202            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
-202-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:29:13-103
-203            android:exported="false" >
-203-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:30:13-37
-204            <meta-data
-204-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:31:13-33:39
-205                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
-205-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:32:17-94
-206                android:value="cct" />
-206-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:33:17-36
-207        </service>
-208        <service
-208-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:26:9-30:19
-209            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
-209-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:27:13-117
-210            android:exported="false"
-210-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:28:13-37
-211            android:permission="android.permission.BIND_JOB_SERVICE" >
-211-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:29:13-69
-212        </service>
-213
-214        <receiver
-214-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:32:9-34:40
-215            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
-215-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:33:13-132
-216            android:exported="false" />
-216-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:34:13-37
-217    </application>
-218
-219</manifest>
+49        android:testOnly="true"
+50        android:theme="@style/AppTheme" >
+50-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:22:5-36
+51        <activity
+51-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:24:9-36:20
+52            android:name="com.uit.timnha.MainActivity"
+52-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:26:7-35
+53            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|locale|smallestScreenSize|screenLayout|uiMode"
+53-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:25:7-123
+54            android:exported="true"
+54-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:30:7-30
+55            android:label="@string/title_activity_main"
+55-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:27:7-50
+56            android:launchMode="singleTask"
+56-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:29:7-38
+57            android:theme="@style/AppTheme.NoActionBarLaunch" >
+57-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:28:7-56
+58            <intent-filter>
+58-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:32:13-35:29
+59                <action android:name="android.intent.action.MAIN" />
+59-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:33:17-69
+59-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:33:25-66
+60
+61                <category android:name="android.intent.category.LAUNCHER" />
+61-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:34:17-77
+61-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:34:27-74
+62            </intent-filter>
+63        </activity>
+64
+65        <provider
+66            android:name="androidx.core.content.FileProvider"
+66-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:39:7-56
+67            android:authorities="com.uit.timnha.fileprovider"
+67-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:40:7-58
+68            android:exported="false"
+68-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:41:7-31
+69            android:grantUriPermissions="true" >
+69-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:42:7-41
+70            <meta-data
+70-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:44:13-47:9
+71                android:name="android.support.FILE_PROVIDER_PATHS"
+71-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:45:9-59
+72                android:resource="@xml/file_paths" />
+72-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:46:9-43
+73        </provider>
+74
+75        <!-- 3. Thêm Service chạy nền của Plugin tại đây -->
+76        <service
+76-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:51:9-56:7
+77            android:name="com.equimaps.capacitor_background_geolocation.BackgroundGeolocationService"
+77-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:52:7-96
+78            android:enabled="true"
+78-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:53:7-29
+79            android:exported="true"
+79-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:54:7-30
+80            android:foregroundServiceType="location|location" />
+80-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:55:7-47
+81
+82        <meta-data
+82-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:58:5-61:7
+83            android:name="com.google.firebase.messaging.default_notification_icon"
+83-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:59:7-77
+84            android:resource="@mipmap/ic_launcher" />
+84-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:60:7-45
+85        <meta-data
+85-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:63:5-66:7
+86            android:name="com.google.firebase.messaging.default_notification_channel_id"
+86-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:64:7-83
+87            android:value="real_estate_alerts" />
+87-->/home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/android/app/src/main/AndroidManifest.xml:65:7-41
+88
+89        <service
+89-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:9-16:19
+90            android:name="io.capawesome.capacitorjs.plugins.firebase.messaging.MessagingService"
+90-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:11:13-97
+91            android:exported="false" >
+91-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:12:13-37
+92            <intent-filter>
+92-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
+93                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+93-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
+93-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
+94            </intent-filter>
+95        </service>
+96        <service
+96-->[:capacitor-push-notifications] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor/push-notifications/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:8:9-14:19
+97            android:name="com.capacitorjs.plugins.pushnotifications.MessagingService"
+97-->[:capacitor-push-notifications] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor/push-notifications/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:9:13-86
+98            android:exported="false" >
+98-->[:capacitor-push-notifications] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor/push-notifications/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:10:13-37
+99            <intent-filter>
+99-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
+100                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+100-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
+100-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
+101            </intent-filter>
+102        </service>
+103
+104        <receiver
+104-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:29:9-40:20
+105            android:name="com.google.firebase.iid.FirebaseInstanceIdReceiver"
+105-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:30:13-78
+106            android:exported="true"
+106-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:31:13-36
+107            android:permission="com.google.android.c2dm.permission.SEND" >
+107-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:32:13-73
+108            <intent-filter>
+108-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:33:13-35:29
+109                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
+109-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:34:17-81
+109-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:34:25-78
+110            </intent-filter>
+111
+112            <meta-data
+112-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:37:13-39:40
+113                android:name="com.google.android.gms.cloudmessaging.FINISHED_AFTER_HANDLED"
+113-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:38:17-92
+114                android:value="true" />
+114-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:39:17-37
+115        </receiver>
+116        <!--
+117             FirebaseMessagingService performs security checks at runtime,
+118             but set to not exported to explicitly avoid allowing another app to call it.
+119        -->
+120        <service
+120-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:46:9-53:19
+121            android:name="com.google.firebase.messaging.FirebaseMessagingService"
+121-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:47:13-82
+122            android:directBootAware="true"
+122-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:48:13-43
+123            android:exported="false" >
+123-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:49:13-37
+124            <intent-filter android:priority="-500" >
+124-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:13:13-15:29
+125                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+125-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:17-78
+125-->[:capacitor-firebase-messaging] /home/haphuthinh/Workplace/School_project/KLTN/fix_mobile/KLTN-FE/fe/node_modules/@capacitor-firebase/messaging/android/build/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml:14:25-75
+126            </intent-filter>
+127        </service>
+128        <service
+128-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:54:9-63:19
+129            android:name="com.google.firebase.components.ComponentDiscoveryService"
+129-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:55:13-84
+130            android:directBootAware="true"
+130-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:32:13-43
+131            android:exported="false" >
+131-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:56:13-37
+132            <meta-data
+132-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:57:13-59:85
+133                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingKtxRegistrar"
+133-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:58:17-122
+134                android:value="com.google.firebase.components.ComponentRegistrar" />
+134-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:59:17-82
+135            <meta-data
+135-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:60:13-62:85
+136                android:name="com.google.firebase.components:com.google.firebase.messaging.FirebaseMessagingRegistrar"
+136-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:61:17-119
+137                android:value="com.google.firebase.components.ComponentRegistrar" />
+137-->[com.google.firebase:firebase-messaging:25.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/fee7827030cf30b9c64fc7d59fae02bb/transformed/firebase-messaging-25.0.1/AndroidManifest.xml:62:17-82
+138            <meta-data
+138-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:15:13-17:85
+139                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsKtxRegistrar"
+139-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:16:17-130
+140                android:value="com.google.firebase.components.ComponentRegistrar" />
+140-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:17:17-82
+141            <meta-data
+141-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:18:13-20:85
+142                android:name="com.google.firebase.components:com.google.firebase.installations.FirebaseInstallationsRegistrar"
+142-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:19:17-127
+143                android:value="com.google.firebase.components.ComponentRegistrar" />
+143-->[com.google.firebase:firebase-installations:18.0.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/df907beae055c1d2434697ac5cd0594d/transformed/firebase-installations-18.0.0/AndroidManifest.xml:20:17-82
+144            <meta-data
+144-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:35:13-37:85
+145                android:name="com.google.firebase.components:com.google.firebase.FirebaseCommonKtxRegistrar"
+145-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:36:17-109
+146                android:value="com.google.firebase.components.ComponentRegistrar" />
+146-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:37:17-82
+147            <meta-data
+147-->[com.google.firebase:firebase-datatransport:18.2.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/37804962654ec3e9f031e2012e83e63f/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:25:13-27:85
+148                android:name="com.google.firebase.components:com.google.firebase.datatransport.TransportRegistrar"
+148-->[com.google.firebase:firebase-datatransport:18.2.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/37804962654ec3e9f031e2012e83e63f/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:26:17-115
+149                android:value="com.google.firebase.components.ComponentRegistrar" />
+149-->[com.google.firebase:firebase-datatransport:18.2.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/37804962654ec3e9f031e2012e83e63f/transformed/firebase-datatransport-18.2.0/AndroidManifest.xml:27:17-82
+150        </service>
+151
+152        <activity
+152-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:9-22:45
+153            android:name="com.google.android.gms.common.api.GoogleApiActivity"
+153-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:20:19-85
+154            android:exported="false"
+154-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:22:19-43
+155            android:theme="@android:style/Theme.Translucent.NoTitleBar" />
+155-->[com.google.android.gms:play-services-base:18.1.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/4aef5d6dbfa2eab3e0cf75d9b9b7eb7a/transformed/play-services-base-18.1.0/AndroidManifest.xml:21:19-78
+156
+157        <provider
+157-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:23:9-28:39
+158            android:name="com.google.firebase.provider.FirebaseInitProvider"
+158-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:24:13-77
+159            android:authorities="com.uit.timnha.firebaseinitprovider"
+159-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:25:13-72
+160            android:directBootAware="true"
+160-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:26:13-43
+161            android:exported="false"
+161-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:27:13-37
+162            android:initOrder="100" />
+162-->[com.google.firebase:firebase-common:22.0.1] /home/haphuthinh/.gradle/caches/8.14.3/transforms/cb546919c09df4bb1e2d2127157bcaa2/transformed/firebase-common-22.0.1/AndroidManifest.xml:28:13-36
+163        <provider
+163-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:24:9-32:20
+164            android:name="androidx.startup.InitializationProvider"
+164-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:25:13-67
+165            android:authorities="com.uit.timnha.androidx-startup"
+165-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:26:13-68
+166            android:exported="false" >
+166-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:27:13-37
+167            <meta-data
+167-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:29:13-31:52
+168                android:name="androidx.emoji2.text.EmojiCompatInitializer"
+168-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:30:17-75
+169                android:value="androidx.startup" />
+169-->[androidx.emoji2:emoji2:1.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/353d69426d62513a7e19e841051a3a44/transformed/emoji2-1.3.0/AndroidManifest.xml:31:17-49
+170            <meta-data
+170-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/haphuthinh/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:29:13-31:52
+171                android:name="androidx.lifecycle.ProcessLifecycleInitializer"
+171-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/haphuthinh/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:30:17-78
+172                android:value="androidx.startup" />
+172-->[androidx.lifecycle:lifecycle-process:2.6.2] /home/haphuthinh/.gradle/caches/8.14.3/transforms/14a3b51da1167f75215e7e32d2231e74/transformed/lifecycle-process-2.6.2/AndroidManifest.xml:31:17-49
+173            <meta-data
+173-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:29:13-31:52
+174                android:name="androidx.profileinstaller.ProfileInstallerInitializer"
+174-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:30:17-85
+175                android:value="androidx.startup" />
+175-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:31:17-49
+176        </provider>
+177
+178        <meta-data
+178-->[com.google.android.gms:play-services-basement:18.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/114baedee36b8bdac268f5386a7e6897/transformed/play-services-basement-18.3.0/AndroidManifest.xml:21:9-23:69
+179            android:name="com.google.android.gms.version"
+179-->[com.google.android.gms:play-services-basement:18.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/114baedee36b8bdac268f5386a7e6897/transformed/play-services-basement-18.3.0/AndroidManifest.xml:22:13-58
+180            android:value="@integer/google_play_services_version" />
+180-->[com.google.android.gms:play-services-basement:18.3.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/114baedee36b8bdac268f5386a7e6897/transformed/play-services-basement-18.3.0/AndroidManifest.xml:23:13-66
+181
+182        <receiver
+182-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:34:9-52:20
+183            android:name="androidx.profileinstaller.ProfileInstallReceiver"
+183-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:35:13-76
+184            android:directBootAware="false"
+184-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:36:13-44
+185            android:enabled="true"
+185-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:37:13-35
+186            android:exported="true"
+186-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:38:13-36
+187            android:permission="android.permission.DUMP" >
+187-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:39:13-57
+188            <intent-filter>
+188-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:40:13-42:29
+189                <action android:name="androidx.profileinstaller.action.INSTALL_PROFILE" />
+189-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:17-91
+189-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:41:25-88
+190            </intent-filter>
+191            <intent-filter>
+191-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:43:13-45:29
+192                <action android:name="androidx.profileinstaller.action.SKIP_FILE" />
+192-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:17-85
+192-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:44:25-82
+193            </intent-filter>
+194            <intent-filter>
+194-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:46:13-48:29
+195                <action android:name="androidx.profileinstaller.action.SAVE_PROFILE" />
+195-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:17-88
+195-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:47:25-85
+196            </intent-filter>
+197            <intent-filter>
+197-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:49:13-51:29
+198                <action android:name="androidx.profileinstaller.action.BENCHMARK_OPERATION" />
+198-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:17-95
+198-->[androidx.profileinstaller:profileinstaller:1.4.0] /home/haphuthinh/.gradle/caches/8.14.3/transforms/f95ab50c54d3211c648684c462933e30/transformed/profileinstaller-1.4.0/AndroidManifest.xml:50:25-92
+199            </intent-filter>
+200        </receiver>
+201
+202        <service
+202-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:28:9-34:19
+203            android:name="com.google.android.datatransport.runtime.backends.TransportBackendDiscovery"
+203-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:29:13-103
+204            android:exported="false" >
+204-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:30:13-37
+205            <meta-data
+205-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:31:13-33:39
+206                android:name="backend:com.google.android.datatransport.cct.CctBackendFactory"
+206-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:32:17-94
+207                android:value="cct" />
+207-->[com.google.android.datatransport:transport-backend-cct:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/ea620a6b5afc7c5e432bbec109041d91/transformed/transport-backend-cct-3.1.9/AndroidManifest.xml:33:17-36
+208        </service>
+209        <service
+209-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:26:9-30:19
+210            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.JobInfoSchedulerService"
+210-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:27:13-117
+211            android:exported="false"
+211-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:28:13-37
+212            android:permission="android.permission.BIND_JOB_SERVICE" >
+212-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:29:13-69
+213        </service>
+214
+215        <receiver
+215-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:32:9-34:40
+216            android:name="com.google.android.datatransport.runtime.scheduling.jobscheduling.AlarmManagerSchedulerBroadcastReceiver"
+216-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:33:13-132
+217            android:exported="false" />
+217-->[com.google.android.datatransport:transport-runtime:3.1.9] /home/haphuthinh/.gradle/caches/8.14.3/transforms/1491c73c5d15eb22051217da9a2fb39c/transformed/transport-runtime-3.1.9/AndroidManifest.xml:34:13-37
+218    </application>
+219
+220</manifest>
