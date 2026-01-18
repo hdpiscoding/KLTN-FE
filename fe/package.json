@@ -10,6 +10,12 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@capacitor-community/background-geolocation": "^1.2.26",
+    "@capacitor-firebase/messaging": "^8.0.1",
+    "@capacitor/android": "^8.0.0",
+    "@capacitor/app": "^8.0.0",
+    "@capacitor/core": "^8.0.0",
+    "@capacitor/status-bar": "^8.0.0",
     "@googlemaps/markerclusterer": "^2.6.2",
     "@goongmaps/goong-map-react": "^1.1.2",
     "@hookform/resolvers": "^5.2.2",
@@ -48,6 +54,8 @@
     "zustand": "^5.0.8"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^8.0.0",
     "@eslint/js": "^9.36.0",
     "@types/google.maps": "^3.58.1",
     "@types/node": "^24.10.0",
