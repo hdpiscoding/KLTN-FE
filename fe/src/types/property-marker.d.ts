@@ -7,7 +7,6 @@ export interface PropertyMarker {
     id: string;
     location: Location;
     title: string;
-    listingType?: string;
     image: string;
     price: number;
     area: number;

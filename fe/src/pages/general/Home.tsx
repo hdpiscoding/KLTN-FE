@@ -473,7 +473,6 @@ export const Home: React.FC = () => {
                                                     key={property.id}
                                                     id={property.id!}
                                                     title={property.title || ''}
-                                                    listingType={property.listingType}
                                                     price={property.price || 0}
                                                     priceUnit={property.priceUnit || 'VND'}
                                                     area={property.area || 0}
@@ -557,7 +556,6 @@ export const Home: React.FC = () => {
                                         <PropertyCardItem
                                             key={property.id}
                                             id={String(property.id)}
-                                            listingType={property.listingType}
                                             title={property.title}
                                             price={property.price}
                                             area={property.area}
@@ -687,7 +685,6 @@ export const Home: React.FC = () => {
                                                 <PropertyCardItem
                                                     id={String(property.id)}
                                                     title={property.title}
-                                                    listingType={property.listingType}
                                                     price={property.price}
                                                     area={property.area}
                                                     address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}
@@ -755,7 +752,6 @@ export const Home: React.FC = () => {
                                                 <PropertyCardItem
                                                     id={String(property.id)}
                                                     title={property.title}
-                                                    listingType={property.listingType}
                                                     price={property.price}
                                                     area={property.area}
                                                     address={String(property.addressStreet + " " + property.addressWard + " " + property.addressDistrict + " " + property.addressCity)}

@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1021570019668",
+    "project_id": "kltn-8cc85",
+    "storage_bucket": "kltn-8cc85.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1021570019668:android:a58e4dcc02ba2f545818c1",
+        "android_client_info": {
+          "package_name": "com.uit.timnha"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDUHlImIbGnRx1Ndm59wp0GE7-xOS1wOzE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

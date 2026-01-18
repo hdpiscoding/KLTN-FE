@@ -381,7 +381,6 @@ const MultipleMarkerMap: React.FC<MultipleMarkerMapProps> = ({
                 <PropertyPopupCard
                   id={selectedProperty.id}
                   title={selectedProperty.title}
-                  listingType={selectedProperty.listingType}
                   image={selectedProperty.image}
                   address={selectedProperty.location.address}
                   price={selectedProperty.price}

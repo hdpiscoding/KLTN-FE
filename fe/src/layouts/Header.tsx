@@ -12,8 +12,7 @@ import {
     LogOut,
     Heart,
     User,
-    History,
-    Settings
+    History
 } from "lucide-react";
 import {
     DropdownMenu,
@@ -144,12 +143,6 @@ export const Header = () => {
                                                 Đổi mật khẩu
                                             </Link>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link to="/cai-dat" className="w-full flex items-center gap-2">
-                                                <Settings className="w-4 h-4" />
-                                                Cài đặt
-                                            </Link>
-                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             onClick={handleLogout}
@@ -214,12 +207,6 @@ export const Header = () => {
                                             <Link to="/doi-mat-khau" className="w-full flex items-center gap-2">
                                                 <Lock className="w-4 h-4" />
                                                 Đổi mật khẩu
-                                            </Link>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem asChild className="cursor-pointer">
-                                            <Link to="/cai-dat" className="w-full flex items-center gap-2">
-                                                <Settings className="w-4 h-4" />
-                                                Cài đặt
                                             </Link>
                                         </DropdownMenuItem>
                                         <DropdownMenuSeparator />
